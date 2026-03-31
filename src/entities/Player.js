@@ -10,6 +10,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.setCollideWorldBounds(true);
         this.setDrag(800);
         this.setDamping(true);
+        this.baseScale = 1.0;
         
         // Stats
         this.speed = 280;
@@ -89,6 +90,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             bullet.setDepth(1);
             bullet.body.enable = true;
             bullet.body.reset(this.x, this.y);
+            bullet.baseScale = 0.5;
             
             // Slight random spread
             const spread = (Math.random() - 0.5) * this.bulletSpread;
