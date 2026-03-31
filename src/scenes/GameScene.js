@@ -46,20 +46,6 @@ export default class GameScene extends Phaser.Scene {
             
             if (newZoom !== oldZoom) {
                 this.targetZoom = newZoom;
-                // Calculate scroll to center on player, but clamp to arena bounds
-                const worldWidth = 1920;
-                const worldHeight = 1440;
-                const viewWidth = this.cameras.main.width / newZoom;
-                const viewHeight = this.cameras.main.height / newZoom;
-                
-                let scrollX = this.player.x - (this.cameras.main.width / 2) / newZoom;
-                let scrollY = this.player.y - (this.cameras.main.height / 2) / newZoom;
-                
-                // Clamp to arena bounds
-                scrollX = Phaser.Math.Clamp(scrollX, 0, worldWidth - viewWidth);
-                scrollY = Phaser.Math.Clamp(scrollY, 0, worldHeight - viewHeight);
-                
-                this.cameras.main.setScroll(scrollX, scrollY);
             }
         });
 
@@ -119,20 +105,18 @@ export default class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.enemies, this.playerHit, null, this);
         this.physics.add.collider(this.enemies, this.enemies, this.enemyBounce, null, this);
 
-        // Create UI camera (fixed, no zoom)
+        // Create UI camera (fixed, no zoom) - renders UI only
         this.uiCamera = this.cameras.add(0, 0, this.cameras.main.width, this.cameras.main.height);
         this.uiCamera.setScroll(0, 0);
         this.uiCamera.setZoom(1.0);
-        // UI camera ignores all game objects - only renders UI
-        this.uiCamera.ignore([this.player, this.enemies, this.bullets, 
-                               this.bulletTrails, this.hitParticles, this.deathParticles]);
+        this.uiCamera.setBackgroundColor('#000000'); // Black background
+        
+        // Main camera renders everything except UI
+        this.cameras.main.ignore([this.healthBarBg, this.healthBar, this.scoreText, 
+                                  this.waveText, this.enemyText, this.waveTimerBg, this.waveTimerBar]);
 
         // Minimalist HUD
         this.createHUD();
-
-        // Main camera ignores HUD elements
-        this.cameras.main.ignore([this.healthBarBg, this.healthBar, this.scoreText, 
-                                  this.waveText, this.enemyText, this.waveTimerBg, this.waveTimerBar]);
 
         // Wave system
         this.wave = 1;
@@ -153,34 +137,33 @@ export default class GameScene extends Phaser.Scene {
         const newZoom = currentZoom + (this.targetZoom - currentZoom) * 0.1;
         camera.setZoom(newZoom);
         
-        // Camera follow - only if we're not actively zooming (to avoid fighting the scroll)
+        // Camera follow with bounds handling
         const worldWidth = 1920;
         const worldHeight = 1440;
         const viewWidth = camera.width / newZoom;
         const viewHeight = camera.height / newZoom;
         
-        // Clamp scroll to keep camera within arena bounds
-        const minScrollX = 0;
-        const maxScrollX = worldWidth - viewWidth;
-        const minScrollY = 0;
-        const maxScrollY = worldHeight - viewHeight;
+        // Calculate target scroll to center player
+        let targetScrollX = this.player.x - (camera.width / 2) / newZoom;
+        let targetScrollY = this.player.y - (camera.height / 2) / newZoom;
         
-        if (Math.abs(newZoom - this.targetZoom) < 0.01) {
-            // Zoom settled - smooth follow
-            let targetScrollX = this.player.x - (camera.width / 2) / newZoom;
-            let targetScrollY = this.player.y - (camera.height / 2) / newZoom;
-            
-            // Clamp target to arena bounds
-            targetScrollX = Phaser.Math.Clamp(targetScrollX, minScrollX, maxScrollX);
-            targetScrollY = Phaser.Math.Clamp(targetScrollY, minScrollY, maxScrollY);
-            
-            camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
-            camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
+        // Only clamp if view is smaller than world (otherwise center the world)
+        if (viewWidth < worldWidth) {
+            targetScrollX = Phaser.Math.Clamp(targetScrollX, 0, worldWidth - viewWidth);
+        } else {
+            // View larger than world - center the world
+            targetScrollX = -(viewWidth - worldWidth) / 2;
         }
         
-        // Always clamp current scroll to bounds (prevents seeing outside arena)
-        camera.scrollX = Phaser.Math.Clamp(camera.scrollX, minScrollX, maxScrollX);
-        camera.scrollY = Phaser.Math.Clamp(camera.scrollY, minScrollY, maxScrollY);
+        if (viewHeight < worldHeight) {
+            targetScrollY = Phaser.Math.Clamp(targetScrollY, 0, worldHeight - viewHeight);
+        } else {
+            targetScrollY = -(viewHeight - worldHeight) / 2;
+        }
+        
+        // Smooth lerp toward target
+        camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
+        camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
         
         // No counter-scaling - objects get smaller/bigger with zoom as expected
 
