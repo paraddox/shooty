@@ -76,11 +76,9 @@ export default class GameScene extends Phaser.Scene {
         this.minZoom = 0.3;
         this.maxZoom = 2.0;
         
-        // Mouse wheel zoom - zoom toward center
+        // Mouse wheel zoom - zoom toward center, disable follow during zoom
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-            // deltaY > 0 = scroll down = zoom out
-            // deltaY < 0 = scroll up = zoom in
-            const zoomSpeed = 0.1;
+            const zoomSpeed = 0.15;
             const zoomChange = deltaY > 0 ? -zoomSpeed : zoomSpeed;
             
             const oldZoom = this.currentZoom;
@@ -90,29 +88,30 @@ export default class GameScene extends Phaser.Scene {
                 this.maxZoom
             );
             
-            // Only proceed if zoom actually changed
             if (newZoom === oldZoom) return;
             
             const camera = this.cameras.main;
             
-            // Stop camera follow while zooming
-            camera.stopFollow();
+            // Calculate what's at the center of screen right now
+            const worldCenterX = camera.scrollX + (camera.width / 2) / camera.zoom;
+            const worldCenterY = camera.scrollY + (camera.height / 2) / camera.zoom;
             
-            // Calculate the world coordinates of the center of the screen
-            // BEFORE we change the zoom (using current scroll and zoom)
-            const centerWorldX = camera.scrollX + (camera.width / 2) / oldZoom;
-            const centerWorldY = camera.scrollY + (camera.height / 2) / oldZoom;
-            
-            // Update zoom
+            // Apply new zoom
             this.currentZoom = newZoom;
             camera.setZoom(newZoom);
             
-            // Calculate new scroll position so the same world point stays at center
-            camera.scrollX = centerWorldX - (camera.width / 2) / newZoom;
-            camera.scrollY = centerWorldY - (camera.height / 2) / newZoom;
+            // Now recalculate scroll so that same world point is still at center
+            // But we want the player to remain the focus, so let's use player position instead
+            // Actually, let's use the midpoint between current center and player
+            const targetX = (worldCenterX + this.player.x) / 2;
+            const targetY = (worldCenterY + this.player.y) / 2;
             
-            // Restart camera follow
-            camera.startFollow(this.player, true, 0.08, 0.08);
+            camera.scrollX = targetX - (camera.width / 2) / newZoom;
+            camera.scrollY = targetY - (camera.height / 2) / newZoom;
+            
+            // Don't restart follow - let update() handle camera smoothly
+            // Just set flag to recenter on player
+            this.needsCameraRecenter = true;
         });
 
         // Bullet pool with trails - 500 for bullet hell
@@ -186,6 +185,22 @@ export default class GameScene extends Phaser.Scene {
         if (!this.player.active) return;
 
         this.player.update();
+        
+        // Manual camera follow - smooth lerp toward player
+        const camera = this.cameras.main;
+        const targetScrollX = this.player.x - (camera.width / 2) / camera.zoom;
+        const targetScrollY = this.player.y - (camera.height / 2) / camera.zoom;
+        
+        if (this.needsCameraRecenter) {
+            // Snap immediately after zoom
+            camera.scrollX = targetScrollX;
+            camera.scrollY = targetScrollY;
+            this.needsCameraRecenter = false;
+        } else {
+            // Smooth lerp toward player
+            camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
+            camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
+        }
 
         // Note: Manual zoom only - no auto-zoom to avoid conflicts
 
