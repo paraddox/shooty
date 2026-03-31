@@ -54,6 +54,10 @@ export default class GameScene extends Phaser.Scene {
             
             // Camera bounds match world
             this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
+            
+            // Center camera on player initially
+            this.cameras.main.centerOn(this.player.x, this.player.y);
+            
             this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
         }
 
@@ -277,6 +281,11 @@ export default class GameScene extends Phaser.Scene {
             this.cameras.main.setZoom(newZoom);
             this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
             this.cameras.main.setDeadzone(0, 0);
+            
+            // Re-center on player after resize
+            if (this.player.active) {
+                this.cameras.main.centerOn(this.player.x, this.player.y);
+            }
         }
         
         // Update camera viewport
