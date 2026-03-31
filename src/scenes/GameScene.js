@@ -64,18 +64,8 @@ export default class GameScene extends Phaser.Scene {
             // Manual camera follow - no startFollow
         }
         
-        // Camera always at zoom=1 - no scaling of game objects
-        // Mouse wheel adjusts camera follow offset (simulates zoom by changing view distance)
-        this.cameraOffset = 0; // 0 = close follow, positive = further back
-        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-            const offsetSpeed = 50;
-            const offsetChange = deltaY > 0 ? offsetSpeed : -offsetSpeed;
-            this.cameraOffset = Phaser.Math.Clamp(
-                this.cameraOffset + offsetChange,
-                0,      // Closest: tight on player
-                400     // Furthest: shows more arena
-            );
-        });
+        // Camera locked at zoom=1 - no zoom to keep enemy sizes consistent
+        this.cameras.main.setZoom(1.0);
 
         // Bullet pool with trails - 500 for bullet hell
         this.bullets = this.physics.add.group({
@@ -133,21 +123,8 @@ export default class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.enemies, this.playerHit, null, this);
         this.physics.add.collider(this.enemies, this.enemies, this.enemyBounce, null, this);
 
-        // Create a separate UI camera that doesn't zoom
-        this.uiCamera = this.cameras.add(0, 0, this.cameras.main.width, this.cameras.main.height);
-        this.uiCamera.setScroll(0, 0);
-        this.uiCamera.setZoom(1);
-        this.uiCamera.ignore([this.player, this.enemies, this.bullets, this.bulletTrails, this.hitParticles, this.deathParticles]);
-        
-        // Minimalist HUD - add to UI camera
+        // Minimalist HUD
         this.createHUD();
-        
-        // Tell main camera to ignore HUD elements
-        this.cameras.main.ignore([
-            this.healthBarBg, this.healthBar, 
-            this.scoreText, this.waveText, this.enemyText, 
-            this.waveTimerBg, this.waveTimerBar
-        ]);
 
         // Wave system
         this.wave = 1;
@@ -166,20 +143,10 @@ export default class GameScene extends Phaser.Scene {
         const camera = this.cameras.main;
         camera.setZoom(1.0);
         
-        // Dynamic camera offset based on enemy count + manual scroll adjustment
-        const enemyCount = this.enemies.countActive();
-        const dangerOffset = Math.min(200, enemyCount * 15); // Pull back as enemies increase
-        const totalOffset = this.cameraOffset + dangerOffset;
-        
-        // Smoothly interpolate offset
-        this.smoothedOffset = this.smoothedOffset || 0;
-        this.smoothedOffset += (totalOffset - this.smoothedOffset) * 0.05;
-        
-        // Manual camera follow - center player with optional offset padding
+        // Simple smooth camera follow - center player
         const targetScrollX = this.player.x - camera.width / 2;
         const targetScrollY = this.player.y - camera.height / 2;
         
-        // Smooth lerp toward player
         camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
         camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
 
@@ -305,30 +272,12 @@ export default class GameScene extends Phaser.Scene {
         this.waveTimerBg.x = gameSize.width - margin;
         this.waveTimerBar.x = gameSize.width - margin;
         
-        // Recalculate zoom and centering for new screen size
-        const screenLarger = gameSize.width > worldWidth && gameSize.height > worldHeight;
+        // Camera always at zoom=1 - just update bounds and viewport
+        this.cameras.main.setZoom(1.0);
+        this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
         
-        if (screenLarger) {
-            // Screen larger than world - center it
-            this.currentZoom = 1.0;
-            this.cameras.main.setZoom(1.0);
-            const offsetX = (gameSize.width - worldWidth) / 2;
-            const offsetY = (gameSize.height - worldHeight) / 2;
-            this.cameras.main.setBounds(-offsetX, -offsetY, gameSize.width, gameSize.height);
-            this.cameras.main.setScroll(-offsetX, -offsetY);
-        } else {
-            // Screen smaller - zoom to fit
-            const zoomX = gameSize.width / worldWidth;
-            const zoomY = gameSize.height / worldHeight;
-            const newZoom = Math.min(zoomX, zoomY);
-            this.currentZoom = newZoom;
-            this.cameras.main.setZoom(newZoom);
-            this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
-        }
-        
-        // Update camera viewports
+        // Update camera viewport
         this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
-        this.uiCamera.setViewport(0, 0, gameSize.width, gameSize.height);
     }
 
     updateHUD() {
