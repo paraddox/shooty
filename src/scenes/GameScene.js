@@ -21,24 +21,39 @@ export default class GameScene extends Phaser.Scene {
         // Player
         this.player = new Player(this, worldWidth / 2, worldHeight / 2);
 
-        // Camera setup - if world is smaller than screen, center it
+        // Camera setup
         const screenWidth = this.cameras.main.width;
         const screenHeight = this.cameras.main.height;
         
-        // Calculate camera bounds to center the world if screen is larger
-        const boundsX = Math.min(0, (screenWidth - worldWidth) / 2);
-        const boundsY = Math.min(0, (screenHeight - worldHeight) / 2);
-        const boundsWidth = Math.max(worldWidth, screenWidth);
-        const boundsHeight = Math.max(worldHeight, screenHeight);
-        
-        this.cameras.main.setBounds(boundsX, boundsY, boundsWidth, boundsHeight);
-        this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
-        
-        // Calculate zoom to fit world on screen if screen is smaller, or 1.0 if screen is larger
+        // If screen is larger than world, zoom = 1 (no zoom) and center the world
+        // If screen is smaller than world, zoom out to fit
         const zoomX = screenWidth / worldWidth;
         const zoomY = screenHeight / worldHeight;
-        const baseZoom = Math.min(zoomX, zoomY, 0.9); // Cap at 0.9 for gameplay comfort
+        const baseZoom = Math.min(zoomX, zoomY, 1.0); // Cap at 1.0 (no zoom in)
         this.cameras.main.setZoom(baseZoom);
+        
+        // Calculate camera bounds to center the world
+        // If zoomed out (screen smaller), bounds match world
+        // If no zoom (screen larger), allow negative offsets to center
+        const visibleWorldWidth = worldWidth * baseZoom;
+        const visibleWorldHeight = worldHeight * baseZoom;
+        const offsetX = (screenWidth - visibleWorldWidth) / 2;
+        const offsetY = (screenHeight - visibleWorldHeight) / 2;
+        
+        // Camera bounds need to account for the offset when centering
+        const boundsX = Math.min(0, offsetX);
+        const boundsY = Math.min(0, offsetY);
+        const boundsWidth = Math.max(worldWidth, screenWidth / baseZoom);
+        const boundsHeight = Math.max(worldHeight, screenHeight / baseZoom);
+        
+        this.cameras.main.setBounds(boundsX, boundsY, boundsWidth, boundsHeight);
+        
+        // If screen is larger, center the camera on the world initially
+        if (offsetX > 0 || offsetY > 0) {
+            this.cameras.main.centerOn(worldWidth / 2, worldHeight / 2);
+        }
+        
+        this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
         // Bullet pool with trails - 500 for bullet hell
         this.bullets = this.physics.add.group({
