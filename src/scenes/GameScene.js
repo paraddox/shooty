@@ -249,12 +249,30 @@ export default class GameScene extends Phaser.Scene {
     
     resizeHUD(gameSize) {
         const margin = 30;
+        const worldWidth = 1920;
+        const worldHeight = 1440;
         
         // Update wave timer bar position
         this.waveTimerBg.x = gameSize.width - margin;
         this.waveTimerBar.x = gameSize.width - margin;
         
-        // Update camera zoom for new screen size
+        // Recalculate zoom and centering for new screen size
+        const zoomX = gameSize.width / worldWidth;
+        const zoomY = gameSize.height / worldHeight;
+        const newZoom = Math.min(zoomX, zoomY, 1.0);
+        this.cameras.main.setZoom(newZoom);
+        
+        // Recenter if needed
+        const visibleWorldWidth = worldWidth * newZoom;
+        const visibleWorldHeight = worldHeight * newZoom;
+        const offsetX = (gameSize.width - visibleWorldWidth) / 2;
+        const offsetY = (gameSize.height - visibleWorldHeight) / 2;
+        
+        if (offsetX > 0 || offsetY > 0) {
+            this.cameras.main.centerOn(worldWidth / 2, worldHeight / 2);
+        }
+        
+        // Update camera viewport
         this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
     }
 
