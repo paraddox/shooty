@@ -18,6 +18,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
                 this.health = 30;
                 this.damage = 15;
                 this.scoreValue = 20;
+                this.baseScale = 1.0;
                 this.setTint(0xffaa44);
                 break;
             case 'enemyTank':
@@ -25,7 +26,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
                 this.health = 120;
                 this.damage = 25;
                 this.scoreValue = 50;
-                this.setScale(1.3);
+                this.baseScale = 1.3;
                 this.setTint(0xcc66ff);
                 break;
             default: // normal
@@ -33,6 +34,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
                 this.health = 50;
                 this.damage = 10;
                 this.scoreValue = 10;
+                this.baseScale = 1.0;
         }
         
         this.maxHealth = this.health;
