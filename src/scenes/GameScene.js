@@ -109,7 +109,7 @@ export default class GameScene extends Phaser.Scene {
         this.uiCamera = this.cameras.add(0, 0, this.cameras.main.width, this.cameras.main.height);
         this.uiCamera.setScroll(0, 0);
         this.uiCamera.setZoom(1.0);
-        this.uiCamera.setBackgroundColor('#000000'); // Black background
+        this.uiCamera.transparent = true; // Don't clear, let main camera show through
         
         // Main camera renders everything except UI
         this.cameras.main.ignore([this.healthBarBg, this.healthBar, this.scoreText, 
