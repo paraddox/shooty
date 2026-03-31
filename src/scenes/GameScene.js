@@ -69,6 +69,28 @@ export default class GameScene extends Phaser.Scene {
             // Now start following
             this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
         }
+        
+        // Store base zoom for mouse wheel zooming
+        this.baseZoom = this.cameras.main.zoom;
+        this.currentZoom = this.cameras.main.zoom;
+        this.minZoom = 0.3;
+        this.maxZoom = 2.0;
+        
+        // Mouse wheel zoom
+        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
+            // deltaY > 0 = scroll down = zoom out
+            // deltaY < 0 = scroll up = zoom in
+            const zoomSpeed = 0.1;
+            const zoomChange = deltaY > 0 ? -zoomSpeed : zoomSpeed;
+            
+            this.currentZoom = Phaser.Math.Clamp(
+                this.currentZoom + zoomChange,
+                this.minZoom,
+                this.maxZoom
+            );
+            
+            this.cameras.main.setZoom(this.currentZoom);
+        });
 
         // Bullet pool with trails - 500 for bullet hell
         this.bullets = this.physics.add.group({
