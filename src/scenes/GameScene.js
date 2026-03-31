@@ -32,20 +32,14 @@ export default class GameScene extends Phaser.Scene {
             this.player.y - this.cameras.main.height / 2
         );
         
-        // Mouse wheel zoom - direct control
+        // Mouse wheel zoom
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-            console.log('Wheel event:', deltaY, 'current targetZoom:', this.targetZoom);
-            
-            // deltaY > 0 = scroll down (zoom out)
-            // deltaY < 0 = scroll up (zoom in)
             const zoomStep = 0.2;
             
             if (deltaY > 0) {
                 this.targetZoom = Math.max(0.5, this.targetZoom - zoomStep);
-                console.log('Zooming out to:', this.targetZoom);
             } else if (deltaY < 0) {
                 this.targetZoom = Math.min(1.5, this.targetZoom + zoomStep);
-                console.log('Zooming in to:', this.targetZoom);
             }
         });
 
@@ -105,18 +99,14 @@ export default class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.enemies, this.playerHit, null, this);
         this.physics.add.collider(this.enemies, this.enemies, this.enemyBounce, null, this);
 
-        // Minimalist HUD - create FIRST
+        // Minimalist HUD
         this.createHUD();
         
-        // Create UI camera (fixed, no zoom) - renders UI only
-        this.uiCamera = this.cameras.add(0, 0, this.cameras.main.width, this.cameras.main.height);
-        this.uiCamera.setScroll(0, 0);
-        this.uiCamera.setZoom(1.0);
-        this.uiCamera.transparent = true; // Don't clear, let main camera show through
-        
-        // Main camera renders everything except UI
-        this.cameras.main.ignore([this.healthBarBg, this.healthBar, this.scoreText, 
-                                  this.waveText, this.enemyText, this.waveTimerBg, this.waveTimerBar]);
+        // Fix HUD elements to screen (ignore camera scroll/zoom)
+        [this.healthBarBg, this.healthBar, this.scoreText, this.waveText, 
+         this.enemyText, this.waveTimerBg, this.waveTimerBar].forEach(el => {
+            el.setScrollFactor(0);
+        });
 
         // Wave system
         this.wave = 1;
@@ -131,15 +121,11 @@ export default class GameScene extends Phaser.Scene {
 
         this.player.update();
         
-        // Zoom interpolation - faster response
+        // Zoom interpolation
         const camera = this.cameras.main;
         const currentZoom = camera.zoom;
         const newZoom = currentZoom + (this.targetZoom - currentZoom) * 0.25;
-        
-        if (Math.abs(newZoom - currentZoom) > 0.001) {
-            console.log('Applying zoom:', newZoom, 'target:', this.targetZoom);
-            camera.setZoom(newZoom);
-        }
+        camera.setZoom(newZoom);
         
         // Camera follow with bounds handling
         const worldWidth = 1920;
@@ -310,11 +296,8 @@ export default class GameScene extends Phaser.Scene {
         this.cameras.main.setZoom(1.0);
         this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
         
-        // Update camera viewports
+        // Update camera viewport
         this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
-        if (this.uiCamera) {
-            this.uiCamera.setViewport(0, 0, gameSize.width, gameSize.height);
-        }
     }
 
     updateHUD() {
