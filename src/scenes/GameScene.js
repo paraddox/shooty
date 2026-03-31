@@ -131,25 +131,17 @@ export default class GameScene extends Phaser.Scene {
         // Counter-scale all sprites to maintain consistent visual size regardless of zoom
         const scaleMultiplier = 1.0 / newZoom;
         
-        // Player counter-scale (base scale is 1)
-        if (!this.player.baseScale) this.player.baseScale = 1;
+        // Apply counter-scale to all objects (baseScale set on creation)
         this.player.setScale(this.player.baseScale * scaleMultiplier);
         
-        // Enemy counter-scale (each type has different base scale)
         this.enemies.children.entries.forEach(enemy => {
             if (enemy.active) {
-                // Store base scale if not set (tanks are 1.3, others are 1)
-                if (!enemy.baseScale) {
-                    enemy.baseScale = enemy.type === 'enemyTank' ? 1.3 : 1.0;
-                }
                 enemy.setScale(enemy.baseScale * scaleMultiplier);
             }
         });
         
-        // Bullet counter-scale (base scale is 0.5)
         this.bullets.children.entries.forEach(bullet => {
             if (bullet.active) {
-                if (!bullet.baseScale) bullet.baseScale = 0.5;
                 bullet.setScale(bullet.baseScale * scaleMultiplier);
             }
         });
