@@ -55,9 +55,18 @@ export default class GameScene extends Phaser.Scene {
             // Camera bounds match world
             this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
             
-            // Center camera on player initially
-            this.cameras.main.centerOn(this.player.x, this.player.y);
+            // Stop any existing follow before positioning
+            this.cameras.main.stopFollow();
             
+            // Calculate scroll to center the player in the viewport
+            // scroll = playerPosition - (visibleArea / 2)
+            const visibleWidth = screenWidth / baseZoom;
+            const visibleHeight = screenHeight / baseZoom;
+            const scrollX = this.player.x - visibleWidth / 2;
+            const scrollY = this.player.y - visibleHeight / 2;
+            this.cameras.main.setScroll(scrollX, scrollY);
+            
+            // Now start following
             this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
         }
 
@@ -282,9 +291,14 @@ export default class GameScene extends Phaser.Scene {
             this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
             this.cameras.main.setDeadzone(0, 0);
             
-            // Re-center on player after resize
+            // Re-center on player after resize using scroll calculation
             if (this.player.active) {
-                this.cameras.main.centerOn(this.player.x, this.player.y);
+                const visibleWidth = gameSize.width / newZoom;
+                const visibleHeight = gameSize.height / newZoom;
+                this.cameras.main.setScroll(
+                    this.player.x - visibleWidth / 2,
+                    this.player.y - visibleHeight / 2
+                );
             }
         }
         
