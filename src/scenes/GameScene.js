@@ -133,27 +133,38 @@ export default class GameScene extends Phaser.Scene {
         const viewWidth = camera.width / newZoom;
         const viewHeight = camera.height / newZoom;
         
-        // Calculate target scroll to center player
-        let targetScrollX = this.player.x - (camera.width / 2) / newZoom;
-        let targetScrollY = this.player.y - (camera.height / 2) / newZoom;
+        let targetScrollX, targetScrollY;
         
-        // Only clamp if view is smaller than world (otherwise center the world)
-        if (viewWidth < worldWidth) {
-            targetScrollX = Phaser.Math.Clamp(targetScrollX, 0, worldWidth - viewWidth);
-        } else {
-            // View larger than world - center the world
+        // If view is larger than world, center the world directly (no smooth lerp)
+        if (viewWidth >= worldWidth && viewHeight >= worldHeight) {
+            // Both dimensions larger - center the arena
             targetScrollX = -(viewWidth - worldWidth) / 2;
-        }
-        
-        if (viewHeight < worldHeight) {
-            targetScrollY = Phaser.Math.Clamp(targetScrollY, 0, worldHeight - viewHeight);
-        } else {
             targetScrollY = -(viewHeight - worldHeight) / 2;
+            camera.scrollX = targetScrollX;
+            camera.scrollY = targetScrollY;
+        } else if (viewWidth >= worldWidth) {
+            // Only width larger - center X, follow player Y
+            targetScrollX = -(viewWidth - worldWidth) / 2;
+            targetScrollY = this.player.y - viewHeight / 2;
+            targetScrollY = Phaser.Math.Clamp(targetScrollY, 0, worldHeight - viewHeight);
+            camera.scrollX = targetScrollX;
+            camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
+        } else if (viewHeight >= worldHeight) {
+            // Only height larger - follow player X, center Y
+            targetScrollX = this.player.x - viewWidth / 2;
+            targetScrollX = Phaser.Math.Clamp(targetScrollX, 0, worldWidth - viewWidth);
+            targetScrollY = -(viewHeight - worldHeight) / 2;
+            camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
+            camera.scrollY = targetScrollY;
+        } else {
+            // View smaller than world - follow player with clamping
+            targetScrollX = this.player.x - viewWidth / 2;
+            targetScrollY = this.player.y - viewHeight / 2;
+            targetScrollX = Phaser.Math.Clamp(targetScrollX, 0, worldWidth - viewWidth);
+            targetScrollY = Phaser.Math.Clamp(targetScrollY, 0, worldHeight - viewHeight);
+            camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
+            camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
         }
-        
-        // Smooth lerp toward target
-        camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
-        camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
         
         // No counter-scaling - objects get smaller/bigger with zoom as expected
 
