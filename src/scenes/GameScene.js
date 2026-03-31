@@ -70,42 +70,17 @@ export default class GameScene extends Phaser.Scene {
         this.minZoom = 0.3;
         this.maxZoom = 2.0;
         
-        // Mouse wheel zoom - zoom toward center, disable follow during zoom
+        // Mouse wheel - adjust camera distance multiplier instead of zoom
+        // This avoids the complexity of zoom+scroll calculations
+        this.targetZoomOffset = 0;
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-            const zoomSpeed = 0.15;
-            const zoomChange = deltaY > 0 ? -zoomSpeed : zoomSpeed;
-            
-            const oldZoom = this.currentZoom;
-            const newZoom = Phaser.Math.Clamp(
-                this.currentZoom + zoomChange,
-                this.minZoom,
-                this.maxZoom
+            const zoomSpeed = 0.05;
+            const zoomChange = deltaY > 0 ? zoomSpeed : -zoomSpeed;
+            this.targetZoomOffset = Phaser.Math.Clamp(
+                this.targetZoomOffset + zoomChange,
+                -0.3,  // Can zoom out up to 30% more
+                0.5    // Can zoom in up to 50% closer
             );
-            
-            if (newZoom === oldZoom) return;
-            
-            const camera = this.cameras.main;
-            
-            // Calculate what's at the center of screen right now
-            const worldCenterX = camera.scrollX + (camera.width / 2) / camera.zoom;
-            const worldCenterY = camera.scrollY + (camera.height / 2) / camera.zoom;
-            
-            // Apply new zoom
-            this.currentZoom = newZoom;
-            camera.setZoom(newZoom);
-            
-            // Now recalculate scroll so that same world point is still at center
-            // But we want the player to remain the focus, so let's use player position instead
-            // Actually, let's use the midpoint between current center and player
-            const targetX = (worldCenterX + this.player.x) / 2;
-            const targetY = (worldCenterY + this.player.y) / 2;
-            
-            camera.scrollX = targetX - (camera.width / 2) / newZoom;
-            camera.scrollY = targetY - (camera.height / 2) / newZoom;
-            
-            // Don't restart follow - let update() handle camera smoothly
-            // Just set flag to recenter on player
-            this.needsCameraRecenter = true;
         });
 
         // Bullet pool with trails - 500 for bullet hell
@@ -193,23 +168,25 @@ export default class GameScene extends Phaser.Scene {
 
         this.player.update();
         
-        // Manual camera follow - smooth lerp toward player
-        const camera = this.cameras.main;
-        const targetScrollX = this.player.x - (camera.width / 2) / camera.zoom;
-        const targetScrollY = this.player.y - (camera.height / 2) / camera.zoom;
+        // Dynamic zoom based on enemy count + manual zoom offset
+        const enemyCount = this.enemies.countActive();
+        const dangerZoom = Math.max(0.5, 1.0 - enemyCount * 0.02); // Zoom out as enemies increase
+        const targetZoom = dangerZoom + this.targetZoomOffset;
+        const newZoom = Phaser.Math.Clamp(targetZoom, 0.4, 1.5);
         
-        if (this.needsCameraRecenter) {
-            // Snap immediately after zoom
-            camera.scrollX = targetScrollX;
-            camera.scrollY = targetScrollY;
-            this.needsCameraRecenter = false;
-        } else {
-            // Smooth lerp toward player
-            camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
-            camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
-        }
-
-        // Note: Manual zoom only - no auto-zoom to avoid conflicts
+        // Smoothly interpolate zoom
+        const camera = this.cameras.main;
+        const currentZoom = camera.zoom;
+        const smoothedZoom = currentZoom + (newZoom - currentZoom) * 0.05;
+        camera.setZoom(smoothedZoom);
+        
+        // Manual camera follow - smooth lerp toward player
+        const targetScrollX = this.player.x - (camera.width / 2) / smoothedZoom;
+        const targetScrollY = this.player.y - (camera.height / 2) / smoothedZoom;
+        
+        // Smooth lerp toward player
+        camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
+        camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
 
         // Bullet cleanup and trails
         this.bullets.children.entries.forEach(bullet => {
