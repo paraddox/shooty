@@ -67,10 +67,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
         
-        // Aim
+        // Aim - account for camera zoom and scroll
         const pointer = this.scene.input.activePointer;
-        const worldPoint = this.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
-        const angle = Phaser.Math.Angle.Between(this.x, this.y, worldPoint.x, worldPoint.y);
+        const camera = this.scene.cameras.main;
+        
+        // Convert screen coordinates to world coordinates manually
+        // accounting for camera zoom and scroll position
+        const worldX = camera.scrollX + pointer.x / camera.zoom;
+        const worldY = camera.scrollY + pointer.y / camera.zoom;
+        
+        const angle = Phaser.Math.Angle.Between(this.x, this.y, worldX, worldY);
         this.setRotation(angle + Math.PI / 2);
         
         // Shooting
