@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shooty</title>
     <style>
         * {
@@ -10,16 +10,18 @@
             padding: 0;
             box-sizing: border-box;
         }
-        body {
-            background: #0a0a0a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: #0a0a0f;
             overflow: hidden;
         }
         #game-container {
-            box-shadow: 0 0 20px rgba(0, 255, 100, 0.3);
+            width: 100%;
+            height: 100%;
+        }
+        canvas {
+            display: block;
         }
     </style>
 </head>

@@ -209,6 +209,20 @@ export default class GameScene extends Phaser.Scene {
         });
 
         this.score = 0;
+        
+        // Handle window resize
+        this.scale.on('resize', this.resizeHUD, this);
+    }
+    
+    resizeHUD(gameSize) {
+        const margin = 30;
+        
+        // Update wave timer bar position
+        this.waveTimerBg.x = gameSize.width - margin;
+        this.waveTimerBar.x = gameSize.width - margin;
+        
+        // Update camera zoom for new screen size
+        this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
     }
 
     updateHUD() {
