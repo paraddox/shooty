@@ -76,7 +76,7 @@ export default class GameScene extends Phaser.Scene {
         this.minZoom = 0.3;
         this.maxZoom = 2.0;
         
-        // Mouse wheel zoom - simple zoom toward center
+        // Mouse wheel zoom - zoom toward center
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
             // deltaY > 0 = scroll down = zoom out
             // deltaY < 0 = scroll up = zoom in
@@ -93,21 +93,20 @@ export default class GameScene extends Phaser.Scene {
             // Only proceed if zoom actually changed
             if (newZoom === oldZoom) return;
             
-            // Store the center point of the screen in world coordinates
-            const centerX = this.cameras.main.midPoint.x;
-            const centerY = this.cameras.main.midPoint.y;
+            // Calculate the world coordinates of the center of the screen
+            // BEFORE we change the zoom (using current scroll and zoom)
+            const camera = this.cameras.main;
+            const centerWorldX = camera.scrollX + (camera.width / 2) / oldZoom;
+            const centerWorldY = camera.scrollY + (camera.height / 2) / oldZoom;
             
             // Update zoom
             this.currentZoom = newZoom;
-            this.cameras.main.setZoom(newZoom);
+            camera.setZoom(newZoom);
             
-            // Calculate new scroll to keep center point centered
-            // scroll = centerWorldPoint - (screenSize / 2 / zoom)
-            const newScrollX = centerX - (this.cameras.main.width / 2) / newZoom;
-            const newScrollY = centerY - (this.cameras.main.height / 2) / newZoom;
-            
-            this.cameras.main.scrollX = newScrollX;
-            this.cameras.main.scrollY = newScrollY;
+            // Calculate new scroll position so the same world point stays at center
+            // scroll = worldPoint - (screenSize / 2 / newZoom)
+            camera.scrollX = centerWorldX - (camera.width / 2) / newZoom;
+            camera.scrollY = centerWorldY - (camera.height / 2) / newZoom;
         });
 
         // Bullet pool with trails - 500 for bullet hell
