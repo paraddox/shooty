@@ -32,15 +32,26 @@ export default class GameScene extends Phaser.Scene {
             this.player.y - this.cameras.main.height / 2
         );
         
-        // Mouse wheel zoom
+        // Mouse wheel zoom - centers on player
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
             const zoomSpeed = 0.1;
             const zoomChange = deltaY > 0 ? -zoomSpeed : zoomSpeed;
-            this.targetZoom = Phaser.Math.Clamp(
+            
+            const oldZoom = this.targetZoom;
+            const newZoom = Phaser.Math.Clamp(
                 this.targetZoom + zoomChange,
                 0.5,  // Zoom out to see more
                 1.5   // Zoom in for precision
             );
+            
+            if (newZoom !== oldZoom) {
+                this.targetZoom = newZoom;
+                // Immediately recenter on player when zoom changes
+                this.cameras.main.setScroll(
+                    this.player.x - (this.cameras.main.width / 2) / newZoom,
+                    this.player.y - (this.cameras.main.height / 2) / newZoom
+                );
+            }
         });
 
         // Bullet pool with trails - 500 for bullet hell
@@ -121,30 +132,16 @@ export default class GameScene extends Phaser.Scene {
         const newZoom = currentZoom + (this.targetZoom - currentZoom) * 0.1;
         camera.setZoom(newZoom);
         
-        // Camera follow - center player (adjust for zoom)
-        const targetScrollX = this.player.x - (camera.width / 2) / newZoom;
-        const targetScrollY = this.player.y - (camera.height / 2) / newZoom;
+        // Camera follow - only if we're not actively zooming (to avoid fighting the scroll)
+        if (Math.abs(newZoom - this.targetZoom) < 0.01) {
+            // Zoom settled - smooth follow
+            const targetScrollX = this.player.x - (camera.width / 2) / newZoom;
+            const targetScrollY = this.player.y - (camera.height / 2) / newZoom;
+            camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
+            camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
+        }
         
-        camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
-        camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
-        
-        // Counter-scale all sprites to maintain consistent visual size regardless of zoom
-        const scaleMultiplier = 1.0 / newZoom;
-        
-        // Apply counter-scale to all objects (baseScale set on creation)
-        this.player.setScale(this.player.baseScale * scaleMultiplier);
-        
-        this.enemies.children.entries.forEach(enemy => {
-            if (enemy.active) {
-                enemy.setScale(enemy.baseScale * scaleMultiplier);
-            }
-        });
-        
-        this.bullets.children.entries.forEach(bullet => {
-            if (bullet.active) {
-                bullet.setScale(bullet.baseScale * scaleMultiplier);
-            }
-        });
+        // No counter-scaling - objects get smaller/bigger with zoom as expected
 
         // Bullet cleanup and trails
         this.bullets.children.entries.forEach(bullet => {
