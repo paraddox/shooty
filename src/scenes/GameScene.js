@@ -164,8 +164,21 @@ export default class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.enemies, this.playerHit, null, this);
         this.physics.add.collider(this.enemies, this.enemies, this.enemyBounce, null, this);
 
-        // Minimalist HUD
+        // Create a separate UI camera that doesn't zoom
+        this.uiCamera = this.cameras.add(0, 0, this.cameras.main.width, this.cameras.main.height);
+        this.uiCamera.setScroll(0, 0);
+        this.uiCamera.setZoom(1);
+        this.uiCamera.ignore([this.player, this.enemies, this.bullets, this.bulletTrails, this.hitParticles, this.deathParticles]);
+        
+        // Minimalist HUD - add to UI camera
         this.createHUD();
+        
+        // Tell main camera to ignore HUD elements
+        this.cameras.main.ignore([
+            this.healthBarBg, this.healthBar, 
+            this.scoreText, this.waveText, this.enemyText, 
+            this.waveTimerBg, this.waveTimerBar
+        ]);
 
         // Wave system
         this.wave = 1;
@@ -325,34 +338,25 @@ export default class GameScene extends Phaser.Scene {
         
         if (screenLarger) {
             // Screen larger than world - center it
+            this.currentZoom = 1.0;
             this.cameras.main.setZoom(1.0);
             const offsetX = (gameSize.width - worldWidth) / 2;
             const offsetY = (gameSize.height - worldHeight) / 2;
             this.cameras.main.setBounds(-offsetX, -offsetY, gameSize.width, gameSize.height);
             this.cameras.main.setScroll(-offsetX, -offsetY);
-            this.cameras.main.setDeadzone(100, 100);
         } else {
             // Screen smaller - zoom to fit
             const zoomX = gameSize.width / worldWidth;
             const zoomY = gameSize.height / worldHeight;
             const newZoom = Math.min(zoomX, zoomY);
+            this.currentZoom = newZoom;
             this.cameras.main.setZoom(newZoom);
             this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
-            this.cameras.main.setDeadzone(0, 0);
-            
-            // Re-center on player after resize using scroll calculation
-            if (this.player.active) {
-                const visibleWidth = gameSize.width / newZoom;
-                const visibleHeight = gameSize.height / newZoom;
-                this.cameras.main.setScroll(
-                    this.player.x - visibleWidth / 2,
-                    this.player.y - visibleHeight / 2
-                );
-            }
         }
         
-        // Update camera viewport
+        // Update camera viewports
         this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
+        this.uiCamera.setViewport(0, 0, gameSize.width, gameSize.height);
     }
 
     updateHUD() {
