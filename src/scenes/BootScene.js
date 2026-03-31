@@ -14,7 +14,6 @@ export default class BootScene extends Phaser.Scene {
         this.createTankEnemyTexture();
         this.createFloorTexture();
         this.createParticleTexture();
-        this.createGlowTexture();
     }
 
     create() {
@@ -150,22 +149,6 @@ export default class BootScene extends Phaser.Scene {
         graphics.fillStyle(0xffffff);
         graphics.fillCircle(4, 4, 4);
         graphics.generateTexture('particle', 8, 8);
-        graphics.destroy();
-    }
-
-    createGlowTexture() {
-        const graphics = this.make.graphics({ x: 0, y: 0 });
-        
-        // Soft glow for effects
-        const gradient = graphics.createRadialGradient(32, 32, 0, 32, 32, 32);
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-        gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
-        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        
-        graphics.fillStyle(gradient);
-        graphics.fillCircle(32, 32, 32);
-        
-        graphics.generateTexture('glow', 64, 64);
         graphics.destroy();
     }
 }
