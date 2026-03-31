@@ -42,9 +42,7 @@ export default class GameScene extends Phaser.Scene {
             // Position camera so world is centered
             this.cameras.main.setScroll(-offsetX, -offsetY);
             
-            // Still follow player but with deadzone (camera won't move until player nears edge)
-            this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
-            this.cameras.main.setDeadzone(100, 100);
+            // Manual camera follow - no startFollow needed
         } else {
             // Screen is smaller than world - zoom out to fit
             const zoomX = screenWidth / worldWidth;
@@ -66,8 +64,7 @@ export default class GameScene extends Phaser.Scene {
             const scrollY = this.player.y - visibleHeight / 2;
             this.cameras.main.setScroll(scrollX, scrollY);
             
-            // Now start following
-            this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+            // Manual camera follow - no startFollow
         }
         
         // Store base zoom for mouse wheel zooming
