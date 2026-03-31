@@ -309,15 +309,34 @@ export default class GameScene extends Phaser.Scene {
 
     spawnEnemies(count) {
         const types = ['enemy', 'enemyFast', 'enemyTank'];
+        const worldWidth = 1920;
+        const worldHeight = 1440;
+        const spawnMargin = 60; // Distance outside the arena to spawn
         
         for (let i = 0; i < count; i++) {
             let x, y;
-            let attempts = 0;
-            do {
-                x = Phaser.Math.Between(100, 1820);
-                y = Phaser.Math.Between(100, 1340);
-                attempts++;
-            } while (Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y) < 350 && attempts < 50);
+            
+            // Pick a random edge: 0=top, 1=right, 2=bottom, 3=left
+            const edge = Phaser.Math.Between(0, 3);
+            
+            switch (edge) {
+                case 0: // Top edge
+                    x = Phaser.Math.Between(0, worldWidth);
+                    y = -spawnMargin;
+                    break;
+                case 1: // Right edge
+                    x = worldWidth + spawnMargin;
+                    y = Phaser.Math.Between(0, worldHeight);
+                    break;
+                case 2: // Bottom edge
+                    x = Phaser.Math.Between(0, worldWidth);
+                    y = worldHeight + spawnMargin;
+                    break;
+                case 3: // Left edge
+                    x = -spawnMargin;
+                    y = Phaser.Math.Between(0, worldHeight);
+                    break;
+            }
 
             // Choose enemy type based on wave
             let type = types[0];
