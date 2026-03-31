@@ -32,20 +32,16 @@ export default class GameScene extends Phaser.Scene {
             this.player.y - this.cameras.main.height / 2
         );
         
-        // Mouse wheel zoom - centers on player
+        // Mouse wheel zoom - direct control
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-            const zoomSpeed = 0.1;
-            const zoomChange = deltaY > 0 ? -zoomSpeed : zoomSpeed;
+            // deltaY > 0 = scroll down (zoom out)
+            // deltaY < 0 = scroll up (zoom in)
+            const zoomStep = 0.15;
             
-            const oldZoom = this.targetZoom;
-            const newZoom = Phaser.Math.Clamp(
-                this.targetZoom + zoomChange,
-                0.5,  // Zoom out to see more
-                1.5   // Zoom in for precision
-            );
-            
-            if (newZoom !== oldZoom) {
-                this.targetZoom = newZoom;
+            if (deltaY > 0) {
+                this.targetZoom = Math.max(0.5, this.targetZoom - zoomStep);
+            } else if (deltaY < 0) {
+                this.targetZoom = Math.min(1.5, this.targetZoom + zoomStep);
             }
         });
 
@@ -131,10 +127,10 @@ export default class GameScene extends Phaser.Scene {
 
         this.player.update();
         
-        // Smooth zoom interpolation
+        // Zoom interpolation - faster response
         const camera = this.cameras.main;
         const currentZoom = camera.zoom;
-        const newZoom = currentZoom + (this.targetZoom - currentZoom) * 0.1;
+        const newZoom = currentZoom + (this.targetZoom - currentZoom) * 0.25;
         camera.setZoom(newZoom);
         
         // Camera follow with bounds handling
