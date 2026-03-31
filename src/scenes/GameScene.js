@@ -135,7 +135,11 @@ export default class GameScene extends Phaser.Scene {
         const camera = this.cameras.main;
         const currentZoom = camera.zoom;
         const newZoom = currentZoom + (this.targetZoom - currentZoom) * 0.25;
-        camera.setZoom(newZoom);
+        
+        if (Math.abs(newZoom - currentZoom) > 0.001) {
+            console.log('Applying zoom:', newZoom, 'target:', this.targetZoom);
+            camera.setZoom(newZoom);
+        }
         
         // Camera follow with bounds handling
         const worldWidth = 1920;
