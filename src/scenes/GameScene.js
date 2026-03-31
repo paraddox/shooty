@@ -24,10 +24,10 @@ export default class GameScene extends Phaser.Scene {
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
         this.cameras.main.setZoom(0.9);
 
-        // Bullet pool with trails
+        // Bullet pool with trails - 500 for bullet hell
         this.bullets = this.physics.add.group({
             classType: Phaser.Physics.Arcade.Image,
-            maxSize: 200,
+            maxSize: 500,
             runChildUpdate: true
         });
 
@@ -105,13 +105,19 @@ export default class GameScene extends Phaser.Scene {
 
         // Bullet cleanup and trails
         this.bullets.children.entries.forEach(bullet => {
-            if (bullet.active) {
-                // Spawn trail
-                if (this.time.now % 3 === 0) {
-                    this.bulletTrails.emitParticleAt(bullet.x, bullet.y);
-                }
-            } else {
-                bullet.destroy();
+            if (!bullet.active) return;
+            
+            // Spawn trail
+            if (this.time.now % 3 === 0) {
+                this.bulletTrails.emitParticleAt(bullet.x, bullet.y);
+            }
+            
+            // Kill bullets that go too far off screen (for recycling)
+            if (bullet.x < -100 || bullet.x > 2020 || bullet.y < -100 || bullet.y > 1540) {
+                bullet.setActive(false);
+                bullet.setVisible(false);
+                bullet.body.reset(0, 0);
+                bullet.body.enable = false;
             }
         });
 
@@ -252,8 +258,11 @@ export default class GameScene extends Phaser.Scene {
     }
 
     hitEnemy(bullet, enemy) {
+        // Recycle bullet back to pool
         bullet.setActive(false);
         bullet.setVisible(false);
+        bullet.body.reset(0, 0);
+        bullet.body.enable = false;
         
         // Hit particles
         this.hitParticles.setParticleTint(enemy.tintTopLeft || 0xff3366);

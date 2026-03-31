@@ -83,9 +83,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         const bullet = this.scene.getBulletsGroup().get(this.x, this.y, 'bullet');
         
         if (bullet) {
+            // Reactivate recycled bullet
             bullet.setActive(true);
             bullet.setVisible(true);
             bullet.setDepth(1);
+            bullet.body.enable = true;
+            bullet.body.reset(this.x, this.y);
             
             // Slight random spread
             const spread = (Math.random() - 0.5) * this.bulletSpread;
