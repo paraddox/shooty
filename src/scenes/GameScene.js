@@ -25,39 +25,37 @@ export default class GameScene extends Phaser.Scene {
         const screenWidth = this.cameras.main.width;
         const screenHeight = this.cameras.main.height;
         
-        // If screen is larger than world, zoom = 1 (no zoom) and center the world
-        // If screen is smaller than world, zoom out to fit
-        const zoomX = screenWidth / worldWidth;
-        const zoomY = screenHeight / worldHeight;
-        const baseZoom = Math.min(zoomX, zoomY, 1.0); // Cap at 1.0 (no zoom in)
-        this.cameras.main.setZoom(baseZoom);
+        // Determine if screen is larger than world
+        const screenLarger = screenWidth > worldWidth && screenHeight > worldHeight;
         
-        // Calculate camera bounds to center the world
-        // If zoomed out (screen smaller), bounds match world
-        // If no zoom (screen larger), allow negative offsets to center
-        const visibleWorldWidth = worldWidth * baseZoom;
-        const visibleWorldHeight = worldHeight * baseZoom;
-        const offsetX = (screenWidth - visibleWorldWidth) / 2;
-        const offsetY = (screenHeight - visibleWorldHeight) / 2;
-        
-        // Camera bounds need to account for the offset when centering
-        const boundsX = Math.min(0, offsetX);
-        const boundsY = Math.min(0, offsetY);
-        const boundsWidth = Math.max(worldWidth, screenWidth / baseZoom);
-        const boundsHeight = Math.max(worldHeight, screenHeight / baseZoom);
-        
-        this.cameras.main.setBounds(boundsX, boundsY, boundsWidth, boundsHeight);
-        
-        // If screen is larger, center the camera on the world initially
-        if (offsetX > 0 || offsetY > 0) {
-            // Calculate scroll position to center the world
-            this.cameras.main.setScroll(
-                (worldWidth - screenWidth / baseZoom) / 2,
-                (worldHeight - screenHeight / baseZoom) / 2
-            );
+        if (screenLarger) {
+            // Screen is bigger than world - no zoom, center the world
+            this.cameras.main.setZoom(1.0);
+            
+            // Calculate the offset to center the world in the screen
+            const offsetX = (screenWidth - worldWidth) / 2;
+            const offsetY = (screenHeight - worldHeight) / 2;
+            
+            // Set camera bounds to allow the offset
+            this.cameras.main.setBounds(-offsetX, -offsetY, screenWidth, screenHeight);
+            
+            // Position camera so world is centered
+            this.cameras.main.setScroll(-offsetX, -offsetY);
+            
+            // Still follow player but with deadzone (camera won't move until player nears edge)
+            this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+            this.cameras.main.setDeadzone(100, 100);
+        } else {
+            // Screen is smaller than world - zoom out to fit
+            const zoomX = screenWidth / worldWidth;
+            const zoomY = screenHeight / worldHeight;
+            const baseZoom = Math.min(zoomX, zoomY);
+            this.cameras.main.setZoom(baseZoom);
+            
+            // Camera bounds match world
+            this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
+            this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
         }
-        
-        this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
         // Bullet pool with trails - 500 for bullet hell
         this.bullets = this.physics.add.group({
@@ -261,22 +259,24 @@ export default class GameScene extends Phaser.Scene {
         this.waveTimerBar.x = gameSize.width - margin;
         
         // Recalculate zoom and centering for new screen size
-        const zoomX = gameSize.width / worldWidth;
-        const zoomY = gameSize.height / worldHeight;
-        const newZoom = Math.min(zoomX, zoomY, 1.0);
-        this.cameras.main.setZoom(newZoom);
+        const screenLarger = gameSize.width > worldWidth && gameSize.height > worldHeight;
         
-        // Recenter if needed
-        const visibleWorldWidth = worldWidth * newZoom;
-        const visibleWorldHeight = worldHeight * newZoom;
-        const offsetX = (gameSize.width - visibleWorldWidth) / 2;
-        const offsetY = (gameSize.height - visibleWorldHeight) / 2;
-        
-        if (offsetX > 0 || offsetY > 0) {
-            this.cameras.main.setScroll(
-                (worldWidth - gameSize.width / newZoom) / 2,
-                (worldHeight - gameSize.height / newZoom) / 2
-            );
+        if (screenLarger) {
+            // Screen larger than world - center it
+            this.cameras.main.setZoom(1.0);
+            const offsetX = (gameSize.width - worldWidth) / 2;
+            const offsetY = (gameSize.height - worldHeight) / 2;
+            this.cameras.main.setBounds(-offsetX, -offsetY, gameSize.width, gameSize.height);
+            this.cameras.main.setScroll(-offsetX, -offsetY);
+            this.cameras.main.setDeadzone(100, 100);
+        } else {
+            // Screen smaller - zoom to fit
+            const zoomX = gameSize.width / worldWidth;
+            const zoomY = gameSize.height / worldHeight;
+            const newZoom = Math.min(zoomX, zoomY);
+            this.cameras.main.setZoom(newZoom);
+            this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
+            this.cameras.main.setDeadzone(0, 0);
         }
         
         // Update camera viewport
