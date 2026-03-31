@@ -334,7 +334,7 @@ export default class GameScene extends Phaser.Scene {
 
         // Enemy count
         const enemyCount = this.enemies.countActive();
-        this.enemyText.setText(`${enemyCount} ENEMY${enemyCount !== 1 ? 'S' : ''}`);
+        this.enemyText.setText(`${enemyCount} ENEMY${enemyCount !== 1 ? 'IES' : ''}`);
 
         // Wave timer
         const waveProgress = 1 - (this.nextWaveTime - this.time.now) / 30000;
