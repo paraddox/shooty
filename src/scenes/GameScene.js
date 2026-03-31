@@ -32,15 +32,49 @@ export default class GameScene extends Phaser.Scene {
             this.player.y - this.cameras.main.height / 2
         );
         
-        // Mouse wheel zoom
+        // Mouse wheel zoom - immediate centering on player
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
             const zoomStep = 0.2;
+            const camera = this.cameras.main;
+            const worldWidth = 1920;
+            const worldHeight = 1440;
             
+            // Calculate new zoom
+            let newZoom;
             if (deltaY > 0) {
-                this.targetZoom = Math.max(0.5, this.targetZoom - zoomStep);
+                newZoom = Math.max(0.5, this.targetZoom - zoomStep);
             } else if (deltaY < 0) {
-                this.targetZoom = Math.min(1.5, this.targetZoom + zoomStep);
+                newZoom = Math.min(1.5, this.targetZoom + zoomStep);
+            } else {
+                return; // No change
             }
+            
+            this.targetZoom = newZoom;
+            
+            // Calculate view size at new zoom
+            const viewWidth = camera.width / newZoom;
+            const viewHeight = camera.height / newZoom;
+            
+            // Calculate scroll to center on player (or center arena if view is larger)
+            let scrollX, scrollY;
+            
+            if (viewWidth < worldWidth) {
+                scrollX = this.player.x - viewWidth / 2;
+                scrollX = Phaser.Math.Clamp(scrollX, 0, worldWidth - viewWidth);
+            } else {
+                scrollX = -(viewWidth - worldWidth) / 2;
+            }
+            
+            if (viewHeight < worldHeight) {
+                scrollY = this.player.y - viewHeight / 2;
+                scrollY = Phaser.Math.Clamp(scrollY, 0, worldHeight - viewHeight);
+            } else {
+                scrollY = -(viewHeight - worldHeight) / 2;
+            }
+            
+            // Apply immediately - no interpolation
+            camera.setZoom(newZoom);
+            camera.setScroll(scrollX, scrollY);
         });
 
         // Bullet pool with trails - 500 for bullet hell
@@ -121,52 +155,29 @@ export default class GameScene extends Phaser.Scene {
 
         this.player.update();
         
-        // Zoom interpolation
+        // Camera follow player (zoom handled immediately in wheel event)
         const camera = this.cameras.main;
-        const currentZoom = camera.zoom;
-        const newZoom = currentZoom + (this.targetZoom - currentZoom) * 0.25;
-        camera.setZoom(newZoom);
-        
-        // Camera follow with bounds handling
         const worldWidth = 1920;
         const worldHeight = 1440;
-        const viewWidth = camera.width / newZoom;
-        const viewHeight = camera.height / newZoom;
+        const viewWidth = camera.width / camera.zoom;
+        const viewHeight = camera.height / camera.zoom;
         
-        let targetScrollX, targetScrollY;
+        // Only follow player if view is smaller than world in that dimension
+        let targetScrollX = camera.scrollX;
+        let targetScrollY = camera.scrollY;
         
-        // If view is larger than world, center the world directly (no smooth lerp)
-        if (viewWidth >= worldWidth && viewHeight >= worldHeight) {
-            // Both dimensions larger - center the arena
-            targetScrollX = -(viewWidth - worldWidth) / 2;
-            targetScrollY = -(viewHeight - worldHeight) / 2;
-            camera.scrollX = targetScrollX;
-            camera.scrollY = targetScrollY;
-        } else if (viewWidth >= worldWidth) {
-            // Only width larger - center X, follow player Y
-            targetScrollX = -(viewWidth - worldWidth) / 2;
-            targetScrollY = this.player.y - viewHeight / 2;
-            targetScrollY = Phaser.Math.Clamp(targetScrollY, 0, worldHeight - viewHeight);
-            camera.scrollX = targetScrollX;
-            camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
-        } else if (viewHeight >= worldHeight) {
-            // Only height larger - follow player X, center Y
+        if (viewWidth < worldWidth) {
             targetScrollX = this.player.x - viewWidth / 2;
             targetScrollX = Phaser.Math.Clamp(targetScrollX, 0, worldWidth - viewWidth);
-            targetScrollY = -(viewHeight - worldHeight) / 2;
-            camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
-            camera.scrollY = targetScrollY;
-        } else {
-            // View smaller than world - follow player with clamping
-            targetScrollX = this.player.x - viewWidth / 2;
-            targetScrollY = this.player.y - viewHeight / 2;
-            targetScrollX = Phaser.Math.Clamp(targetScrollX, 0, worldWidth - viewWidth);
-            targetScrollY = Phaser.Math.Clamp(targetScrollY, 0, worldHeight - viewHeight);
-            camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
-            camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
         }
         
-        // No counter-scaling - objects get smaller/bigger with zoom as expected
+        if (viewHeight < worldHeight) {
+            targetScrollY = this.player.y - viewHeight / 2;
+            targetScrollY = Phaser.Math.Clamp(targetScrollY, 0, worldHeight - viewHeight);
+        }
+        
+        camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
+        camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
 
         // Bullet cleanup and trails
         this.bullets.children.entries.forEach(bullet => {
