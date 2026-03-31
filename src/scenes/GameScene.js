@@ -21,51 +21,15 @@ export default class GameScene extends Phaser.Scene {
         // Player
         this.player = new Player(this, worldWidth / 2, worldHeight / 2);
 
-        // Camera setup
-        const screenWidth = this.cameras.main.width;
-        const screenHeight = this.cameras.main.height;
-        
-        // Determine if screen is larger than world
-        const screenLarger = screenWidth > worldWidth && screenHeight > worldHeight;
-        
-        if (screenLarger) {
-            // Screen is bigger than world - no zoom, center the world
-            this.cameras.main.setZoom(1.0);
-            
-            // Calculate the offset to center the world in the screen
-            const offsetX = (screenWidth - worldWidth) / 2;
-            const offsetY = (screenHeight - worldHeight) / 2;
-            
-            // Set camera bounds to allow the offset
-            this.cameras.main.setBounds(-offsetX, -offsetY, screenWidth, screenHeight);
-            
-            // Position camera so world is centered
-            this.cameras.main.setScroll(-offsetX, -offsetY);
-            
-            // Manual camera follow - no startFollow needed
-        } else {
-            // Screen is smaller than world - zoom out to fit
-            const zoomX = screenWidth / worldWidth;
-            const zoomY = screenHeight / worldHeight;
-            const baseZoom = Math.min(zoomX, zoomY);
-            this.cameras.main.setZoom(baseZoom);
-            
-            // Camera bounds match world
-            this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
-            
-            // Calculate scroll to center the player in the viewport
-            // scroll = playerPosition - (visibleArea / 2)
-            const visibleWidth = screenWidth / baseZoom;
-            const visibleHeight = screenHeight / baseZoom;
-            const scrollX = this.player.x - visibleWidth / 2;
-            const scrollY = this.player.y - visibleHeight / 2;
-            this.cameras.main.setScroll(scrollX, scrollY);
-            
-            // Manual camera follow - no startFollow
-        }
-        
-        // Camera locked at zoom=1 - no zoom to keep enemy sizes consistent
+        // Camera setup - locked at zoom=1, simple follow
         this.cameras.main.setZoom(1.0);
+        this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
+        
+        // Center camera on player initially
+        this.cameras.main.setScroll(
+            this.player.x - this.cameras.main.width / 2,
+            this.player.y - this.cameras.main.height / 2
+        );
 
         // Bullet pool with trails - 500 for bullet hell
         this.bullets = this.physics.add.group({
