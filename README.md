@@ -1,52 +1,55 @@
-# Shooty 🎮
+# SHOOTY ▲
 
-A top-down roguelike shooter built with Phaser 3.
+A minimalist top-down roguelike shooter. Clean geometry, neon accents, bullet hell chaos.
 
-## Quick Start
+![Aesthetic: Dark void, geometric shapes, neon glows]
+
+## Play
 
 ```bash
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
-
-# Build for production
-npm run build
 ```
 
 ## Controls
 
-- **WASD** or **Arrow Keys** - Move
-- **Mouse** - Aim
-- **Click/Hold** - Shoot
+| Input | Action |
+|-------|--------|
+| WASD | Move |
+| Mouse | Aim |
+| Click | Shoot |
 
-## Features
+## Visual Design
 
-- ✅ Procedurally generated placeholder sprites (no external assets needed)
-- ✅ Wave-based enemy spawning with increasing difficulty
-- ✅ Bullet pool for performance
-- ✅ Knockback on damage
-- ✅ Health bars
-- ✅ Camera follow with smooth lerp
+- **Background**: Deep void (#0a0a0f) with subtle procedural grid
+- **Player**: Cyan triangle — precise, directional
+- **Enemies**: Geometric hierarchy
+  - 🔶 **Fast**: Orange triangle, speedy but fragile
+  - 🔷 **Normal**: Red diamond, balanced threat  
+  - ⬡ **Tank**: Purple hexagon, slow but durable
+- **Bullets**: Bright yellow bars with particle trails
+- **UI**: Monospace, minimal — score as raw numbers, single health bar
 
-## Project Structure
+## Why This Scales to Bullet Hell
 
-```
-src/
-  scenes/        # Game states (Boot, Menu, Game, GameOver)
-  entities/      # Player, Enemy classes
-  systems/       # (reserved for future: upgrades, loot, etc.)
-assets/          # (reserved for future: real sprites, sounds)
-```
+1. **Shape language**: Triangles = allies, diamonds/hexagons = threats — instant recognition
+2. **High contrast**: Yellow bullets on dark void = readable at 100+ projectiles
+3. **Particle feedback**: No UI clutter, damage communicated through hit flashes and death bursts
+4. **Dynamic zoom**: Camera pulls back as enemy count increases
+5. **Bullet trails**: Every projectile leaves a brief trail — essential for tracking dense patterns
 
-## Roadmap Ideas
+## Systems
 
-- [ ] Real pixel art sprites
-- [ ] Weapon upgrades & variety
-- [ ] Enemy types (fast, tank, ranged)
-- [ ] Room-based dungeon generation (true roguelike)
-- [ ] Loot drops & power-ups
-- [ ] Boss fights
-- [ ] High score persistence
-- [ ] Sound effects & music
+- **Wave-based spawning**: 30s waves, increasing difficulty
+- **Enemy variety**: 3 types with distinct speeds/HP/damage
+- **Screen shake**: Impact feedback on damage
+- **200-bullet pool**: Ready for bullet density
+
+## Roadmap
+
+- [ ] Weapon upgrades (spread, pierce, rapid)
+- [ ] Boss encounters (large geometric constructs)
+- [ ] Pattern-based enemy attacks (bullet hell formations)
+- [ ] Power-ups (speed, shield, bomb)
+- [ ] Persistent high scores
+- [ ] Synthwave audio
