@@ -53,9 +53,6 @@ export default class GameScene extends Phaser.Scene {
             // Camera bounds match world
             this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
             
-            // Stop any existing follow before positioning
-            this.cameras.main.stopFollow();
-            
             // Calculate scroll to center the player in the viewport
             // scroll = playerPosition - (visibleArea / 2)
             const visibleWidth = screenWidth / baseZoom;
