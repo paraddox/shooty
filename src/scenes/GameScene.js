@@ -16,12 +16,8 @@ export default class GameScene extends Phaser.Scene {
         this.createFloor();
         this.createAmbientGrid();
 
-        // Lighting setup for glow effects
-        this.lights.enable().setAmbientColor(0x111116);
-
         // Player
         this.player = new Player(this, 960, 720);
-        this.lights.addLight(960, 720, 150, 0x00f0ff, 0.5);
 
         // Camera
         this.cameras.main.setBounds(0, 0, 1920, 1440);

@@ -26,10 +26,6 @@ export default class MenuScene extends Phaser.Scene {
             fill: '#ffffff'
         }).setOrigin(0.5);
 
-        // Title glow effect
-        title.setPipeline('light2d');
-        this.add.pointLight(cx, cy - 100, 0x00f0ff, 100, 0.3);
-
         // Subtitle
         this.add.text(cx, cy - 30, 'minimalist roguelike shooter', {
             fontFamily: 'monospace',
@@ -85,8 +81,8 @@ export default class MenuScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-SPACE', () => this.startGame());
         this.input.keyboard.on('keydown-ENTER', () => this.startGame());
 
-        // Ambient particles
-        this.createAmbientParticles();
+        // Ambient grid
+        this.createGridEffect();
     }
 
     createGridEffect() {
@@ -107,20 +103,6 @@ export default class MenuScene extends Phaser.Scene {
             grid.lineTo(w, y);
         }
         grid.strokePath();
-    }
-
-    createAmbientParticles() {
-        const particles = this.add.particles(0, 0, 'particle', {
-            x: { min: 0, max: this.cameras.main.width },
-            y: { min: 0, max: this.cameras.main.height },
-            scale: { min: 0.2, max: 0.5 },
-            alpha: { start: 0.3, end: 0 },
-            speed: 10,
-            lifespan: 4000,
-            frequency: 500,
-            quantity: 1,
-            tint: [0x00f0ff, 0xff3366, 0xffff00]
-        });
     }
 
     startGame() {
