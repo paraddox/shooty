@@ -8,8 +8,10 @@ export default class GameScene extends Phaser.Scene {
     }
 
     create() {
-        // World bounds
-        this.physics.world.setBounds(0, 0, 1920, 1440);
+        // World bounds (game arena)
+        const worldWidth = 1920;
+        const worldHeight = 1440;
+        this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
         this.cameras.main.setBackgroundColor('#0a0a0f');
 
         // Create environment
@@ -17,12 +19,26 @@ export default class GameScene extends Phaser.Scene {
         this.createAmbientGrid();
 
         // Player
-        this.player = new Player(this, 960, 720);
+        this.player = new Player(this, worldWidth / 2, worldHeight / 2);
 
-        // Camera
-        this.cameras.main.setBounds(0, 0, 1920, 1440);
+        // Camera setup - if world is smaller than screen, center it
+        const screenWidth = this.cameras.main.width;
+        const screenHeight = this.cameras.main.height;
+        
+        // Calculate camera bounds to center the world if screen is larger
+        const boundsX = Math.min(0, (screenWidth - worldWidth) / 2);
+        const boundsY = Math.min(0, (screenHeight - worldHeight) / 2);
+        const boundsWidth = Math.max(worldWidth, screenWidth);
+        const boundsHeight = Math.max(worldHeight, screenHeight);
+        
+        this.cameras.main.setBounds(boundsX, boundsY, boundsWidth, boundsHeight);
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
-        this.cameras.main.setZoom(0.9);
+        
+        // Calculate zoom to fit world on screen if screen is smaller, or 1.0 if screen is larger
+        const zoomX = screenWidth / worldWidth;
+        const zoomY = screenHeight / worldHeight;
+        const baseZoom = Math.min(zoomX, zoomY, 0.9); // Cap at 0.9 for gameplay comfort
+        this.cameras.main.setZoom(baseZoom);
 
         // Bullet pool with trails - 500 for bullet hell
         this.bullets = this.physics.add.group({
@@ -137,6 +153,7 @@ export default class GameScene extends Phaser.Scene {
 
     createFloor() {
         const tileSize = 128;
+        // Cover the world bounds area only - the arena
         for (let x = 0; x < 1920; x += tileSize) {
             for (let y = 0; y < 1440; y += tileSize) {
                 const tile = this.add.image(x + tileSize/2, y + tileSize/2, 'floor');
@@ -150,6 +167,7 @@ export default class GameScene extends Phaser.Scene {
         const grid = this.add.graphics();
         grid.lineStyle(1, 0x1a1a25, 0.2);
         
+        // Draw grid only within the world bounds (the playable arena)
         const spacing = 128;
         for (let x = 0; x <= 1920; x += spacing) {
             grid.moveTo(x, 0);
