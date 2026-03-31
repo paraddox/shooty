@@ -105,6 +105,9 @@ export default class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.enemies, this.playerHit, null, this);
         this.physics.add.collider(this.enemies, this.enemies, this.enemyBounce, null, this);
 
+        // Minimalist HUD - create FIRST
+        this.createHUD();
+        
         // Create UI camera (fixed, no zoom) - renders UI only
         this.uiCamera = this.cameras.add(0, 0, this.cameras.main.width, this.cameras.main.height);
         this.uiCamera.setScroll(0, 0);
@@ -114,9 +117,6 @@ export default class GameScene extends Phaser.Scene {
         // Main camera renders everything except UI
         this.cameras.main.ignore([this.healthBarBg, this.healthBar, this.scoreText, 
                                   this.waveText, this.enemyText, this.waveTimerBg, this.waveTimerBar]);
-
-        // Minimalist HUD
-        this.createHUD();
 
         // Wave system
         this.wave = 1;
