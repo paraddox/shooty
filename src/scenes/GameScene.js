@@ -110,8 +110,20 @@ export default class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.enemies, this.playerHit, null, this);
         this.physics.add.collider(this.enemies, this.enemies, this.enemyBounce, null, this);
 
+        // Create UI camera (fixed, no zoom)
+        this.uiCamera = this.cameras.add(0, 0, this.cameras.main.width, this.cameras.main.height);
+        this.uiCamera.setScroll(0, 0);
+        this.uiCamera.setZoom(1.0);
+        // UI camera ignores all game objects - only renders UI
+        this.uiCamera.ignore([this.player, this.enemies, this.bullets, 
+                               this.bulletTrails, this.hitParticles, this.deathParticles]);
+
         // Minimalist HUD
         this.createHUD();
+
+        // Main camera ignores HUD elements
+        this.cameras.main.ignore([this.healthBarBg, this.healthBar, this.scoreText, 
+                                  this.waveText, this.enemyText, this.waveTimerBg, this.waveTimerBar]);
 
         // Wave system
         this.wave = 1;
@@ -237,16 +249,16 @@ export default class GameScene extends Phaser.Scene {
             fill: '#ff3366'
         });
 
-        // Wave timer bar
-        this.waveTimerBg = this.add.rectangle(this.cameras.main.width - margin, margin, 100, 3, 0x22222a);
-        this.waveTimerBar = this.add.rectangle(this.cameras.main.width - margin, margin, 100, 3, 0xffff00);
+        // Wave timer bar - top right
+        const screenWidth = this.scale.width;
+        this.waveTimerBg = this.add.rectangle(screenWidth - margin, margin, 100, 3, 0x22222a);
+        this.waveTimerBar = this.add.rectangle(screenWidth - margin, margin, 100, 3, 0xffff00);
         this.waveTimerBg.setOrigin(1, 0.5);
         this.waveTimerBar.setOrigin(1, 0.5);
 
-        // Fixed to camera
+        // Set high depth so UI renders on top
         [this.healthBarBg, this.healthBar, this.scoreText, this.waveText, 
          this.enemyText, this.waveTimerBg, this.waveTimerBar].forEach(el => {
-            el.setScrollFactor(0);
             el.setDepth(100);
         });
 
@@ -261,16 +273,19 @@ export default class GameScene extends Phaser.Scene {
         const worldWidth = 1920;
         const worldHeight = 1440;
         
-        // Update wave timer bar position
-        this.waveTimerBg.x = gameSize.width - margin;
-        this.waveTimerBar.x = gameSize.width - margin;
+        // Update wave timer bar position (top right of screen)
+        this.waveTimerBg.x = this.scale.width - margin;
+        this.waveTimerBar.x = this.scale.width - margin;
         
         // Camera always at zoom=1 - just update bounds and viewport
         this.cameras.main.setZoom(1.0);
         this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
         
-        // Update camera viewport
+        // Update camera viewports
         this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
+        if (this.uiCamera) {
+            this.uiCamera.setViewport(0, 0, gameSize.width, gameSize.height);
+        }
     }
 
     updateHUD() {
