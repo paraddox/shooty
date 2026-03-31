@@ -76,7 +76,7 @@ export default class GameScene extends Phaser.Scene {
         this.minZoom = 0.3;
         this.maxZoom = 2.0;
         
-        // Mouse wheel zoom - zoom toward center of screen
+        // Mouse wheel zoom - zoom toward mouse pointer or center
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
             // deltaY > 0 = scroll down = zoom out
             // deltaY < 0 = scroll up = zoom in
@@ -90,18 +90,32 @@ export default class GameScene extends Phaser.Scene {
                 this.maxZoom
             );
             
-            // Get center of screen in world coordinates before zoom
-            const centerX = this.cameras.main.scrollX + this.cameras.main.width / 2 / oldZoom;
-            const centerY = this.cameras.main.scrollY + this.cameras.main.height / 2 / oldZoom;
+            // Get world point under the mouse (or use player position if no mouse)
+            let worldPoint;
+            if (pointer && pointer.x !== undefined) {
+                worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+            } else {
+                worldPoint = { x: this.player.x, y: this.player.y };
+            }
             
             // Apply new zoom
             this.currentZoom = newZoom;
-            this.cameras.main.setZoom(newZoom);
+            this.cameras.main.zoom = newZoom;
             
-            // Adjust scroll to keep same center point
-            const newScrollX = centerX - this.cameras.main.width / 2 / newZoom;
-            const newScrollY = centerY - this.cameras.main.height / 2 / newZoom;
-            this.cameras.main.setScroll(newScrollX, newScrollY);
+            // After zoom, calculate where that same world point is on screen
+            // and adjust scroll so it's still at the same screen position
+            const targetScreenX = pointer ? pointer.x : this.cameras.main.width / 2;
+            const targetScreenY = pointer ? pointer.y : this.cameras.main.height / 2;
+            
+            const newScrollX = worldPoint.x - targetScreenX / newZoom;
+            const newScrollY = worldPoint.y - targetScreenY / newZoom;
+            
+            // Remove bounds temporarily to allow free zooming, then restore
+            const bounds = this.cameras.main.getBounds();
+            this.cameras.main.removeBounds();
+            this.cameras.main.scrollX = newScrollX;
+            this.cameras.main.scrollY = newScrollY;
+            this.cameras.main.setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
         });
 
         // Bullet pool with trails - 500 for bullet hell
