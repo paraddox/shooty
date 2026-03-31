@@ -76,7 +76,7 @@ export default class GameScene extends Phaser.Scene {
         this.minZoom = 0.3;
         this.maxZoom = 2.0;
         
-        // Mouse wheel zoom - zoom toward mouse pointer or center
+        // Mouse wheel zoom - simple zoom toward center
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
             // deltaY > 0 = scroll down = zoom out
             // deltaY < 0 = scroll up = zoom in
@@ -90,32 +90,24 @@ export default class GameScene extends Phaser.Scene {
                 this.maxZoom
             );
             
-            // Get world point under the mouse (or use player position if no mouse)
-            let worldPoint;
-            if (pointer && pointer.x !== undefined) {
-                worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-            } else {
-                worldPoint = { x: this.player.x, y: this.player.y };
-            }
+            // Only proceed if zoom actually changed
+            if (newZoom === oldZoom) return;
             
-            // Apply new zoom
+            // Store the center point of the screen in world coordinates
+            const centerX = this.cameras.main.midPoint.x;
+            const centerY = this.cameras.main.midPoint.y;
+            
+            // Update zoom
             this.currentZoom = newZoom;
-            this.cameras.main.zoom = newZoom;
+            this.cameras.main.setZoom(newZoom);
             
-            // After zoom, calculate where that same world point is on screen
-            // and adjust scroll so it's still at the same screen position
-            const targetScreenX = pointer ? pointer.x : this.cameras.main.width / 2;
-            const targetScreenY = pointer ? pointer.y : this.cameras.main.height / 2;
+            // Calculate new scroll to keep center point centered
+            // scroll = centerWorldPoint - (screenSize / 2 / zoom)
+            const newScrollX = centerX - (this.cameras.main.width / 2) / newZoom;
+            const newScrollY = centerY - (this.cameras.main.height / 2) / newZoom;
             
-            const newScrollX = worldPoint.x - targetScreenX / newZoom;
-            const newScrollY = worldPoint.y - targetScreenY / newZoom;
-            
-            // Remove bounds temporarily to allow free zooming, then restore
-            const bounds = this.cameras.main.getBounds();
-            this.cameras.main.removeBounds();
             this.cameras.main.scrollX = newScrollX;
             this.cameras.main.scrollY = newScrollY;
-            this.cameras.main.setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
         });
 
         // Bullet pool with trails - 500 for bullet hell
@@ -190,16 +182,7 @@ export default class GameScene extends Phaser.Scene {
 
         this.player.update();
 
-        // Dynamic zoom based on danger (only adjusts from manual zoom base)
-        // More enemies = slightly more zoom out, but respects manual zoom
-        const enemyCount = this.enemies.countActive();
-        const dangerZoomOffset = Math.min(0.15, enemyCount * 0.005);
-        const targetZoom = this.currentZoom - dangerZoomOffset;
-        
-        // Smoothly interpolate to target (don't override if user just zoomed)
-        this.cameras.main.setZoom(
-            Phaser.Math.Linear(this.cameras.main.zoom, targetZoom, 0.02)
-        );
+        // Note: Manual zoom only - no auto-zoom to avoid conflicts
 
         // Bullet cleanup and trails
         this.bullets.children.entries.forEach(bullet => {
