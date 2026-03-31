@@ -46,11 +46,20 @@ export default class GameScene extends Phaser.Scene {
             
             if (newZoom !== oldZoom) {
                 this.targetZoom = newZoom;
-                // Immediately recenter on player when zoom changes
-                this.cameras.main.setScroll(
-                    this.player.x - (this.cameras.main.width / 2) / newZoom,
-                    this.player.y - (this.cameras.main.height / 2) / newZoom
-                );
+                // Calculate scroll to center on player, but clamp to arena bounds
+                const worldWidth = 1920;
+                const worldHeight = 1440;
+                const viewWidth = this.cameras.main.width / newZoom;
+                const viewHeight = this.cameras.main.height / newZoom;
+                
+                let scrollX = this.player.x - (this.cameras.main.width / 2) / newZoom;
+                let scrollY = this.player.y - (this.cameras.main.height / 2) / newZoom;
+                
+                // Clamp to arena bounds
+                scrollX = Phaser.Math.Clamp(scrollX, 0, worldWidth - viewWidth);
+                scrollY = Phaser.Math.Clamp(scrollY, 0, worldHeight - viewHeight);
+                
+                this.cameras.main.setScroll(scrollX, scrollY);
             }
         });
 
@@ -145,13 +154,33 @@ export default class GameScene extends Phaser.Scene {
         camera.setZoom(newZoom);
         
         // Camera follow - only if we're not actively zooming (to avoid fighting the scroll)
+        const worldWidth = 1920;
+        const worldHeight = 1440;
+        const viewWidth = camera.width / newZoom;
+        const viewHeight = camera.height / newZoom;
+        
+        // Clamp scroll to keep camera within arena bounds
+        const minScrollX = 0;
+        const maxScrollX = worldWidth - viewWidth;
+        const minScrollY = 0;
+        const maxScrollY = worldHeight - viewHeight;
+        
         if (Math.abs(newZoom - this.targetZoom) < 0.01) {
             // Zoom settled - smooth follow
-            const targetScrollX = this.player.x - (camera.width / 2) / newZoom;
-            const targetScrollY = this.player.y - (camera.height / 2) / newZoom;
+            let targetScrollX = this.player.x - (camera.width / 2) / newZoom;
+            let targetScrollY = this.player.y - (camera.height / 2) / newZoom;
+            
+            // Clamp target to arena bounds
+            targetScrollX = Phaser.Math.Clamp(targetScrollX, minScrollX, maxScrollX);
+            targetScrollY = Phaser.Math.Clamp(targetScrollY, minScrollY, maxScrollY);
+            
             camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
             camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
         }
+        
+        // Always clamp current scroll to bounds (prevents seeing outside arena)
+        camera.scrollX = Phaser.Math.Clamp(camera.scrollX, minScrollX, maxScrollX);
+        camera.scrollY = Phaser.Math.Clamp(camera.scrollY, minScrollY, maxScrollY);
         
         // No counter-scaling - objects get smaller/bigger with zoom as expected
 
