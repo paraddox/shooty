@@ -8,103 +8,249 @@ export default class GameScene extends Phaser.Scene {
     }
 
     create() {
-        // World bounds (roguelike room size)
-        this.physics.world.setBounds(0, 0, 1600, 1200);
+        // World bounds
+        this.physics.world.setBounds(0, 0, 1920, 1440);
+        this.cameras.main.setBackgroundColor('#0a0a0f');
 
-        // Create floor
+        // Create environment
         this.createFloor();
+        this.createAmbientGrid();
+
+        // Lighting setup for glow effects
+        this.lights.enable().setAmbientColor(0x111116);
 
         // Player
-        this.player = new Player(this, 800, 600);
+        this.player = new Player(this, 960, 720);
+        this.lights.addLight(960, 720, 150, 0x00f0ff, 0.5);
 
-        // Camera follow
-        this.cameras.main.setBounds(0, 0, 1600, 1200);
-        this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+        // Camera
+        this.cameras.main.setBounds(0, 0, 1920, 1440);
+        this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+        this.cameras.main.setZoom(0.9);
 
-        // Bullets group
+        // Bullet pool with trails
         this.bullets = this.physics.add.group({
             classType: Phaser.Physics.Arcade.Image,
-            maxSize: 100,
+            maxSize: 200,
             runChildUpdate: true
         });
 
-        // Enemies group
+        // Bullet trail particles
+        this.bulletTrails = this.add.particles(0, 0, 'particle', {
+            scale: { start: 0.6, end: 0 },
+            alpha: { start: 0.6, end: 0 },
+            speed: 0,
+            lifespan: 150,
+            tint: 0xffff00,
+            frequency: -1
+        });
+
+        // Enemy hit particles
+        this.hitParticles = this.add.particles(0, 0, 'particle', {
+            scale: { start: 0.8, end: 0 },
+            alpha: { start: 1, end: 0 },
+            speed: { min: 50, max: 150 },
+            lifespan: 400,
+            gravityY: 0,
+            quantity: 8,
+            frequency: -1
+        });
+
+        // Enemy death particles
+        this.deathParticles = this.add.particles(0, 0, 'particle', {
+            scale: { start: 1.2, end: 0 },
+            alpha: { start: 1, end: 0 },
+            speed: { min: 80, max: 200 },
+            lifespan: 600,
+            gravityY: 0,
+            quantity: 12,
+            frequency: -1
+        });
+
+        // Enemies
         this.enemies = this.physics.add.group();
+        this.spawnEnemies(4);
 
-        // Spawn initial enemies
-        this.spawnEnemies(5);
-
-        // Enemy spawn timer (increasing difficulty)
+        // Spawn timer
         this.spawnTimer = this.time.addEvent({
-            delay: 3000,
-            callback: () => this.spawnEnemies(2),
+            delay: 4000,
+            callback: () => this.spawnEnemies(3),
             callbackScope: this,
             loop: true
         });
 
         // Collisions
-        this.physics.add.collider(this.bullets, this.enemies, this.hitEnemy, null, this);
-        this.physics.add.collider(this.player, this.enemies, this.playerHit, null, this);
-        this.physics.add.collider(this.enemies, this.enemies);
+        this.physics.add.overlap(this.bullets, this.enemies, this.hitEnemy, null, this);
+        this.physics.add.overlap(this.player, this.enemies, this.playerHit, null, this);
+        this.physics.add.collider(this.enemies, this.enemies, this.enemyBounce, null, this);
 
-        // Score
-        this.score = 0;
-        this.scoreText = this.add.text(16, 16, 'Score: 0', {
-            fontSize: '24px',
-            fill: '#ffffff'
-        }).setScrollFactor(0);
+        // Minimalist HUD
+        this.createHUD();
 
-        // Wave
+        // Wave system
         this.wave = 1;
-        this.waveText = this.add.text(16, 50, 'Wave: 1', {
-            fontSize: '20px',
-            fill: '#00ff88'
-        }).setScrollFactor(0);
+        this.nextWaveTime = this.time.now + 30000;
 
-        // Wave timer
-        this.time.addEvent({
-            delay: 30000,
-            callback: () => this.nextWave(),
-            callbackScope: this,
-            loop: true
-        });
+        // Screen shake effect
+        this.shakeIntensity = 0;
     }
 
     update() {
+        if (!this.player.active) return;
+
         this.player.update();
 
-        // Clean up off-screen bullets
+        // Update camera zoom based on danger (more enemies = slightly more zoom out)
+        const enemyCount = this.enemies.countActive();
+        const targetZoom = 0.9 - Math.min(0.15, enemyCount * 0.005);
+        this.cameras.main.setZoom(
+            Phaser.Math.Linear(this.cameras.main.zoom, targetZoom, 0.02)
+        );
+
+        // Bullet cleanup and trails
         this.bullets.children.entries.forEach(bullet => {
-            if (bullet.x < 0 || bullet.x > 1600 || bullet.y < 0 || bullet.y > 1200) {
-                this.bullets.killAndHide(bullet);
+            if (bullet.active) {
+                // Spawn trail
+                if (this.time.now % 3 === 0) {
+                    this.bulletTrails.emitParticleAt(bullet.x, bullet.y);
+                }
+            } else {
+                bullet.destroy();
             }
         });
 
         // Update enemies
         this.enemies.children.entries.forEach(enemy => {
-            if (enemy.update) enemy.update();
+            if (enemy.active && enemy.update) enemy.update();
         });
+
+        // Update HUD
+        this.updateHUD();
+
+        // Wave check
+        if (this.time.now > this.nextWaveTime) {
+            this.nextWave();
+        }
     }
 
     createFloor() {
-        const tileSize = 64;
-        for (let x = 0; x < 1600; x += tileSize) {
-            for (let y = 0; y < 1200; y += tileSize) {
-                this.add.image(x + tileSize/2, y + tileSize/2, 'floor')
-                    .setAlpha(0.5 + Math.random() * 0.3);
+        const tileSize = 128;
+        for (let x = 0; x < 1920; x += tileSize) {
+            for (let y = 0; y < 1440; y += tileSize) {
+                const tile = this.add.image(x + tileSize/2, y + tileSize/2, 'floor');
+                tile.setAlpha(0.4 + Math.random() * 0.2);
+                tile.setDepth(-1);
             }
         }
     }
 
+    createAmbientGrid() {
+        const grid = this.add.graphics();
+        grid.lineStyle(1, 0x1a1a25, 0.2);
+        
+        const spacing = 128;
+        for (let x = 0; x <= 1920; x += spacing) {
+            grid.moveTo(x, 0);
+            grid.lineTo(x, 1440);
+        }
+        for (let y = 0; y <= 1440; y += spacing) {
+            grid.moveTo(0, y);
+            grid.lineTo(1920, y);
+        }
+        grid.strokePath();
+        grid.setDepth(-1);
+    }
+
+    createHUD() {
+        const margin = 30;
+        
+        // Health bar - minimal horizontal bar
+        this.healthBarBg = this.add.rectangle(margin, margin, 200, 6, 0x22222a);
+        this.healthBar = this.add.rectangle(margin, margin, 200, 6, 0x00f0ff);
+        this.healthBar.setOrigin(0, 0.5);
+        this.healthBarBg.setOrigin(0, 0.5);
+        
+        // Score - minimal
+        this.scoreText = this.add.text(margin, margin + 20, '0', {
+            fontFamily: 'monospace',
+            fontSize: '24px',
+            fill: '#ffffff'
+        });
+        
+        // Wave indicator
+        this.waveText = this.add.text(margin, margin + 50, 'WAVE 1', {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            letterSpacing: 2,
+            fill: '#666677'
+        });
+
+        // Enemy count
+        this.enemyText = this.add.text(margin, margin + 70, '0 ENEMIES', {
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            letterSpacing: 1,
+            fill: '#ff3366'
+        });
+
+        // Wave timer bar
+        this.waveTimerBg = this.add.rectangle(this.cameras.main.width - margin, margin, 100, 3, 0x22222a);
+        this.waveTimerBar = this.add.rectangle(this.cameras.main.width - margin, margin, 100, 3, 0xffff00);
+        this.waveTimerBg.setOrigin(1, 0.5);
+        this.waveTimerBar.setOrigin(1, 0.5);
+
+        // Fixed to camera
+        [this.healthBarBg, this.healthBar, this.scoreText, this.waveText, 
+         this.enemyText, this.waveTimerBg, this.waveTimerBar].forEach(el => {
+            el.setScrollFactor(0);
+            el.setDepth(100);
+        });
+
+        this.score = 0;
+    }
+
+    updateHUD() {
+        // Health
+        const healthPercent = Math.max(0, this.player.health / this.player.maxHealth);
+        this.healthBar.width = 200 * healthPercent;
+        
+        // Color shift on low health
+        if (healthPercent < 0.3) {
+            this.healthBar.fillColor = 0xff3366;
+        } else {
+            this.healthBar.fillColor = 0x00f0ff;
+        }
+
+        // Score
+        this.scoreText.setText(this.score.toString().padStart(6, '0'));
+
+        // Enemy count
+        const enemyCount = this.enemies.countActive();
+        this.enemyText.setText(`${enemyCount} ENEMY${enemyCount !== 1 ? 'S' : ''}`);
+
+        // Wave timer
+        const waveProgress = 1 - (this.nextWaveTime - this.time.now) / 30000;
+        this.waveTimerBar.width = Math.max(0, 100 * waveProgress);
+    }
+
     spawnEnemies(count) {
+        const types = ['enemy', 'enemyFast', 'enemyTank'];
+        
         for (let i = 0; i < count; i++) {
             let x, y;
+            let attempts = 0;
             do {
-                x = Phaser.Math.Between(100, 1500);
-                y = Phaser.Math.Between(100, 1100);
-            } while (Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y) < 300);
+                x = Phaser.Math.Between(100, 1820);
+                y = Phaser.Math.Between(100, 1340);
+                attempts++;
+            } while (Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y) < 350 && attempts < 50);
 
-            const enemy = new Enemy(this, x, y, this.player);
+            // Choose enemy type based on wave
+            let type = types[0];
+            if (this.wave > 2 && Math.random() < 0.3) type = types[1];
+            if (this.wave > 4 && Math.random() < 0.2) type = types[2];
+
+            const enemy = new Enemy(this, x, y, this.player, type);
             this.enemies.add(enemy);
         }
     }
@@ -113,39 +259,85 @@ export default class GameScene extends Phaser.Scene {
         bullet.setActive(false);
         bullet.setVisible(false);
         
-        enemy.takeDamage(25);
+        // Hit particles
+        this.hitParticles.setParticleTint(enemy.tintTopLeft || 0xff3366);
+        this.hitParticles.emitParticleAt(enemy.x, enemy.y);
+        
+        // Screen shake on hit
+        this.cameras.main.shake(50, 0.002);
+        
+        enemy.takeDamage(34);
         
         if (!enemy.active) {
-            this.score += 10;
-            this.scoreText.setText('Score: ' + this.score);
+            // Death particles
+            this.deathParticles.setParticleTint(enemy.tintTopLeft || 0xff3366);
+            this.deathParticles.emitParticleAt(enemy.x, enemy.y);
+            
+            this.score += enemy.scoreValue;
         }
     }
 
     playerHit(player, enemy) {
-        enemy.takeDamage(50);
-        player.takeDamage(10);
-        
         // Knockback
         const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, player.x, player.y);
-        player.knockback(Math.cos(angle) * 200, Math.sin(angle) * 200);
+        player.knockback(Math.cos(angle) * 300, Math.sin(angle) * 300);
+        
+        // Player damage
+        player.takeDamage(enemy.damage);
+        
+        // Enemy also takes damage (mutual destruction)
+        enemy.takeDamage(20);
+        
+        // Screen shake
+        this.cameras.main.shake(100, 0.005);
+        
+        // Flash vignette
+        this.cameras.main.flash(100, 255, 50, 50, 0.2);
 
         if (player.health <= 0) {
-            this.scene.start('GameOverScene', { score: this.score });
+            this.gameOver();
         }
+    }
+
+    enemyBounce(enemy1, enemy2) {
+        // Slight separation impulse to prevent clumping
+        const angle = Phaser.Math.Angle.Between(enemy1.x, enemy1.y, enemy2.x, enemy2.y);
+        const force = 20;
+        enemy1.body.velocity.x -= Math.cos(angle) * force;
+        enemy1.body.velocity.y -= Math.sin(angle) * force;
+        enemy2.body.velocity.x += Math.cos(angle) * force;
+        enemy2.body.velocity.y += Math.sin(angle) * force;
     }
 
     nextWave() {
         this.wave++;
-        this.waveText.setText('Wave: ' + this.wave);
+        this.nextWaveTime = this.time.now + 30000;
         
-        // Spawn more enemies each wave
-        this.spawnEnemies(2 + this.wave * 2);
+        // Wave announcement
+        const waveText = this.add.text(this.player.x, this.player.y - 80, `WAVE ${this.wave}`, {
+            fontFamily: 'monospace',
+            fontSize: '32px',
+            letterSpacing: 4,
+            fill: '#ffff00'
+        }).setOrigin(0.5);
         
-        // Decrease spawn delay slightly
-        if (this.spawnTimer.delay > 1000) {
+        this.tweens.add({
+            targets: waveText,
+            y: waveText.y - 50,
+            alpha: 0,
+            duration: 1500,
+            ease: 'Power2',
+            onComplete: () => waveText.destroy()
+        });
+        
+        // Spawn wave
+        this.spawnEnemies(3 + this.wave * 2);
+        
+        // Increase spawn rate
+        if (this.spawnTimer.delay > 1500) {
             this.spawnTimer.remove();
             this.spawnTimer = this.time.addEvent({
-                delay: Math.max(1000, 3000 - this.wave * 200),
+                delay: Math.max(1500, 4000 - this.wave * 300),
                 callback: () => this.spawnEnemies(2 + Math.floor(this.wave / 2)),
                 callbackScope: this,
                 loop: true
@@ -153,7 +345,22 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
+    gameOver() {
+        this.cameras.main.shake(300, 0.02);
+        this.cameras.main.fade(1000, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.start('GameOverScene', { 
+                score: this.score, 
+                wave: this.wave 
+            });
+        });
+    }
+
     getBulletsGroup() {
         return this.bullets;
+    }
+
+    getBulletTrails() {
+        return this.bulletTrails;
     }
 }

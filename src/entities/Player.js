@@ -8,51 +8,31 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         scene.physics.add.existing(this);
         
         this.setCollideWorldBounds(true);
-        this.setDrag(500);
+        this.setDrag(800);
         this.setDamping(true);
         
         // Stats
-        this.speed = 250;
+        this.speed = 280;
         this.health = 100;
         this.maxHealth = 100;
         
         // Shooting
         this.lastFired = 0;
-        this.fireRate = 150; // ms between shots
-        this.bulletSpeed = 500;
+        this.fireRate = 120;
+        this.bulletSpeed = 600;
+        this.bulletSpread = 0.05;
         
-        // Knockback recovery
+        // Knockback
         this.isKnockedBack = false;
         this.knockbackTimer = null;
         
-        // Create health bar
-        this.createHealthBar(scene);
-    }
-
-    createHealthBar(scene) {
-        this.healthBarBg = scene.add.rectangle(0, -25, 40, 6, 0x000000);
-        this.healthBar = scene.add.rectangle(0, -25, 40, 6, 0x00ff00);
-        
-        scene.events.on('update', () => {
-            if (this.active) {
-                this.healthBarBg.x = this.x;
-                this.healthBarBg.y = this.y - 25;
-                this.healthBar.x = this.x - (40 - this.health / this.maxHealth * 40) / 2;
-                this.healthBar.y = this.y - 25;
-                this.healthBar.width = (this.health / this.maxHealth) * 40;
-                
-                // Update color based on health
-                if (this.health > 60) this.healthBar.fillColor = 0x00ff00;
-                else if (this.health > 30) this.healthBar.fillColor = 0xffff00;
-                else this.healthBar.fillColor = 0xff0000;
-            }
-        });
+        // Trail
+        this.trailTimer = 0;
     }
 
     update() {
         if (!this.active) return;
         
-        const cursors = this.scene.input.keyboard.createCursorKeys();
         const wasd = this.scene.input.keyboard.addKeys({
             up: Phaser.Input.Keyboard.KeyCodes.W,
             down: Phaser.Input.Keyboard.KeyCodes.S,
@@ -60,27 +40,33 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             right: Phaser.Input.Keyboard.KeyCodes.D
         });
         
-        // Movement (disabled during knockback)
+        // Movement
         if (!this.isKnockedBack) {
             let vx = 0;
             let vy = 0;
             
-            if (cursors.left.isDown || wasd.left.isDown) vx = -this.speed;
-            else if (cursors.right.isDown || wasd.right.isDown) vx = this.speed;
+            if (wasd.left.isDown) vx = -this.speed;
+            else if (wasd.right.isDown) vx = this.speed;
             
-            if (cursors.up.isDown || wasd.up.isDown) vy = -this.speed;
-            else if (cursors.down.isDown || wasd.down.isDown) vy = this.speed;
+            if (wasd.up.isDown) vy = -this.speed;
+            else if (wasd.down.isDown) vy = this.speed;
             
-            // Normalize diagonal movement
+            // Normalize diagonal
             if (vx !== 0 && vy !== 0) {
                 vx *= 0.707;
                 vy *= 0.707;
             }
             
             this.setVelocity(vx, vy);
+            
+            // Movement trail
+            if ((vx !== 0 || vy !== 0) && this.scene.time.now > this.trailTimer) {
+                this.scene.hitParticles.emitParticleAt(this.x, this.y);
+                this.trailTimer = this.scene.time.now + 100;
+            }
         }
         
-        // Aim at mouse
+        // Aim
         const pointer = this.scene.input.activePointer;
         const worldPoint = this.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
         const angle = Phaser.Math.Angle.Between(this.x, this.y, worldPoint.x, worldPoint.y);
@@ -88,32 +74,37 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         
         // Shooting
         if (pointer.isDown && this.scene.time.now > this.lastFired) {
-            this.shoot(worldPoint.x, worldPoint.y);
+            this.shoot(angle);
             this.lastFired = this.scene.time.now + this.fireRate;
         }
     }
 
-    shoot(targetX, targetY) {
+    shoot(angle) {
         const bullet = this.scene.getBulletsGroup().get(this.x, this.y, 'bullet');
         
         if (bullet) {
             bullet.setActive(true);
             bullet.setVisible(true);
-            bullet.setDepth(0);
+            bullet.setDepth(1);
             
-            const angle = Phaser.Math.Angle.Between(this.x, this.y, targetX, targetY);
+            // Slight random spread
+            const spread = (Math.random() - 0.5) * this.bulletSpread;
+            const finalAngle = angle + spread;
+            
             bullet.setVelocity(
-                Math.cos(angle) * this.bulletSpeed,
-                Math.sin(angle) * this.bulletSpeed
+                Math.cos(finalAngle) * this.bulletSpeed,
+                Math.sin(finalAngle) * this.bulletSpeed
             );
+            
+            bullet.setRotation(finalAngle);
         }
     }
 
     takeDamage(amount) {
         this.health -= amount;
         
-        // Flash red
-        this.setTint(0xff0000);
+        // Flash white
+        this.setTint(0xff3366);
         this.scene.time.delayedCall(100, () => {
             if (this.active) this.clearTint();
         });
@@ -129,14 +120,15 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         
         if (this.knockbackTimer) this.knockbackTimer.remove();
         
-        this.knockbackTimer = this.scene.time.delayedCall(200, () => {
+        this.knockbackTimer = this.scene.time.delayedCall(150, () => {
             this.isKnockedBack = false;
         });
     }
 
     die() {
-        this.healthBarBg.destroy();
-        this.healthBar.destroy();
+        // Death explosion
+        this.scene.deathParticles.setParticleTint(0x00f0ff);
+        this.scene.deathParticles.emitParticleAt(this.x, this.y);
         this.destroy();
     }
 }

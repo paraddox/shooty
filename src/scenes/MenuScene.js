@@ -6,48 +6,127 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     create() {
-        const centerX = this.cameras.main.width / 2;
-        const centerY = this.cameras.main.height / 2;
+        const w = this.cameras.main.width;
+        const h = this.cameras.main.height;
+        const cx = w / 2;
+        const cy = h / 2;
 
-        // Title
-        this.add.text(centerX, centerY - 100, 'SHOOTY', {
-            fontSize: '64px',
+        // Dark void background
+        this.cameras.main.setBackgroundColor('#0a0a0f');
+
+        // Subtle grid effect
+        this.createGridEffect();
+
+        // Title - minimalist typography
+        const title = this.add.text(cx, cy - 100, 'SHOOTY', {
+            fontFamily: 'monospace',
+            fontSize: '72px',
             fontStyle: 'bold',
-            fill: '#00ff88'
+            letterSpacing: 8,
+            fill: '#ffffff'
         }).setOrigin(0.5);
+
+        // Title glow effect
+        title.setPipeline('light2d');
+        this.add.pointLight(cx, cy - 100, 0x00f0ff, 100, 0.3);
 
         // Subtitle
-        this.add.text(centerX, centerY - 30, 'Top-Down Roguelike Shooter', {
-            fontSize: '24px',
-            fill: '#888888'
+        this.add.text(cx, cy - 30, 'minimalist roguelike shooter', {
+            fontFamily: 'monospace',
+            fontSize: '16px',
+            letterSpacing: 2,
+            fill: '#666677'
         }).setOrigin(0.5);
 
-        // Controls hint
-        this.add.text(centerX, centerY + 40, 'WASD to move | Mouse to aim & shoot', {
+        // Control hints - clean layout
+        const controls = [
+            { key: 'WASD', desc: 'move' },
+            { key: 'MOUSE', desc: 'aim' },
+            { key: 'CLICK', desc: 'shoot' }
+        ];
+
+        let y = cy + 40;
+        controls.forEach(c => {
+            const keyText = this.add.text(cx - 60, y, c.key, {
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                fill: '#00f0ff'
+            }).setOrigin(1, 0.5);
+            
+            this.add.text(cx - 40, y, c.desc, {
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                fill: '#888899'
+            }).setOrigin(0, 0.5);
+            
+            y += 30;
+        });
+
+        // Start prompt with pulse animation
+        const startText = this.add.text(cx, cy + 150, '[ CLICK TO START ]', {
+            fontFamily: 'monospace',
             fontSize: '18px',
-            fill: '#aaaaaa'
+            letterSpacing: 4,
+            fill: '#ffffff'
         }).setOrigin(0.5);
 
-        // Start prompt
-        this.add.text(centerX, centerY + 100, 'Click to Start', {
-            fontSize: '32px',
-            fill: '#ffffff'
-        }).setOrigin(0.5)
-        .setInteractive()
-        .on('pointerover', () => this.add.tween({
-            targets: this,
-            scale: 1.1,
-            duration: 100
-        }))
-        .on('pointerdown', () => this.startGame());
+        // Pulse animation
+        this.tweens.add({
+            targets: startText,
+            alpha: 0.4,
+            duration: 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
 
-        // Also accept keyboard
+        // Input handlers
+        this.input.on('pointerdown', () => this.startGame());
         this.input.keyboard.on('keydown-SPACE', () => this.startGame());
         this.input.keyboard.on('keydown-ENTER', () => this.startGame());
-        this.input.on('pointerdown', () => this.startGame());
+
+        // Ambient particles
+        this.createAmbientParticles();
+    }
+
+    createGridEffect() {
+        const w = this.cameras.main.width;
+        const h = this.cameras.main.height;
+        
+        // Draw subtle grid lines
+        const grid = this.add.graphics();
+        grid.lineStyle(1, 0x1a1a25, 0.3);
+        
+        const spacing = 64;
+        for (let x = 0; x < w; x += spacing) {
+            grid.moveTo(x, 0);
+            grid.lineTo(x, h);
+        }
+        for (let y = 0; y < h; y += spacing) {
+            grid.moveTo(0, y);
+            grid.lineTo(w, y);
+        }
+        grid.strokePath();
+    }
+
+    createAmbientParticles() {
+        const particles = this.add.particles(0, 0, 'particle', {
+            x: { min: 0, max: this.cameras.main.width },
+            y: { min: 0, max: this.cameras.main.height },
+            scale: { min: 0.2, max: 0.5 },
+            alpha: { start: 0.3, end: 0 },
+            speed: 10,
+            lifespan: 4000,
+            frequency: 500,
+            quantity: 1,
+            tint: [0x00f0ff, 0xff3366, 0xffff00]
+        });
     }
 
     startGame() {
-        this.scene.start('GameScene');
+        this.cameras.main.fade(300, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.start('GameScene');
+        });
     }
 }
