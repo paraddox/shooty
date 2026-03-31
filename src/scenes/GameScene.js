@@ -50,7 +50,11 @@ export default class GameScene extends Phaser.Scene {
         
         // If screen is larger, center the camera on the world initially
         if (offsetX > 0 || offsetY > 0) {
-            this.cameras.main.centerOn(worldWidth / 2, worldHeight / 2);
+            // Calculate scroll position to center the world
+            this.cameras.main.setScroll(
+                (worldWidth - screenWidth / baseZoom) / 2,
+                (worldHeight - screenHeight / baseZoom) / 2
+            );
         }
         
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
@@ -269,7 +273,10 @@ export default class GameScene extends Phaser.Scene {
         const offsetY = (gameSize.height - visibleWorldHeight) / 2;
         
         if (offsetX > 0 || offsetY > 0) {
-            this.cameras.main.centerOn(worldWidth / 2, worldHeight / 2);
+            this.cameras.main.setScroll(
+                (worldWidth - gameSize.width / newZoom) / 2,
+                (worldHeight - gameSize.height / newZoom) / 2
+            );
         }
         
         // Update camera viewport
