@@ -64,22 +64,16 @@ export default class GameScene extends Phaser.Scene {
             // Manual camera follow - no startFollow
         }
         
-        // Store base zoom for mouse wheel zooming
-        this.baseZoom = this.cameras.main.zoom;
-        this.currentZoom = this.cameras.main.zoom;
-        this.minZoom = 0.3;
-        this.maxZoom = 2.0;
-        
-        // Mouse wheel - adjust camera distance multiplier instead of zoom
-        // This avoids the complexity of zoom+scroll calculations
-        this.targetZoomOffset = 0;
+        // Camera always at zoom=1 - no scaling of game objects
+        // Mouse wheel adjusts camera follow offset (simulates zoom by changing view distance)
+        this.cameraOffset = 0; // 0 = close follow, positive = further back
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-            const zoomSpeed = 0.05;
-            const zoomChange = deltaY > 0 ? zoomSpeed : -zoomSpeed;
-            this.targetZoomOffset = Phaser.Math.Clamp(
-                this.targetZoomOffset + zoomChange,
-                -0.3,  // Can zoom out up to 30% more
-                0.5    // Can zoom in up to 50% closer
+            const offsetSpeed = 50;
+            const offsetChange = deltaY > 0 ? offsetSpeed : -offsetSpeed;
+            this.cameraOffset = Phaser.Math.Clamp(
+                this.cameraOffset + offsetChange,
+                0,      // Closest: tight on player
+                400     // Furthest: shows more arena
             );
         });
 
@@ -168,21 +162,22 @@ export default class GameScene extends Phaser.Scene {
 
         this.player.update();
         
-        // Dynamic zoom based on enemy count + manual zoom offset
-        const enemyCount = this.enemies.countActive();
-        const dangerZoom = Math.max(0.5, 1.0 - enemyCount * 0.02); // Zoom out as enemies increase
-        const targetZoom = dangerZoom + this.targetZoomOffset;
-        const newZoom = Phaser.Math.Clamp(targetZoom, 0.4, 1.5);
-        
-        // Smoothly interpolate zoom
+        // Camera always at zoom=1 - objects maintain consistent size
         const camera = this.cameras.main;
-        const currentZoom = camera.zoom;
-        const smoothedZoom = currentZoom + (newZoom - currentZoom) * 0.05;
-        camera.setZoom(smoothedZoom);
+        camera.setZoom(1.0);
         
-        // Manual camera follow - smooth lerp toward player
-        const targetScrollX = this.player.x - (camera.width / 2) / smoothedZoom;
-        const targetScrollY = this.player.y - (camera.height / 2) / smoothedZoom;
+        // Dynamic camera offset based on enemy count + manual scroll adjustment
+        const enemyCount = this.enemies.countActive();
+        const dangerOffset = Math.min(200, enemyCount * 15); // Pull back as enemies increase
+        const totalOffset = this.cameraOffset + dangerOffset;
+        
+        // Smoothly interpolate offset
+        this.smoothedOffset = this.smoothedOffset || 0;
+        this.smoothedOffset += (totalOffset - this.smoothedOffset) * 0.05;
+        
+        // Manual camera follow - center player with optional offset padding
+        const targetScrollX = this.player.x - camera.width / 2;
+        const targetScrollY = this.player.y - camera.height / 2;
         
         // Smooth lerp toward player
         camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
