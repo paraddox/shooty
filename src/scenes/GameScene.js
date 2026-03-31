@@ -76,20 +76,32 @@ export default class GameScene extends Phaser.Scene {
         this.minZoom = 0.3;
         this.maxZoom = 2.0;
         
-        // Mouse wheel zoom
+        // Mouse wheel zoom - zoom toward center of screen
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
             // deltaY > 0 = scroll down = zoom out
             // deltaY < 0 = scroll up = zoom in
             const zoomSpeed = 0.1;
             const zoomChange = deltaY > 0 ? -zoomSpeed : zoomSpeed;
             
-            this.currentZoom = Phaser.Math.Clamp(
+            const oldZoom = this.currentZoom;
+            const newZoom = Phaser.Math.Clamp(
                 this.currentZoom + zoomChange,
                 this.minZoom,
                 this.maxZoom
             );
             
-            this.cameras.main.setZoom(this.currentZoom);
+            // Get center of screen in world coordinates before zoom
+            const centerX = this.cameras.main.scrollX + this.cameras.main.width / 2 / oldZoom;
+            const centerY = this.cameras.main.scrollY + this.cameras.main.height / 2 / oldZoom;
+            
+            // Apply new zoom
+            this.currentZoom = newZoom;
+            this.cameras.main.setZoom(newZoom);
+            
+            // Adjust scroll to keep same center point
+            const newScrollX = centerX - this.cameras.main.width / 2 / newZoom;
+            const newScrollY = centerY - this.cameras.main.height / 2 / newZoom;
+            this.cameras.main.setScroll(newScrollX, newScrollY);
         });
 
         // Bullet pool with trails - 500 for bullet hell
