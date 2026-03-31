@@ -34,14 +34,18 @@ export default class GameScene extends Phaser.Scene {
         
         // Mouse wheel zoom - direct control
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
+            console.log('Wheel event:', deltaY, 'current targetZoom:', this.targetZoom);
+            
             // deltaY > 0 = scroll down (zoom out)
             // deltaY < 0 = scroll up (zoom in)
-            const zoomStep = 0.15;
+            const zoomStep = 0.2;
             
             if (deltaY > 0) {
                 this.targetZoom = Math.max(0.5, this.targetZoom - zoomStep);
+                console.log('Zooming out to:', this.targetZoom);
             } else if (deltaY < 0) {
                 this.targetZoom = Math.min(1.5, this.targetZoom + zoomStep);
+                console.log('Zooming in to:', this.targetZoom);
             }
         });
 
