@@ -93,9 +93,13 @@ export default class GameScene extends Phaser.Scene {
             // Only proceed if zoom actually changed
             if (newZoom === oldZoom) return;
             
+            const camera = this.cameras.main;
+            
+            // Stop camera follow while zooming
+            camera.stopFollow();
+            
             // Calculate the world coordinates of the center of the screen
             // BEFORE we change the zoom (using current scroll and zoom)
-            const camera = this.cameras.main;
             const centerWorldX = camera.scrollX + (camera.width / 2) / oldZoom;
             const centerWorldY = camera.scrollY + (camera.height / 2) / oldZoom;
             
@@ -104,9 +108,11 @@ export default class GameScene extends Phaser.Scene {
             camera.setZoom(newZoom);
             
             // Calculate new scroll position so the same world point stays at center
-            // scroll = worldPoint - (screenSize / 2 / newZoom)
             camera.scrollX = centerWorldX - (camera.width / 2) / newZoom;
             camera.scrollY = centerWorldY - (camera.height / 2) / newZoom;
+            
+            // Restart camera follow
+            camera.startFollow(this.player, true, 0.08, 0.08);
         });
 
         // Bullet pool with trails - 500 for bullet hell
