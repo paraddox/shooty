@@ -164,9 +164,13 @@ export default class GameScene extends Phaser.Scene {
 
         this.player.update();
 
-        // Update camera zoom based on danger (more enemies = slightly more zoom out)
+        // Dynamic zoom based on danger (only adjusts from manual zoom base)
+        // More enemies = slightly more zoom out, but respects manual zoom
         const enemyCount = this.enemies.countActive();
-        const targetZoom = 0.9 - Math.min(0.15, enemyCount * 0.005);
+        const dangerZoomOffset = Math.min(0.15, enemyCount * 0.005);
+        const targetZoom = this.currentZoom - dangerZoomOffset;
+        
+        // Smoothly interpolate to target (don't override if user just zoomed)
         this.cameras.main.setZoom(
             Phaser.Math.Linear(this.cameras.main.zoom, targetZoom, 0.02)
         );
