@@ -218,32 +218,45 @@ export default class GameScene extends Phaser.Scene {
 
     createFloor() {
         const tileSize = 128;
-        // Cover the world bounds area only - the arena
-        for (let x = 0; x < 1920; x += tileSize) {
-            for (let y = 0; y < 1440; y += tileSize) {
+        // Cover a larger area than the arena to prevent visible edges when zoomed out
+        const extraMargin = 400; // Extra tiles beyond arena bounds
+        for (let x = -extraMargin; x < 1920 + extraMargin; x += tileSize) {
+            for (let y = -extraMargin; y < 1440 + extraMargin; y += tileSize) {
                 const tile = this.add.image(x + tileSize/2, y + tileSize/2, 'floor');
-                tile.setAlpha(0.4 + Math.random() * 0.2);
-                tile.setDepth(-1);
+                // Full opacity within arena, fade out beyond
+                const inArena = x >= 0 && x < 1920 && y >= 0 && y < 1440;
+                tile.setAlpha(inArena ? 0.4 + Math.random() * 0.2 : 0.1);
+                tile.setDepth(-2);
             }
         }
+        
+        // Add solid dark background that covers everything
+        const bg = this.add.rectangle(960, 720, 4000, 4000, 0x0a0a0f);
+        bg.setDepth(-3);
     }
 
     createAmbientGrid() {
-        const grid = this.add.graphics();
-        grid.lineStyle(1, 0x1a1a25, 0.2);
-        
-        // Draw grid only within the world bounds (the playable arena)
         const spacing = 128;
+        
+        // Arena boundary - visible grid
+        const arenaGrid = this.add.graphics();
+        arenaGrid.lineStyle(1, 0x1a1a25, 0.3);
         for (let x = 0; x <= 1920; x += spacing) {
-            grid.moveTo(x, 0);
-            grid.lineTo(x, 1440);
+            arenaGrid.moveTo(x, 0);
+            arenaGrid.lineTo(x, 1440);
         }
         for (let y = 0; y <= 1440; y += spacing) {
-            grid.moveTo(0, y);
-            grid.lineTo(1920, y);
+            arenaGrid.moveTo(0, y);
+            arenaGrid.lineTo(1920, y);
         }
-        grid.strokePath();
-        grid.setDepth(-1);
+        arenaGrid.strokePath();
+        arenaGrid.setDepth(-1);
+        
+        // Outer boundary line - shows where arena ends
+        const bounds = this.add.graphics();
+        bounds.lineStyle(2, 0x00f0ff, 0.3);
+        bounds.strokeRect(0, 0, 1920, 1440);
+        bounds.setDepth(-1);
     }
 
     createHUD() {
