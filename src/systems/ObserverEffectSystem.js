@@ -425,6 +425,10 @@ export default class ObserverEffectSystem {
         ];
         
         const poem = poems[Math.floor(Math.random() * poems.length)]();
+        
+        // Guard: panel elements may not be initialized yet
+        if (!this.analysisText) return;
+        
         this.analysisText.setText(poem);
         
         // Fade in/out
