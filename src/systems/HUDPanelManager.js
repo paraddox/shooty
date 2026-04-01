@@ -65,6 +65,7 @@ export default class HUDPanelManager {
                 title: 'SYMBIOSIS',
                 color: 0xff00ff, // Magenta accent
                 slots: [
+                    { id: 'PROTEUS', label: 'EVOLUTION', type: 'compact', minHeight: 35 },
                     { id: 'SYMBIOSIS_HARMONY', label: 'HARMONY/CHAOS', type: 'balance', minHeight: 25 },
                     { id: 'RESONANCE_CASCADE', label: 'RESONANCE', type: 'multiplier', minHeight: 30 },
                 ]

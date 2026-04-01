@@ -702,4 +702,26 @@ describe('HUD System Compliance', () => {
       expect(bounds.left).toBe(0);
     });
   });
+
+  describe('ProteusProtocolSystem Pattern (generation/species display)', () => {
+    it('should position generation counter at top of content area', () => {
+      const container = new MockContainer(0, 0);
+
+      // Generation counter - cyan, top of panel
+      const generationText = new MockText(0, 0, 'GEN 1', { fontSize: '14px' });
+      generationText.setOrigin(0, 0); // Top-left origin
+      container.add(generationText);
+
+      // Species name - below generation
+      const speciesText = new MockText(0, 16, 'Primordial', { fontSize: '10px' });
+      speciesText.setOrigin(0, 0); // Top-left origin
+      container.add(speciesText);
+
+      const bounds = getContentBounds(container);
+      expect(bounds.top).toBe(0);
+      expect(bounds.left).toBe(0);
+      expect(generationText.y).toBe(0);
+      expect(speciesText.y).toBe(16);
+    });
+  });
 });

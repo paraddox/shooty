@@ -416,37 +416,44 @@ export default class ProteusProtocolSystem {
     }
     
     create() {
-        const { width, height } = this.scene.scale;
+        // Register with panel-based HUD system
+        if (!this.scene.hudPanels) {
+            console.warn('[ProteusProtocolSystem] hudPanels not available, deferring UI registration');
+            // Retry after a short delay
+            this.scene.time.delayedCall(100, () => this.create());
+            return;
+        }
         
-        // Create UI container in top-right area
-        this.ui.container = this.scene.add.container(width - 180, 80);
-        this.ui.container.setDepth(1000);
-        this.ui.container.setAlpha(0.9);
-        
-        // Generation counter
-        this.ui.generationText = this.scene.add.text(0, -35, `GEN ${this.genome.generation}`, {
-            fontFamily: 'monospace',
-            fontSize: '14px',
-            fontStyle: 'bold',
-            color: '#00d4aa'
-        }).setOrigin(0.5);
-        this.ui.container.add(this.ui.generationText);
-        
-        // Species name
-        this.ui.speciesText = this.scene.add.text(0, -15, this.genome.species, {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            color: '#9d4edd'
-        }).setOrigin(0.5);
-        this.ui.container.add(this.ui.speciesText);
-        
-        // Mutation ticker
-        this.ui.mutationTicker = this.scene.add.text(0, 45, '', {
-            fontFamily: 'monospace',
-            fontSize: '9px',
-            color: '#00d4aa'
-        }).setOrigin(0.5);
-        this.ui.container.add(this.ui.mutationTicker);
+        this.scene.hudPanels.registerSlot('PROTEUS', (container, width, layout) => {
+            this.ui.container = container;
+            this.ui.container.setDepth(1000);
+            this.ui.container.setAlpha(0.9);
+            
+            // Generation counter - cyan, at top of panel with top-left origin
+            this.ui.generationText = this.scene.add.text(0, 0, `GEN ${this.genome.generation}`, {
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                fontStyle: 'bold',
+                color: '#00d4aa'
+            }).setOrigin(0, 0); // Top-left origin
+            this.ui.container.add(this.ui.generationText);
+            
+            // Species name - purple, below generation
+            this.ui.speciesText = this.scene.add.text(0, 18, this.genome.species, {
+                fontFamily: 'monospace',
+                fontSize: '10px',
+                color: '#9d4edd'
+            }).setOrigin(0, 0); // Top-left origin
+            this.ui.container.add(this.ui.speciesText);
+            
+            // Mutation ticker - below species name
+            this.ui.mutationTicker = this.scene.add.text(0, 32, '', {
+                fontFamily: 'monospace',
+                fontSize: '9px',
+                color: '#00d4aa'
+            }).setOrigin(0, 0); // Top-left origin
+            this.ui.container.add(this.ui.mutationTicker);
+        }, 'TOP_CENTER');
         
         // Initial phenotype expression
         this.applyToGameScene();
@@ -465,6 +472,12 @@ export default class ProteusProtocolSystem {
         const manager = this.scene.graphicsManager;
         if (!manager) return;
         
+        // Skip drawing helix if using panel-based HUD (container is panel-relative)
+        // The helix was designed for absolute positioning; needs refactoring for panel mode
+        if (!this.ui.container || this.ui.container.x === 0 && this.ui.container.y === 0) {
+            return;
+        }
+        
         const time = this.scene.time.now / 1000;
         const width = 80;
         const height = 30;
@@ -472,8 +485,8 @@ export default class ProteusProtocolSystem {
         const points = 20;
         
         // Get container position for world coordinates
-        const containerX = this.ui.container?.x || this.scene.scale.width - 180;
-        const containerY = this.ui.container?.y || 80;
+        const containerX = this.ui.container.x || this.scene.scale.width - 180;
+        const containerY = this.ui.container.y || 80;
         
         // Draw double helix strands as paths
         for (let s = 0; s < strands; s++) {
