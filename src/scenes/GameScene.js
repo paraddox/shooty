@@ -742,6 +742,10 @@ export default class GameScene extends Phaser.Scene {
         
         // Show Dream State Protocol hint (the 52nd dimension - ONEIRIC SYNTHESIS)
         this.time.delayedCall(20000, () => this.showDreamStateHint());
+        
+        // Recalculate panel heights after ALL systems have registered their slots
+        // This ensures the panel background fits all content properly
+        this.hudPanels.recalculatePanelHeights();
     }
     
     showDissolutionHint() {
@@ -2986,9 +2990,8 @@ export default class GameScene extends Phaser.Scene {
         // OmniWeapon, VoidCoherence, ChronoLoop, CausalLink, TemporalRewind
         // These will be populated by their respective systems
         
-        // Recalculate panel heights now that all slots are registered
-        // This measures actual content and resizes backgrounds properly
-        panels.recalculatePanelHeights();
+        // NOTE: recalculatePanelHeights() is called at the end of create()
+        // after all systems have registered their slots
         
         this.score = 0;
         this.scoreMultiplier = 1.0;
