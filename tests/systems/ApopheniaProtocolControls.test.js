@@ -14,11 +14,6 @@ describe('ApopheniaProtocol ControlsManager Integration', () => {
         
         mockControls = {
             register: vi.fn((key, action, handler, options) => {
-                // Simulate F key conflict (already bound by DimensionalCollapse)
-                if (key === 'F' && registeredKeys['F']) {
-                    console.warn(`[ControlsManager] Key F already bound to: ${registeredKeys['F'].action}`);
-                    return false;
-                }
                 registeredKeys[key] = { action, handler, options };
                 return true;
             }),
@@ -40,7 +35,8 @@ describe('ApopheniaProtocol ControlsManager Integration', () => {
             scene: mockScene,
             
             setupInput() {
-                return this.scene.controls.register('F', 'Focus Mode', () => {
+                // Uses T key (changed from F to avoid conflict)
+                return this.scene.controls.register('T', 'Apophenic Focus', () => {
                     this.toggleFocusMode();
                 }, {
                     system: 'ApopheniaProtocol',
@@ -54,13 +50,13 @@ describe('ApopheniaProtocol ControlsManager Integration', () => {
         };
     });
     
-    describe('ControlsManager registration with conflict', () => {
-        it('should try to register F key with ControlsManager', () => {
+    describe('ControlsManager registration', () => {
+        it('should register T key (changed from F to avoid conflict)', () => {
             apopheniaSystem.setupInput();
             
             expect(mockControls.register).toHaveBeenCalledWith(
-                'F',
-                'Focus Mode',
+                'T',
+                'Apophenic Focus',
                 expect.any(Function),
                 expect.objectContaining({
                     system: 'ApopheniaProtocol',
@@ -69,38 +65,17 @@ describe('ApopheniaProtocol ControlsManager Integration', () => {
             );
         });
         
-        it('should fail to register when F is already bound', () => {
-            // Pre-register F as DimensionalCollapse would have
-            mockControls.register('F', 'Dimensional Collapse', () => {}, {
-                system: 'DimensionalCollapseSystem'
-            });
+        it('should NOT use F key anymore', () => {
+            apopheniaSystem.setupInput();
             
-            const result = apopheniaSystem.setupInput();
-            expect(result).toBe(false);
+            const fCalls = mockControls.register.mock.calls.filter(c => c[0] === 'F');
+            expect(fCalls).toHaveLength(0);
         });
         
-        it('should fallback to direct keyboard binding when ControlsManager rejects', () => {
-            // Pre-register F
-            mockControls.register('F', 'Dimensional Collapse', () => {}, {
-                system: 'DimensionalCollapseSystem'
-            });
+        it('should NOT register directly with keyboard', () => {
+            apopheniaSystem.setupInput();
             
-            // Try ControlsManager (fails)
-            const cmResult = apopheniaSystem.setupInput();
-            expect(cmResult).toBe(false);
-            
-            // Should fall back to direct binding
-            apopheniaSystem.setupInputFallback = function() {
-                this.scene.input.keyboard.on('keydown-F', () => {
-                    this.toggleFocusMode();
-                });
-            };
-            apopheniaSystem.setupInputFallback();
-            
-            expect(mockScene.input.keyboard.on).toHaveBeenCalledWith(
-                'keydown-F',
-                expect.any(Function)
-            );
+            expect(mockScene.input.keyboard.on).not.toHaveBeenCalled();
         });
     });
 });

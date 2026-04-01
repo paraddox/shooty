@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import ControlsManager from '../systems/ControlsManager.js';
 
 export default class GameOverScene extends Phaser.Scene {
     constructor() {
@@ -6,6 +7,8 @@ export default class GameOverScene extends Phaser.Scene {
     }
 
     create(data) {
+        // Initialize ControlsManager for this scene
+        this.controls = new ControlsManager(this);
         const w = this.cameras.main.width;
         const h = this.cameras.main.height;
         const cx = w / 2;
@@ -124,21 +127,15 @@ export default class GameOverScene extends Phaser.Scene {
         restart.on('pointerover', () => restart.setFill('#ffffff'));
         restart.on('pointerout', () => restart.setFill('#00f0ff'));
 
-        // Register with ControlsManager (fallback to direct if scene doesn't have controls)
-        if (this.controls) {
-            this.controls.register('SPACE', 'Restart', () => this.restart(), {
-                system: 'GameOverScene',
-                description: 'Restart game from game over'
-            });
-            this.controls.register('ENTER', 'Restart', () => this.restart(), {
-                system: 'GameOverScene',
-                description: 'Restart game from game over'
-            });
-        } else {
-            // Fallback to direct binding
-            this.input.keyboard.on('keydown-SPACE', () => this.restart());
-            this.input.keyboard.on('keydown-ENTER', () => this.restart());
-        }
+        // Register with ControlsManager ONLY (no fallbacks)
+        this.controls.register('SPACE', 'Restart', () => this.restart(), {
+            system: 'GameOverScene',
+            description: 'Restart game from game over'
+        });
+        this.controls.register('ENTER', 'Restart', () => this.restart(), {
+            system: 'GameOverScene',
+            description: 'Restart game from game over'
+        });
     }
 
     createGridEffect() {

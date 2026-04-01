@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import ControlsManager from '../systems/ControlsManager.js';
 
 /**
  * Chronicle Menu Scene — The Museum of Your Persistence
@@ -21,6 +22,9 @@ export default class ChronicleMenuScene extends Phaser.Scene {
     }
     
     create() {
+        // Initialize ControlsManager for this scene
+        this.controls = new ControlsManager(this);
+        
         const w = this.cameras.main.width;
         const h = this.cameras.main.height;
         
@@ -58,15 +62,11 @@ export default class ChronicleMenuScene extends Phaser.Scene {
         // Detail panel (hidden initially)
         this.createDetailPanel();
         
-        // Input - register with ControlsManager (fallback to direct if no controls)
-        if (this.controls) {
-            this.controls.register('ESC', 'Return to Menu', () => this.returnToMenu(), {
-                system: 'ChronicleMenuScene',
-                description: 'Return to main menu'
-            });
-        } else {
-            this.input.keyboard.on('keydown-ESC', () => this.returnToMenu());
-        }
+        // Input - register with ControlsManager ONLY (no fallbacks)
+        this.controls.register('ESC', 'Return to Menu', () => this.returnToMenu(), {
+            system: 'ChronicleMenuScene',
+            description: 'Return to main menu'
+        });
     }
     
     createConstellationBackground() {

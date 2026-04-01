@@ -386,8 +386,8 @@ export default class ResonantWhisperSystem {
     }
     
     setupInput() {
-        // F key to interact with whispers - try ControlsManager first, fallback to direct
-        const fRegistered = this.scene.controls.register('F', 'Interact', () => {
+        // G key to interact with whispers (was F, changed to avoid conflict)
+        this.scene.controls.register('G', 'Whisper', () => {
             if (this.nearbyWhisper) {
                 this.interactWithWhisper(this.nearbyWhisper);
             }
@@ -395,16 +395,6 @@ export default class ResonantWhisperSystem {
             system: 'ResonantWhisperSystem',
             description: 'Interact with nearby whispers'
         });
-        
-        // Fallback to direct binding if F rejected
-        if (!fRegistered) {
-            console.log('[ResonantWhisperSystem] F key already bound, using direct keyboard binding');
-            this.scene.input.keyboard.on('keydown-F', () => {
-                if (this.nearbyWhisper) {
-                    this.interactWithWhisper(this.nearbyWhisper);
-                }
-            });
-        }
         
         // Numbers 1-3 for fragment responses - registered with ControlsManager
         this.scene.controls.register('ONE', 'Response Yes', () => {

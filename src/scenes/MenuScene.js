@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import ControlsManager from '../systems/ControlsManager.js';
 
 export default class MenuScene extends Phaser.Scene {
     constructor() {
@@ -6,6 +7,8 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     create() {
+        // Initialize ControlsManager for this scene
+        this.controls = new ControlsManager(this);
         const w = this.cameras.main.width;
         const h = this.cameras.main.height;
         const cx = w / 2;
@@ -96,20 +99,15 @@ export default class MenuScene extends Phaser.Scene {
             chronicleText.on('pointerdown', () => this.openChronicle());
         }
 
-        // Input handlers - register with ControlsManager (fallback to direct if no controls)
-        if (this.controls) {
-            this.controls.register('SPACE', 'Start Game', () => this.startGame(), {
-                system: 'MenuScene',
-                description: 'Start the game'
-            });
-            this.controls.register('ENTER', 'Start Game', () => this.startGame(), {
-                system: 'MenuScene',
-                description: 'Start the game'
-            });
-        } else {
-            this.input.keyboard.on('keydown-SPACE', () => this.startGame());
-            this.input.keyboard.on('keydown-ENTER', () => this.startGame());
-        }
+        // Input handlers - register with ControlsManager ONLY (no fallbacks)
+        this.controls.register('SPACE', 'Start Game', () => this.startGame(), {
+            system: 'MenuScene',
+            description: 'Start the game'
+        });
+        this.controls.register('ENTER', 'Start Game', () => this.startGame(), {
+            system: 'MenuScene',
+            description: 'Start the game'
+        });
 
         // Ambient grid
         this.createGridEffect();

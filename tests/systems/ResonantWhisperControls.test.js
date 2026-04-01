@@ -14,10 +14,6 @@ describe('ResonantWhisperSystem ControlsManager Integration', () => {
         
         mockControls = {
             register: vi.fn((key, action, handler, options) => {
-                // Simulate F key conflict
-                if (key === 'F' && registeredKeys['F']) {
-                    return false;
-                }
                 registeredKeys[key] = { action, handler, options };
                 return true;
             }),
@@ -41,8 +37,8 @@ describe('ResonantWhisperSystem ControlsManager Integration', () => {
             activeFragment: null,
             
             setupInput() {
-                // F key for whisper interaction
-                const fRegistered = this.scene.controls.register('F', 'Interact', () => {
+                // G key for whisper interaction (was F, changed to avoid conflict)
+                this.scene.controls.register('G', 'Whisper', () => {
                     if (this.nearbyWhisper) {
                         this.interactWithWhisper(this.nearbyWhisper);
                     }
@@ -50,15 +46,6 @@ describe('ResonantWhisperSystem ControlsManager Integration', () => {
                     system: 'ResonantWhisperSystem',
                     description: 'Interact with nearby whispers'
                 });
-                
-                // Fallback if F rejected
-                if (!fRegistered) {
-                    this.scene.input.keyboard.on('keydown-F', () => {
-                        if (this.nearbyWhisper) {
-                            this.interactWithWhisper(this.nearbyWhisper);
-                        }
-                    });
-                }
                 
                 // Number keys for fragment responses
                 this.scene.controls.register('ONE', 'Response Yes', () => {
@@ -100,18 +87,25 @@ describe('ResonantWhisperSystem ControlsManager Integration', () => {
     });
     
     describe('ControlsManager registration', () => {
-        it('should try to register F key with ControlsManager', () => {
+        it('should register G key (changed from F to avoid conflict)', () => {
             whisperSystem.setupInput();
             
             expect(mockControls.register).toHaveBeenCalledWith(
-                'F',
-                'Interact',
+                'G',
+                'Whisper',
                 expect.any(Function),
                 expect.objectContaining({
                     system: 'ResonantWhisperSystem',
                     description: expect.any(String)
                 })
             );
+        });
+        
+        it('should NOT use F key anymore', () => {
+            whisperSystem.setupInput();
+            
+            const fCalls = mockControls.register.mock.calls.filter(c => c[0] === 'F');
+            expect(fCalls).toHaveLength(0);
         });
         
         it('should register number keys 1-3 with ControlsManager', () => {
@@ -137,22 +131,10 @@ describe('ResonantWhisperSystem ControlsManager Integration', () => {
             );
         });
         
-        it('should fallback to direct F binding when ControlsManager rejects', () => {
-            // Pre-register F
-            mockControls.register('F', 'Dimensional Collapse', () => {}, {
-                system: 'DimensionalCollapseSystem'
-            });
-            
+        it('should NOT register directly with keyboard', () => {
             whisperSystem.setupInput();
             
-            // Should have tried ControlsManager first
-            expect(mockControls.register).toHaveBeenCalledWith('F', expect.anything(), expect.anything(), expect.anything());
-            
-            // Then fallback to direct binding
-            expect(mockScene.input.keyboard.on).toHaveBeenCalledWith(
-                'keydown-F',
-                expect.any(Function)
-            );
+            expect(mockScene.input.keyboard.on).not.toHaveBeenCalled();
         });
     });
 });
