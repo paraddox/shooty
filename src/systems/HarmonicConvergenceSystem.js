@@ -689,6 +689,40 @@ export default class HarmonicConvergenceSystem {
         }
     }
     
+    /**
+     * Receive ambient palette from AmbientAwarenessSystem
+     * Syncs the visual theme with time-of-day colors
+     * @param {Object} palette - Palette data from ambient system
+     * @returns {boolean} - Whether palette was applied
+     */
+    setAmbientPalette(palette) {
+        if (!palette || !palette.primary) {
+            return false;
+        }
+        
+        // Store the ambient palette
+        this.currentPalette = {
+            primary: palette.primary,
+            secondary: palette.secondary,
+            accent: palette.accent,
+            background: palette.background,
+            timeState: palette.timeState || 'unknown'
+        };
+        
+        // Track that this came from ambient system
+        this.ambientPaletteSource = palette.source || 'unknown';
+        
+        // Apply background color if provided
+        if (palette.background && this.scene.cameras?.main) {
+            const bgColor = '#' + palette.background.toString(16).padStart(6, '0');
+            this.scene.cameras.main.setBackgroundColor(bgColor);
+        }
+        
+        console.log(`🎨 Harmonic Convergence synced with ${palette.timeState} palette from ${this.ambientPaletteSource}`);
+        
+        return true;
+    }
+    
     destroy() {
         if (this.metronomeEvent) {
             this.metronomeEvent.remove();
