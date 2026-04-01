@@ -52,24 +52,29 @@ export default class KeyboardShortcutsLegend {
     
     /**
      * Calculate the required panel width based on content
+     * Uses conservative estimates to ensure no overflow
      */
     calculatePanelWidth() {
         const shortcuts = this.getShortcuts();
         const actionColumnX = 55;
-        const padding = 12; // 6px on each side
+        const rightPadding = 10; // Extra space on right side
         
         let maxActionWidth = 0;
         
         shortcuts.forEach(shortcut => {
-            // Action text width (9px monospace ≈ 5.4px per char)
-            const actionWidth = shortcut.action.length * 5.4;
+            // More conservative character width estimate
+            // Phaser 9px monospace is approximately 5.5-6px per character
+            // Using 6.2px to be safe, plus add buffer for longer words
+            const actionWidth = shortcut.action.length * 6.2;
             maxActionWidth = Math.max(maxActionWidth, actionWidth);
         });
         
-        // Total width = action column start + max action width + padding
-        const totalWidth = actionColumnX + maxActionWidth + padding;
+        // Total width = action column start + max action width + right padding
+        const totalWidth = actionColumnX + maxActionWidth + rightPadding;
         
-        return Math.ceil(Math.max(totalWidth, 150)); // Minimum 150px
+        // Round up to nearest 10 and ensure minimum
+        const roundedWidth = Math.ceil(totalWidth / 10) * 10;
+        return Math.max(roundedWidth, 160); // Minimum 160px
     }
     
     createLegendPanel() {
@@ -92,10 +97,9 @@ export default class KeyboardShortcutsLegend {
             
         }, 'BOTTOM_LEFT');
         
-        // Update panel width if needed (after registration)
-        this.scene.time.delayedCall(0, () => {
-            this.updatePanelWidth(requiredWidth);
-        });
+        // Update panel width immediately after registration
+        // Use next frame to ensure HUDPanelManager has processed the registration
+        this.updatePanelWidth(requiredWidth);
     }
     
     /**

@@ -90,7 +90,7 @@ export default class HUDPanelManager {
             BOTTOM_LEFT: {
                 x: this.margin, // Left-aligned
                 y: null, // Bottom-relative
-                width: 150,
+                width: 200, // Increased from 150 to fit longer action names
                 title: 'CONTROLS',
                 color: 0x00f0ff, // Cyan accent
                 slots: [
