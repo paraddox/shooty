@@ -196,6 +196,9 @@ export default class HeartfluxProtocolSystem {
             this.arousalFill = this.scene.add.rectangle(-barWidth/2, 52, 0, 3, this.STREAM_COLOR, 0.8);
             this.arousalFill.setOrigin(0, 0.5);
             container.add(this.arousalFill);
+            
+            // Start pulse animation now that pulseRing is created
+            this.startPulseAnimation();
         }, 'TOP_RIGHT');
         
         // Breathing guide (initially hidden) - NOT in panel, screen-centered overlay
@@ -215,11 +218,21 @@ export default class HeartfluxProtocolSystem {
         this.breathGuide.setScrollFactor(0);
         this.breathGuide.setDepth(1000);
         
-        // Start the pulse animation
-        this.startPulseAnimation();
+        // Pulse animation will start when panel callback completes
+        this.pulseAnimationStarted = false;
     }
     
     startPulseAnimation() {
+        // Guard: pulseRing may not be initialized yet (panel-based HUD async)
+        if (!this.pulseRing) {
+            console.warn('[HeartfluxProtocol] Pulse animation deferred - ring not initialized yet');
+            this.pulseAnimationStarted = false;
+            return;
+        }
+        
+        if (this.pulseAnimationStarted) return; // Already running
+        this.pulseAnimationStarted = true;
+        
         // Base pulse that adapts to arousal
         const pulseDuration = this.getPulseDuration();
         
@@ -230,6 +243,7 @@ export default class HeartfluxProtocolSystem {
             duration: pulseDuration,
             repeat: -1,
             onRepeat: () => {
+                if (!this.pulseRing) return; // Guard for cleanup
                 // Update pulse parameters based on current arousal
                 const newDuration = this.getPulseDuration();
                 this.scene.tweens.getTweensOf(this.pulseRing).forEach(t => {
@@ -582,6 +596,11 @@ export default class HeartfluxProtocolSystem {
     }
     
     updateVisualState() {
+        // Guard: panel elements may not be initialized yet
+        if (!this.heartOrb || !this.innerGlow || !this.pulseRing || !this.stateText || !this.arousalFill) {
+            return;
+        }
+        
         // Update colors and appearance based on arousal state
         let mainColor, glowColor, stateName;
         
