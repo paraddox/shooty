@@ -830,8 +830,8 @@ export default class ResonanceCascadeSystem {
         }
         
         // Update visuals to show new chain state
+        // NOTE: createVisuals() is NOT called here - visuals are created once in init()
         this.updateResonanceState();
-        this.createVisuals();
     }
     
     /**
