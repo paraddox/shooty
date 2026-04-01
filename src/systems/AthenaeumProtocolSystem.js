@@ -395,6 +395,11 @@ export default class AthenaeumProtocolSystem {
         
         if (!region) return;
         
+        // Guard: panel elements may not be initialized yet
+        if (!this.regionSymbol || !this.regionName || !this.regionEffect || !this.intensityBar) {
+            return;
+        }
+        
         // Update UI
         const typeInfo = this.REGION_TYPES[region.type];
         this.regionSymbol.setText(typeInfo.symbol);
