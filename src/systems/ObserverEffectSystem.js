@@ -789,8 +789,10 @@ export default class ObserverEffectSystem {
     }
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+
         this.analysisTimer += dt;
-        
+
         // Update observer echoes
         this.observerEchoes.forEach(echo => echo.update(dt));
         
@@ -883,13 +885,15 @@ class ObserverEcho {
     }
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+
         this.age += dt;
-        
+
         if (this.age >= this.lifespan) {
             this.die();
             return;
         }
-        
+
         // Update aura via UnifiedGraphicsManager
         const pulse = 1 + Math.sin(this.age * 3) * 0.2;
         const alpha = 0.3 * (1 - this.age / this.lifespan);
@@ -1069,8 +1073,10 @@ class ObserverGod {
     }
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+
         this.judgmentTimer += dt;
-        
+
         // Look at player
         const angle = Phaser.Math.Angle.Between(
             this.x, this.y,

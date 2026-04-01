@@ -301,6 +301,8 @@ export default class ChronoLoopSystem {
     }
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Update cooldown
         if (this.recordCooldown > 0) {
             this.recordCooldown -= dt;

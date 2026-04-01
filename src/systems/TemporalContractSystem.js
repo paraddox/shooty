@@ -665,6 +665,9 @@ export default class TemporalContractSystem {
      * Update contract tracking
      */
     update(dt) {
+        // Pause check
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Update survival time for active contracts
         this.tracking.survivalTime += dt;
         

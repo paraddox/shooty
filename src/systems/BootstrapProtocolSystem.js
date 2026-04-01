@@ -174,6 +174,8 @@ export default class BootstrapProtocolSystem {
     }
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+        
         const now = this.scene.time.now / 1000;
         
         // Generate future echoes on interval

@@ -331,6 +331,9 @@ export default class RivalProtocolSystem {
     // ===== SPAWNING RIVALS =====
     
     update(dt) {
+        // Pause check
+        if (this.scene.pauseSystem?.paused) return;
+        
         this.spawnCooldown -= dt;
         
         // Check if it's time to spawn a rival

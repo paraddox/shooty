@@ -524,7 +524,9 @@ export default class ResonanceCascadeSystem {
     }
     
     update(dt) {
-        // Update chain timer
+        if (this.scene.pauseSystem?.paused) return;
+        
+        // Decay chain timer
         if (this.activeChain.length > 0) {
             this.chainTimer -= dt;
             

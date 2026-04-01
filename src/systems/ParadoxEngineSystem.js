@@ -431,6 +431,8 @@ export default class ParadoxEngineSystem {
     }
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Update cooldown
         if (this.projectionCooldown > 0) {
             this.projectionCooldown -= dt;

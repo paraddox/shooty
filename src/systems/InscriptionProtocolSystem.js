@@ -686,6 +686,9 @@ S Y N T H E S I S
     
     // Called every frame
     update(dt) {
+        // Pause check
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Subtle quill float animation
         if (this.quillIcon && this.quillIcon.alpha > 0) {
             this.quillIcon.y += Math.sin(Date.now() / 500) * 0.2;

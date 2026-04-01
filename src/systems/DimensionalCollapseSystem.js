@@ -455,6 +455,9 @@ export default class DimensionalCollapseSystem {
     // ===== UPDATE LOOP =====
     
     update(dt) {
+        // Pause check
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Update cooldown
         if (this.collapseCooldown > 0) {
             this.collapseCooldown -= dt;

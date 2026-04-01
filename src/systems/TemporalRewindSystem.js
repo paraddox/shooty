@@ -459,6 +459,8 @@ export default class TemporalRewindSystem {
     }
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+
         // Update cooldowns
         if (this.rewindCooldown > 0) {
             this.rewindCooldown = Math.max(0, this.rewindCooldown - dt);

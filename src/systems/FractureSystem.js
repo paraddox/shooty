@@ -295,6 +295,9 @@ export default class FractureSystem {
     }
     
     update(dt) {
+        // Pause check
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Update cooldown
         if (this.cooldown > 0) {
             this.cooldown -= dt;

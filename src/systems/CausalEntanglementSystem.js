@@ -855,6 +855,9 @@ export default class CausalEntanglementSystem {
     }
     
     update(dt) {
+        // Pause check
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Update cooldown
         if (this.entanglementCooldown > 0) {
             this.entanglementCooldown -= dt;

@@ -214,6 +214,9 @@ export default class KairosMomentSystem {
     // ===== FLOW DETECTION =====
     
     update(dt) {
+        // Pause check
+        if (this.scene.pauseSystem?.paused) return;
+        
         if (!this.scene.player?.active) return;
         
         const player = this.scene.player;

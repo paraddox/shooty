@@ -960,6 +960,8 @@ export default class NemesisGenesisSystem {
     // ===== MAIN UPDATE =====
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Always observe player
         this.observePlayer(dt);
         

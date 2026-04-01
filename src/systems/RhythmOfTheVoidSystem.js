@@ -762,6 +762,9 @@ export default class RhythmOfTheVoidSystem {
     // ===== MAIN UPDATE =====
     
     update(dt) {
+        // Pause check
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Calculate current beat phase
         const timeSinceLastBeat = (this.scene.time.now - this.lastBeatTime) / 1000;
         this.beatPhase = timeSinceLastBeat / this.beatDuration;

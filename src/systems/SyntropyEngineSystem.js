@@ -247,6 +247,7 @@ export default class SyntropyEngineSystem {
     }
     
     update(time, delta) {
+        if (this.scene.pauseSystem?.paused) return;
         if (!this.scene.player?.active) return;
         
         // Handle radial cooldown

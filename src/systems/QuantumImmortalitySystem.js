@@ -579,6 +579,8 @@ export default class QuantumImmortalitySystem {
     }
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Update cooldowns
         if (this.mergeCooldown > 0) {
             this.mergeCooldown -= dt;

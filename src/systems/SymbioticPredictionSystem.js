@@ -863,6 +863,9 @@ export default class SymbioticPredictionSystem {
     }
     
     update(dt) {
+        // Pause check
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Update harmony timer
         if (this.harmonyActive) {
             this.harmonyTimer -= dt * 1000;

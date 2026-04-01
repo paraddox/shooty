@@ -1066,7 +1066,9 @@ export default class EgregoreProtocolSystem {
     // ===== MAIN UPDATE =====
     
     update(dt) {
-        // Spawn unknown geometry
+        if (this.scene.pauseSystem?.paused) return;
+        
+        // Update unknown geometry spawning
         this.unknownSpawnTimer += dt;
         if (this.unknownSpawnTimer >= this.unknownSpawnInterval) {
             this.unknownSpawnTimer = 0;

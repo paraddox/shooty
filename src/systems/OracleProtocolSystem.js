@@ -645,6 +645,8 @@ export default class OracleProtocolSystem {
     }
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+        
         if (!this.oracleAwakened || !this.scene.player?.active) return;
         
         this.renderCounter++;

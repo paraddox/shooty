@@ -732,6 +732,8 @@ export default class VoidCoherenceSystem {
     }
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Decay coherence
         this.coherenceLevel = Math.max(0, this.coherenceLevel - this.coherenceDecay * dt);
         this.updateCoherenceUI();

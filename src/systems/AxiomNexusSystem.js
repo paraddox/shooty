@@ -383,6 +383,9 @@ export default class AxiomNexusSystem {
     // === CORE UPDATE LOOP ===
     
     update(dt) {
+        // Pause check
+        if (this.scene.pauseSystem?.paused) return;
+        
         if (!this.enabled) return;
         
         // Update cooldowns

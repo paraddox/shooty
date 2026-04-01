@@ -774,6 +774,8 @@ export default class OmniWeaponSystem {
     }
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Decay progress over time (encourages focusing your playstyle)
         Object.keys(this.modProgress).forEach(mod => {
             if (this.modProgress[mod] > 0 && this.modProgress[mod] < this.UNLOCK_THRESHOLD) {

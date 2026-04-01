@@ -573,6 +573,9 @@ export default class SynchronicityCascadeSystem {
      * Main update loop
      */
     update(dt) {
+        // Pause check
+        if (this.scene.pauseSystem?.paused) return;
+        
         const now = this.scene.time.now / 1000;
         
         // Decay inactive systems

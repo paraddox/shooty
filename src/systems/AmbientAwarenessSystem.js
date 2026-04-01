@@ -777,6 +777,8 @@ export default class AmbientAwarenessSystem {
     }
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Update session duration
         this.sessionDuration = (Date.now() - this.sessionStartTime) / 1000;
         

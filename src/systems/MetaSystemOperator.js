@@ -1133,6 +1133,9 @@ export default class MetaSystemOperator {
     }
     
     update(dt) {
+        // Pause check
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Update patch energy
         this.patchEnergy = Math.min(100, this.patchEnergy + dt * 5);
         

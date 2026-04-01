@@ -760,6 +760,8 @@ export default class MnemosyneWeaveSystem {
     // ===== UPDATE LOOP =====
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+
         // Update trance meter
         if (this.tranceMeter < this.tranceMeterMax) {
             this.tranceMeter = Math.min(

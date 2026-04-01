@@ -244,6 +244,9 @@ export default class TesseractTitan {
     }
     
     update(dt) {
+        // Pause check
+        if (this.scene.pauseSystem?.paused) return;
+        
         if (!this.active || this.deathSequence) return;
         
         // Update 4D rotation

@@ -274,6 +274,8 @@ export default class ArchitectSystem {
     // ===== DISCOVERY DETECTION =====
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+
         // Update discovery cooldown
         if (this.discoveryCooldown > 0) {
             this.discoveryCooldown -= dt;

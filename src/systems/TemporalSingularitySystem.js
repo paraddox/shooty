@@ -520,6 +520,8 @@ export default class TemporalSingularitySystem {
     }
     
     update(dt) {
+        if (this.scene.pauseSystem?.paused) return;
+        
         // Update charge decay
         if (!this.singularityActive && this.charge > 0) {
             this.charge = Math.max(0, this.charge - this.chargeDecay * dt);
