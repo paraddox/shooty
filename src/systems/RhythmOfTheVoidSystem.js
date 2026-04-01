@@ -117,6 +117,10 @@ export default class RhythmOfTheVoidSystem {
         this.WARNING_RED = 0xff3366;
         this.SAFE_CYAN = 0x00f0ff;
         
+        // Throttling for performance
+        this.renderInterval = 2; // Update visuals every 2nd frame
+        this.renderCounter = 0;
+        
         this.init();
     }
     
@@ -749,18 +753,22 @@ export default class RhythmOfTheVoidSystem {
         const timeSinceLastBeat = (this.scene.time.now - this.lastBeatTime) / 1000;
         this.beatPhase = timeSinceLastBeat / this.beatDuration;
         
-        // Update measure ring
-        const measureProgress = ((this.scene.time.now - this.trackStartTime) / 1000) % this.measureDuration;
-        const measurePhase = measureProgress / this.measureDuration;
-        
-        // Draw measure ring
-        this.updateMeasureRing(measurePhase);
+        // Update measure ring (throttled for performance)
+        this.renderCounter++;
+        if (this.renderCounter >= this.renderInterval) {
+            this.renderCounter = 0;
+            const measureProgress = ((this.scene.time.now - this.trackStartTime) / 1000) % this.measureDuration;
+            const measurePhase = measureProgress / this.measureDuration;
+            this.updateMeasureRing(measurePhase);
+        }
         
         // Decay spawn windows
         this.decaySpawnWindows(dt);
         
-        // Update visual elements attached to player
-        this.updateAttachedVisuals();
+        // Update visual elements attached to player (throttled)
+        if (this.renderCounter === 0) {
+            this.updateAttachedVisuals();
+        }
     }
     
     updateMeasureRing(phase) {

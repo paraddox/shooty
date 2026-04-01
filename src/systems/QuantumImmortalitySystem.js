@@ -92,6 +92,10 @@ export default class QuantumImmortalitySystem {
         this.totalEchoesSpawned = 0;
         this.branchesCreated = [];     // Record of branch points
         
+        // Throttling for performance (critical for post-death FPS)
+        this.renderInterval = 2; // Render every 2nd frame (30fps)
+        this.renderCounter = 0;
+        
         this.init();
     }
     
@@ -611,14 +615,20 @@ export default class QuantumImmortalitySystem {
             this.updateEntropyEffects();
         }
         
-        // Update UI
-        this.updateUI();
+        // UI (throttled - only update every 5th frame)
+        if (this.renderCounter % 5 === 0) {
+            this.updateUI();
+        }
         
         // Check merge availability
         this.checkMergeAvailability();
         
-        // Render
-        this.render();
+        // Render (throttled for performance)
+        this.renderCounter++;
+        if (this.renderCounter >= this.renderInterval) {
+            this.renderCounter = 0;
+            this.render();
+        }
     }
     
     updateEchoes(dt) {

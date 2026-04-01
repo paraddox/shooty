@@ -79,6 +79,10 @@ export default class TesseractTitan {
         // Chrono-singularity in final phase
         this.singularityRadius = 0;
         this.singularityPull = 0;
+        
+        // Throttling for performance
+        this.renderInterval = 2; // Render every 2nd frame (30fps)
+        this.renderCounter = 0;
     }
     
     /**
@@ -254,8 +258,12 @@ export default class TesseractTitan {
         // Project 4D vertices to 2D for rendering
         this.projectVertices();
         
-        // Render the tesseract
-        this.renderTesseract();
+        // Render the tesseract (throttled for performance)
+        this.renderCounter++;
+        if (this.renderCounter >= this.renderInterval) {
+            this.renderCounter = 0;
+            this.renderTesseract();
+        }
         
         // Update face indicators
         this.updateFaceIndicators();

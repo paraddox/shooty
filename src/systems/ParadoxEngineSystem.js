@@ -92,6 +92,10 @@ export default class ParadoxEngineSystem {
         this.SAFE_COLOR = 0x00f0ff;
         this.PARADOX_COLOR = 0xff00ff;
         
+        // Throttling for performance
+        this.renderInterval = 2; // Render every 2nd frame (30fps)
+        this.renderCounter = 0;
+        
         this.init();
     }
     
@@ -479,8 +483,12 @@ export default class ParadoxEngineSystem {
             this.updateParadox(dt);
         }
         
-        // Update visuals
-        this.render();
+        // Update visuals (throttled for performance)
+        this.renderCounter++;
+        if (this.renderCounter >= this.renderInterval) {
+            this.renderCounter = 0;
+            this.render();
+        }
     }
     
     updateProjection(dt) {
