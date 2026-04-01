@@ -648,10 +648,6 @@ export default class KairosMomentSystem {
     showCrystallizationEffect() {
         const player = this.scene.player;
         
-        // Crystal formation animation
-        const graphics = this.scene.add.graphics();
-        graphics.setDepth(70);
-        
         // Expanding crystal ring
         const ring = this.scene.add.circle(player.x, player.y, 10, this.KAIROS_COLOR, 0);
         ring.setStrokeStyle(3, this.KAIROS_GOLD);

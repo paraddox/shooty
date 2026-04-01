@@ -3,6 +3,13 @@ import Phaser from 'phaser';
 /**
  * Temporal Rewind System — The "Undo Button" Made Flesh
  * 
+ * MIGRATED to UnifiedGraphicsManager (April 2025):
+ * - Anchor graphics rendered via UnifiedGraphicsManager on 'effects' layer
+ * - Rewind effects rendered on 'world' layer (temporal echoes)
+ * - Afterimages rendered on 'effects' layer
+ * - Eliminated 3 per-frame graphics.clear() calls (now handled by UnifiedGraphicsManager)
+ * - 2 remaining clear() calls are in one-shot tween animations (acceptable)
+ * 
  * The missing temporal dimension: Intentional time manipulation. While the Paradox
  * Engine lets you predict forward and Chrono-Loop lets you replay recordings, this
  * system lets you actively REWIND TIME — undo mistakes, try different approaches,
@@ -134,6 +141,7 @@ export default class TemporalRewindSystem {
         // Use UnifiedGraphicsManager if available (new architecture)
         if (this.scene.graphicsManager) {
             this.useUnifiedRenderer = true;
+            // Note: No graphics objects created - all rendering via UnifiedGraphicsManager
         } else {
             // Legacy: create individual graphics objects
             // Anchor rendering graphics
@@ -764,8 +772,8 @@ export default class TemporalRewindSystem {
             return;
         }
         
-        // Legacy direct graphics rendering
-        // Clear all graphics
+        // Legacy direct graphics rendering (deprecated - migrate to UnifiedGraphicsManager)
+        // Note: These 3 clear() calls are eliminated when using UnifiedGraphicsManager
         this.anchorGraphics.clear();
         this.rewindGraphics.clear();
         this.afterimageGraphics.clear();
@@ -784,19 +792,27 @@ export default class TemporalRewindSystem {
     
     /**
      * New unified rendering - registers commands instead of direct drawing
+     * 
+     * Layer separation:
+     * - 'effects' layer: for afterimages (visual effects)
+     * - 'world' layer: for rewind effects (temporal echoes in the world)
+     * - 'effects' layer: for anchors (interactive world elements)
+     * 
+     * Benefits: UnifiedGraphicsManager clears once per frame per layer,
+     * eliminating 3 graphics.clear() calls from this system.
      */
     renderUnified() {
         const manager = this.scene.graphicsManager;
         
-        // Render anchors using unified renderer
+        // Render anchors using unified renderer (effects layer)
         this.renderAnchorsUnified(manager);
         
-        // Render rewind effects using unified renderer
+        // Render rewind effects using unified renderer (world layer - temporal echoes)
         if (this.isRewinding) {
             this.renderRewindEffectsUnified(manager);
         }
         
-        // Render afterimages using unified renderer
+        // Render afterimages using unified renderer (effects layer)
         this.renderAfterimagesUnified(manager);
     }
     
@@ -849,7 +865,7 @@ export default class TemporalRewindSystem {
     }
     
     renderRewindEffectsUnified(manager) {
-        // Time distortion waves
+        // Time distortion waves - rendered on 'world' layer as temporal echoes
         const waveCount = 3;
         const player = this.scene.player;
         if (!player) return;
@@ -859,16 +875,18 @@ export default class TemporalRewindSystem {
             const radius = 50 + offset * 30;
             const alpha = 1 - (offset / (Math.PI * 2));
             
-            manager.drawCircle('effects', player.x, player.y, radius, this.AMBER_COLOR, alpha * 0.3);
+            // Use 'world' layer for rewind temporal echo effects
+            manager.drawCircle('world', player.x, player.y, radius, this.AMBER_COLOR, alpha * 0.3);
         }
         
-        // Rewind path line
+        // Rewind path line - rendered on 'world' layer
         if (this.rewindHistory.length > 1) {
-            manager.drawPath('effects', this.rewindHistory, this.AMBER_GLOW, 0.6, 3);
+            manager.drawPath('world', this.rewindHistory, this.AMBER_GLOW, 0.6, 3);
         }
     }
     
     renderAfterimagesUnified(manager) {
+        // Render afterimages on 'effects' layer (visual effects layer)
         const now = this.scene.time.now / 1000;
         
         for (const afterimage of this.afterimages) {
@@ -1052,7 +1070,9 @@ export default class TemporalRewindSystem {
     
     // Visual effects
     spawnAnchorPlacementEffect(x, y) {
-        // Ring expansion
+        // Ring expansion effect
+        // Note: This uses a local graphics object for a one-shot tween effect
+        // The clear() here is acceptable as it's part of a tween animation, not per-frame rendering
         const ring = this.scene.add.graphics();
         ring.lineStyle(3, this.AMBER_COLOR, 0.8);
         ring.strokeCircle(x, y, 10);
@@ -1140,7 +1160,9 @@ export default class TemporalRewindSystem {
     }
     
     createTemporalCollapseEffect(x, y) {
-        // Massive ring expansion
+        // Massive ring expansion effect
+        // Note: This uses a local graphics object for a one-shot tween effect
+        // The clear() here is acceptable as it's part of a tween animation, not per-frame rendering
         const ring = this.scene.add.graphics();
         ring.lineStyle(5, this.AMBER_COLOR, 1);
         

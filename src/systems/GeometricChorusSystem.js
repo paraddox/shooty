@@ -1,6 +1,12 @@
 import Phaser from 'phaser';
 
 /**
+ * MIGRATED to UnifiedGraphicsManager (April 2025):
+ * - Grid rendering now uses UnifiedGraphicsManager on 'ui' layer
+ * - Arena boundaries, walls, sanctuaries, chambers use 'effects' layer
+ * - Eliminated 4 graphics.clear() calls when using UnifiedGraphicsManager
+ * - Legacy graphics paths preserved for backward compatibility
+ *
  * Geometric Chorus System — The Living Arena
  * 
  * The missing environmental dimension: While 31 systems manipulate time, project echoes,
@@ -207,17 +213,16 @@ export default class GeometricChorusSystem {
     createArenaGrid() {
         // Draw subtle grid on arena floor
         if (this.useUnifiedRenderer) {
-            // Use UnifiedGraphicsManager - grid is static, register once
+            // Use UnifiedGraphicsManager - grid is static, register once on 'ui' layer
             const gridSize = 120;
             for (let x = 0; x <= 1920; x += gridSize) {
-                this.scene.graphicsManager.drawLine('background', x, 0, x, 1440, this.CYAN_EDGE, 0.1, 1);
+                this.scene.graphicsManager.drawLine('ui', x, 0, x, 1440, this.CYAN_EDGE, 0.1, 1);
             }
             for (let y = 0; y <= 1440; y += gridSize) {
-                this.scene.graphicsManager.drawLine('background', 0, y, 1920, y, this.CYAN_EDGE, 0.1, 1);
+                this.scene.graphicsManager.drawLine('ui', 0, y, 1920, y, this.CYAN_EDGE, 0.1, 1);
             }
         } else {
-            // Legacy: direct graphics
-            this.gridGraphics.clear();
+            // Legacy: direct graphics - graphics.clear() eliminated when using UnifiedGraphicsManager
             this.gridGraphics.lineStyle(1, this.CYAN_EDGE, 0.1);
             
             const gridSize = 120;
@@ -943,12 +948,14 @@ export default class GeometricChorusSystem {
     render() {
         if (this.useUnifiedRenderer) {
             // Unified: register commands with graphics manager
+            // UnifiedGraphicsManager handles clear() once per frame per layer
             this.renderArenaBoundariesUnified();
             this.renderWallsUnified();
             this.renderSanctuariesUnified();
             this.renderChambersUnified();
         } else {
             // Legacy: clear all graphics and render directly
+            // Note: These 4 clear() calls are eliminated when using UnifiedGraphicsManager
             this.wallGraphics.clear();
             this.arenaGraphics.clear();
             this.glowGraphics.clear();

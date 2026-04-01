@@ -3,6 +3,11 @@ import Phaser from 'phaser';
 /**
  * Resonance Orb System — Living Power-Ups
  * 
+ * MIGRATED to UnifiedGraphicsManager (2026-04-01):
+ * - Orb visual rendering now uses UnifiedGraphicsManager on 'effects' layer
+ * - graphics.clear() calls removed for UnifiedGraphicsManager compatibility
+ * - HUD orb indicators rendered via UnifiedGraphicsManager
+ * 
  * The missing synthesis: Traditional power-ups are static bonuses that exist
  * outside the game's intricate temporal ecosystem. Resonance Orbs are different.
  * They are ALIVE — temporary surges of dimensional energy that cascade through
@@ -151,14 +156,9 @@ export default class ResonanceOrbSystem {
         // Create visual group for orbs
         this.orbGroup = this.scene.add.group();
         
-        // Check for UnifiedGraphicsManager (new architecture)
-        if (this.scene.graphicsManager) {
-            this.useUnifiedRenderer = true;
-        } else {
-            this.useUnifiedRenderer = false;
-            // Legacy: Create graphics for orb rendering
-            this.graphics = this.scene.add.graphics();
-        }
+        // MIGRATED: Use UnifiedGraphicsManager for all orb rendering (no legacy graphics)
+        // All orb visuals are rendered via UnifiedGraphicsManager on 'effects' layer
+        this.useUnifiedRenderer = true;
         
         // Create UI container for active orb indicators
         this.createOrbHUD();
@@ -260,15 +260,18 @@ export default class ResonanceOrbSystem {
     }
     
     drawOrb(orb) {
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            this.drawOrbUnified(orb);
-        } else {
-            this.drawOrbLegacy(orb);
-        }
+        // MIGRATED: All orb rendering goes through UnifiedGraphicsManager on 'effects' layer
+        this.drawOrbUnified(orb);
     }
     
+    /**
+     * Draw orb visuals via UnifiedGraphicsManager on 'effects' layer
+     * MIGRATED from direct graphics rendering (2026-04-01)
+     * Note: UnifiedGraphicsManager handles clear() once per frame
+     */
     drawOrbUnified(orb) {
         const manager = this.scene.graphicsManager;
+        if (!manager) return;
         
         // Draw all orbs using unified renderer on 'effects' layer
         for (const o of this.activeOrbs) {
@@ -292,104 +295,6 @@ export default class ResonanceOrbSystem {
                 const rainbowColor = Phaser.Display.Color.HSLToColor(hue / 360, 1, 0.5).color;
                 manager.drawRing('effects', x, y, 20 * scale, rainbowColor, 0.8 * o.alpha, 2);
             }
-        }
-    }
-    
-    drawOrbLegacy(orb) {
-        const config = this.ORB_TYPES[orb.type];
-        const g = this.graphics;
-        
-        // Clear previous draw for this orb (simplified - full clear each frame)
-        g.clear();
-        
-        // Draw all orbs
-        for (const o of this.activeOrbs) {
-            const cfg = this.ORB_TYPES[o.type];
-            const x = o.x - this.scene.cameras.main.scrollX;
-            const y = o.y - this.scene.cameras.main.scrollY;
-            const scale = o.pulseScale || 1;
-            
-            // Glow
-            g.fillStyle(cfg.glow, 0.3 * o.alpha);
-            this.drawShape(g, x, y, 18 * scale, cfg.shape);
-            
-            // Core
-            g.fillStyle(cfg.color, 0.9 * o.alpha);
-            this.drawShape(g, x, y, 12 * scale, cfg.shape);
-            
-            // Inner light
-            g.fillStyle(0xffffff, 0.5 * o.alpha);
-            this.drawShape(g, x, y, 6 * scale, cfg.shape);
-            
-            // Rainbow effect for quantum orbs
-            if (cfg.isRainbow) {
-                const hue = (this.scene.time.now * 0.2) % 360;
-                const rainbowColor = Phaser.Display.Color.HSLToColor(hue / 360, 1, 0.5).color;
-                g.lineStyle(2, rainbowColor, 0.8 * o.alpha);
-                g.strokeCircle(x, y, 20 * scale);
-            }
-        }
-    }
-    
-    drawShape(g, x, y, size, shape) {
-        switch (shape) {
-            case 'triangle':
-                g.fillTriangle(
-                    x, y - size,
-                    x - size * 0.866, y + size * 0.5,
-                    x + size * 0.866, y + size * 0.5
-                );
-                break;
-            case 'circle':
-                g.fillCircle(x, y, size);
-                break;
-            case 'diamond':
-                g.fillPoints([
-                    { x: x, y: y - size },
-                    { x: x + size, y: y },
-                    { x: x, y: y + size },
-                    { x: x - size, y: y }
-                ], true);
-                break;
-            case 'hexagon':
-                const hexPoints = [];
-                for (let i = 0; i < 6; i++) {
-                    const angle = (i * 60 - 90) * Math.PI / 180;
-                    hexPoints.push({
-                        x: x + Math.cos(angle) * size,
-                        y: y + Math.sin(angle) * size
-                    });
-                }
-                g.fillPoints(hexPoints, true);
-                break;
-            case 'pentagon':
-                const pentPoints = [];
-                for (let i = 0; i < 5; i++) {
-                    const angle = (i * 72 - 90) * Math.PI / 180;
-                    pentPoints.push({
-                        x: x + Math.cos(angle) * size,
-                        y: y + Math.sin(angle) * size
-                    });
-                }
-                g.fillPoints(pentPoints, true);
-                break;
-            case 'ring':
-                g.fillCircle(x, y, size);
-                g.fillStyle(0x000000, 1);
-                g.fillCircle(x, y, size * 0.6);
-                break;
-            case 'star':
-                const starPoints = [];
-                for (let i = 0; i < 10; i++) {
-                    const angle = (i * 36 - 90) * Math.PI / 180;
-                    const r = i % 2 === 0 ? size : size * 0.4;
-                    starPoints.push({
-                        x: x + Math.cos(angle) * r,
-                        y: y + Math.sin(angle) * r
-                    });
-                }
-                g.fillPoints(starPoints, true);
-                break;
         }
     }
     
@@ -925,11 +830,8 @@ export default class ResonanceOrbSystem {
     }
     
     destroy() {
-        // Clean up - legacy only, unified renderer is managed by GraphicsManager
-        if (!this.useUnifiedRenderer && this.graphics) {
-            this.graphics.clear();
-            this.graphics.destroy();
-        }
+        // MIGRATED: Graphics cleanup handled by UnifiedGraphicsManager
+        // No direct graphics.clear() calls needed
         
         for (const [type, data] of this.playerOrbs) {
             if (data.timer) data.timer.remove();

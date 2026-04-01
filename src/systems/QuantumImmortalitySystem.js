@@ -3,6 +3,11 @@ import Phaser from 'phaser';
 /**
  * Quantum Immortality System — The "Quantum Suicide" Engine
  * 
+ * MIGRATED to UnifiedGraphicsManager (April 2026):
+ * - Main echo rendering now uses UnifiedGraphicsManager on 'effects' layer
+ * - Removed 1 graphics.clear() call (now handled by UnifiedGraphicsManager)
+ * - Legacy graphics objects removed when using unified renderer
+ * 
  * Based on the quantum suicide thought experiment: in a multiverse, you never 
  * truly die — you only experience the branches where you survive.
  * 
@@ -108,6 +113,7 @@ export default class QuantumImmortalitySystem {
         // Use UnifiedGraphicsManager if available (new architecture)
         if (this.scene.graphicsManager) {
             this.useUnifiedRenderer = true;
+            // Note: No legacy graphics objects created - rendering via UnifiedGraphicsManager
         } else {
             // Legacy: Main graphics for rendering echoes
             this.graphics = this.scene.add.graphics();
@@ -160,9 +166,12 @@ export default class QuantumImmortalitySystem {
         this.mergePrompt.setVisible(false);
         
         // Entropy overlay (visual corruption effect at high entropy)
-        this.entropyOverlay = this.scene.add.graphics();
-        this.entropyOverlay.setScrollFactor(0);
-        this.entropyOverlay.setDepth(98);
+        if (!this.useUnifiedRenderer) {
+            // Legacy: Only create when not using UnifiedGraphicsManager
+            this.entropyOverlay = this.scene.add.graphics();
+            this.entropyOverlay.setScrollFactor(0);
+            this.entropyOverlay.setDepth(98);
+        }
         
         // Quantum vignette texture
         this.createQuantumVignette();
@@ -446,23 +455,28 @@ export default class QuantumImmortalitySystem {
     }
     
     updateEntropyOverlay() {
-        this.entropyOverlay.clear();
-        
-        if (this.timelineEntropy < 30) return;
-        
         const intensity = (this.timelineEntropy - 30) / 70; // 0.0 to 1.0
+        if (this.timelineEntropy < 30 || intensity <= 0) return;
         
         // Draw corruption lines at high entropy
         const w = this.scene.scale.width;
         const h = this.scene.scale.height;
-        
-        this.entropyOverlay.lineStyle(1, this.ECHO_GLOW, intensity * 0.3);
-        
-        // Random interference pattern
         const time = this.scene.time.now / 1000;
-        for (let i = 0; i < 5 * intensity; i++) {
-            const y = (i / (5 * intensity)) * h + Math.sin(time + i) * 20;
-            this.entropyOverlay.lineBetween(0, y, w, y);
+        
+        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+            // Unified: Register commands with UnifiedGraphicsManager
+            for (let i = 0; i < 5 * intensity; i++) {
+                const y = (i / (5 * intensity)) * h + Math.sin(time + i) * 20;
+                this.scene.graphicsManager.drawLine('effects', 0, y, w, y, this.ECHO_GLOW, intensity * 0.3, 1);
+            }
+        } else if (this.entropyOverlay) {
+            // Legacy: Direct graphics rendering
+            this.entropyOverlay.clear();
+            this.entropyOverlay.lineStyle(1, this.ECHO_GLOW, intensity * 0.3);
+            for (let i = 0; i < 5 * intensity; i++) {
+                const y = (i / (5 * intensity)) * h + Math.sin(time + i) * 20;
+                this.entropyOverlay.lineBetween(0, y, w, y);
+            }
         }
     }
     
@@ -953,13 +967,15 @@ export default class QuantumImmortalitySystem {
             return;
         }
         
-        // Legacy direct graphics rendering
+        // Legacy direct graphics rendering (deprecated - migrate to UnifiedGraphicsManager)
+        // Note: graphics.clear() is eliminated when using UnifiedGraphicsManager
         this.graphics.clear();
         this.renderEchoes(this.graphics);
     }
     
     /**
-     * New unified rendering - registers commands instead of direct drawing
+     * Unified rendering via UnifiedGraphicsManager - registers commands instead of direct drawing
+     * This is the active rendering path when graphicsManager is available
      */
     renderUnified() {
         const manager = this.scene.graphicsManager;
@@ -1028,7 +1044,8 @@ export default class QuantumImmortalitySystem {
     }
     
     /**
-     * Legacy echo rendering for direct graphics mode
+     * Legacy echo rendering for direct graphics mode (deprecated)
+     * Now handled by renderUnified() via UnifiedGraphicsManager on 'effects' layer
      */
     renderEchoes(graphics) {
         // Draw each echo
@@ -1134,9 +1151,16 @@ export default class QuantumImmortalitySystem {
     }
     
     destroy() {
-        this.graphics.destroy();
+        // Legacy graphics cleanup (only if not using UnifiedGraphicsManager)
+        if (this.graphics) {
+            this.graphics.destroy();
+        }
+        if (this.entropyOverlay) {
+            this.entropyOverlay.destroy();
+        }
+        // Note: UnifiedGraphicsManager handles its own cleanup
+        
         this.entropyContainer.destroy();
         this.mergePrompt.destroy();
-        this.entropyOverlay.destroy();
     }
 }

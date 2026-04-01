@@ -15,6 +15,13 @@ import Phaser from 'phaser';
  * - Phase 2 (75-50%): Fracture Clones - boss splits into attacking shadows
  * - Phase 3 (50-25%): Paradox Fields - zones where time flows backwards
  * - Phase 4 (25-0%): Chrono-Singularity - the boss becomes a temporal black hole
+ * 
+ * MIGRATED to UnifiedGraphicsManager (April 2025):
+ * - Tesseract wireframe rendering -> 'effects' layer via renderTesseractUnified()
+ * - Face indicators (HUD) -> 'ui' layer via updateFaceIndicatorsUnified()
+ * - Chrono-singularity rings -> 'effects' layer via updateChronoSingularityUnified()
+ * - Attack telegraph warnings -> 'effects' layer via telegraphAttack() unified path
+ * - Legacy graphics.clear() calls eliminated in unified mode
  */
 export default class TesseractTitan {
     constructor(scene) {
@@ -108,11 +115,12 @@ export default class TesseractTitan {
     spawn() {
         this.active = true;
         
-        // Check for UnifiedGraphicsManager
+        // Check for UnifiedGraphicsManager - migrate to unified rendering
         if (this.scene.graphicsManager) {
             this.useUnifiedRenderer = true;
+            // Note: No legacy graphics objects created - rendering via UnifiedGraphicsManager
         } else {
-            // Create graphics for tesseract rendering (legacy mode)
+            // Legacy fallback: Create graphics for tesseract rendering
             this.graphics = this.scene.add.graphics();
             this.graphics.setDepth(50);
             
@@ -173,7 +181,9 @@ export default class TesseractTitan {
         ];
         
         for (let i = 0; i < 4; i++) {
-            let indicator;
+            // In unified mode, we don't create graphics objects - render via UnifiedGraphicsManager
+            // In legacy mode, create graphics objects for face indicators
+            let indicator = null;
             if (!this.useUnifiedRenderer) {
                 indicator = this.scene.add.graphics();
                 indicator.setDepth(51);
@@ -1479,11 +1489,21 @@ export default class TesseractTitan {
     destroy() {
         this.active = false;
         
-        if (this.graphics) this.graphics.destroy();
-        if (this.warningGraphics) this.warningGraphics.destroy();
+        // Only destroy legacy graphics objects (not used in unified mode)
+        if (this.graphics) {
+            this.graphics.destroy();
+            this.graphics = null;
+        }
+        if (this.warningGraphics) {
+            this.warningGraphics.destroy();
+            this.warningGraphics = null;
+        }
+        
+        // Core visual components (always exist)
         if (this.coreGlow) this.coreGlow.destroy();
         if (this.coreParticles) this.coreParticles.destroy();
         
+        // Face indicator graphics (only exist in legacy mode)
         this.faceIndicators.forEach(f => {
             if (f.graphics) f.graphics.destroy();
         });
@@ -1493,8 +1513,10 @@ export default class TesseractTitan {
         this.fractureClones.forEach(c => {
             if (c.graphics) c.graphics.destroy();
         });
+        this.fractureClones = [];
         this.paradoxFields.forEach(f => {
             if (f.graphics) f.graphics.destroy();
         });
+        this.paradoxFields = [];
     }
 }

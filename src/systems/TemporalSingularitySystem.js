@@ -45,12 +45,7 @@ export default class TemporalSingularitySystem {
         
         // Visuals
         this.singularityCore = null;
-        this.singularityRing = null;
         this.chargeBar = null;
-        this.trailGraphics = null;
-        
-        // Rendering
-        this.useUnifiedRenderer = false;
         
         // Input
         this.spaceKey = null;
@@ -70,24 +65,10 @@ export default class TemporalSingularitySystem {
     }
     
     createVisuals() {
-        // Check for UnifiedGraphicsManager (new architecture)
-        if (this.scene.graphicsManager) {
-            this.useUnifiedRenderer = true;
-        } else {
-            this.useUnifiedRenderer = false;
-            // Legacy: Charge bar (positioned below momentum bar)
-            this.chargeBar = this.scene.add.graphics();
-            this.chargeBar.setScrollFactor(0);
-            this.chargeBar.setDepth(100);
-            
-            // Legacy: Ring graphics
-            this.singularityRing = this.scene.add.graphics();
-            this.singularityRing.setDepth(44);
-            
-            // Legacy: Trail graphics for orbital paths
-            this.trailGraphics = this.scene.add.graphics();
-            this.trailGraphics.setDepth(43);
-        }
+        // Charge bar for UI layer (UI is not batched the same way)
+        this.chargeBar = this.scene.add.graphics();
+        this.chargeBar.setScrollFactor(0);
+        this.chargeBar.setDepth(100);
         
         // Singularity core (glowing orb) - sprite-based, not affected by migration
         const canvas = document.createElement('canvas');
@@ -109,14 +90,6 @@ export default class TemporalSingularitySystem {
         this.singularityCore = this.scene.add.image(0, 0, 'singularityCore');
         this.singularityCore.setDepth(45);
         this.singularityCore.setVisible(false);
-        
-        // Create legacy graphics if not using unified renderer
-        if (this.useUnifiedRenderer) {
-            // Still need chargeBar for UI layer (UI is not batched the same way)
-            this.chargeBar = this.scene.add.graphics();
-            this.chargeBar.setScrollFactor(0);
-            this.chargeBar.setDepth(100);
-        }
     }
     
     setupInput() {
@@ -416,12 +389,9 @@ export default class TemporalSingularitySystem {
             onComplete: () => collapseText.destroy()
         });
         
-        // Clear ring
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+        // Clear effects layer
+        if (this.scene.graphicsManager) {
             this.scene.graphicsManager.clearLayer('effects');
-        } else {
-            this.singularityRing.clear();
-            this.trailGraphics.clear();
         }
     }
     
@@ -612,11 +582,9 @@ export default class TemporalSingularitySystem {
         this.singularityCore.setScale(scale);
         this.singularityCore.setAlpha(pulse);
         
-        // Render singularity visuals (split based on renderer)
-        if (this.useUnifiedRenderer) {
-            this.renderSingularityUnified(dt);
-        } else {
-            this.renderSingularityLegacy(dt);
+        // Render singularity visuals via UnifiedGraphicsManager
+        if (this.scene.graphicsManager) {
+            this.renderSingularityEffects(dt);
         }
         
         // Life warning
@@ -631,9 +599,10 @@ export default class TemporalSingularitySystem {
     }
     
     /**
-     * Unified rendering for singularity effects
+     * Render singularity effects via UnifiedGraphicsManager
+     * Uses 'effects' layer for trail visualization
      */
-    renderSingularityUnified(dt) {
+    renderSingularityEffects(dt) {
         const manager = this.scene.graphicsManager;
         
         // Draw singularity ring (stroke circle)
@@ -647,7 +616,7 @@ export default class TemporalSingularitySystem {
             lineWidth: 2
         });
         
-        // Draw trapped bullet orbits
+        // Draw trapped bullet orbits (trail graphics)
         this.trappedBullets.forEach(trapped => {
             // Update orbit angle
             trapped.orbitAngle += trapped.orbitSpeed * trapped.orbitDirection * dt;
@@ -678,44 +647,6 @@ export default class TemporalSingularitySystem {
                 
                 manager.drawLine('effects', x1, y1, x2, y2, this.ORBIT_COLOR, 0.2, 1);
             }
-        });
-    }
-    
-    /**
-     * Legacy rendering for singularity effects (direct graphics)
-     */
-    renderSingularityLegacy(dt) {
-        // Update ring
-        this.singularityRing.clear();
-        this.singularityRing.lineStyle(2, this.SINGULARITY_COLOR, 0.5);
-        this.singularityRing.strokeCircle(this.singularityX, this.singularityY, this.singularityRadius);
-        
-        // Draw trapped bullet orbits
-        this.trailGraphics.clear();
-        
-        this.trappedBullets.forEach(trapped => {
-            // Update orbit angle
-            trapped.orbitAngle += trapped.orbitSpeed * trapped.orbitDirection * dt;
-            
-            // Calculate position
-            const x = this.singularityX + Math.cos(trapped.orbitAngle) * trapped.orbitRadius;
-            const y = this.singularityY + Math.sin(trapped.orbitAngle) * trapped.orbitRadius;
-            
-            // Update bullet position
-            trapped.bullet.x = x;
-            trapped.bullet.y = y;
-            trapped.bullet.setRotation(trapped.orbitAngle + Math.PI / 2);
-            
-            // Draw orbit trail
-            this.trailGraphics.lineStyle(1, this.ORBIT_COLOR, 0.2);
-            this.trailGraphics.beginPath();
-            this.trailGraphics.arc(
-                this.singularityX, this.singularityY,
-                trapped.orbitRadius,
-                trapped.orbitAngle - 0.5,
-                trapped.orbitAngle + 0.5
-            );
-            this.trailGraphics.strokePath();
         });
     }
     
@@ -794,10 +725,6 @@ export default class TemporalSingularitySystem {
     destroy() {
         this.chargeBar.destroy();
         this.singularityCore.destroy();
-        if (!this.useUnifiedRenderer) {
-            this.singularityRing.destroy();
-            this.trailGraphics.destroy();
-        }
         this.spaceKey.destroy();
     }
 }

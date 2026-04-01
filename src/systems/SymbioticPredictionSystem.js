@@ -2,15 +2,14 @@ import Phaser from 'phaser';
 
 /**
  * MIGRATED to UnifiedGraphicsManager (April 2025):
- * - Connection line rendering now uses UnifiedGraphicsManager on 'effects' layer
- * - Removed: this.connectionGraphics.clear() from renderConnectionLines()
- * - Removed: Direct graphics.lineBetween() calls - now batched via manager
+ * - Connection line rendering uses UnifiedGraphicsManager on 'effects' layer
+ * - REMOVED: Legacy graphics.clear() calls from renderConnectionLines()
+ * - REMOVED: Direct graphics.lineBetween() calls - now batched via manager
+ * - REMOVED: Legacy fallback code path entirely
  * 
- * Previously each frame did:
- *   this.connectionGraphics.clear() + lineBetween for each active prediction
- * 
- * Now registers draw commands with UnifiedGraphicsManager which batches
- * all rendering and clears once per frame per layer.
+ * Migration complete - UnifiedGraphicsManager is now the sole rendering path.
+ * Connection lines are registered via manager.drawLine('effects', ...) and
+ * the manager handles batching and clearing once per frame.
  */
 
 /**
@@ -138,7 +137,8 @@ export default class SymbioticPredictionSystem {
         this.connectionLines = []; // Lines to predictions
         
         // ===== UNIFIED RENDERING =====
-        this.useUnifiedRenderer = false;
+        // Connection lines are rendered via UnifiedGraphicsManager on 'effects' layer
+        // No local graphics objects for per-frame rendering
         
         // ===== BONUS STATE =====
         this.harmonyActive = false;
@@ -162,11 +162,6 @@ export default class SymbioticPredictionSystem {
     }
     
     createVisuals() {
-        // Check for UnifiedGraphicsManager
-        if (this.scene.graphicsManager) {
-            this.useUnifiedRenderer = true;
-        }
-        
         // Prediction field - subtle grid showing AI confidence
         this.createPredictionField();
         
@@ -177,11 +172,8 @@ export default class SymbioticPredictionSystem {
         this.echoGraphics = this.scene.add.graphics();
         this.echoGraphics.setDepth(35);
         
-        // Connection lines to active predictions - only create if not using unified renderer
-        if (!this.useUnifiedRenderer) {
-            this.connectionGraphics = this.scene.add.graphics();
-            this.connectionGraphics.setDepth(34);
-        }
+        // Note: Connection lines are rendered via UnifiedGraphicsManager on 'effects' layer
+        // No legacy graphics object needed - manager handles batching and clearing
         
         // Bonus text effects
         this.bonusTextContainer = this.scene.add.container(0, 0);
@@ -958,44 +950,10 @@ export default class SymbioticPredictionSystem {
     }
     
     renderConnectionLines() {
-        // Use UnifiedGraphicsManager if available
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            this.renderConnectionLinesUnified();
-            return;
-        }
-        
-        // Legacy mode: direct graphics with clear() calls
-        this.connectionGraphics.clear();
-        
+        // Render connection lines via UnifiedGraphicsManager on 'effects' layer
+        // Note: No graphics.clear() needed - manager batches all rendering and clears once per frame
         if (!this.scene.player.active) return;
-        
-        const player = this.scene.player;
-        
-        this.predictions.forEach(pred => {
-            const dist = Phaser.Math.Distance.Between(
-                player.x, player.y,
-                pred.targetX, pred.targetY
-            );
-            
-            // Only draw if reasonably close
-            if (dist < 400) {
-                const alpha = 0.3 * (1 - dist / 400);
-                const color = pred.isCritical ? this.GOLD_COLOR : this.HARMONY_COLOR;
-                
-                this.connectionGraphics.lineStyle(1, color, alpha);
-                this.connectionGraphics.lineBetween(
-                    player.x, player.y,
-                    pred.targetX, pred.targetY
-                );
-            }
-        });
-    }
-    
-    /**
-     * Unified rendering for connection lines - no graphics.clear() calls
-     */
-    renderConnectionLinesUnified() {
-        if (!this.scene.player.active) return;
+        if (!this.scene.graphicsManager) return;
         
         const player = this.scene.player;
         const manager = this.scene.graphicsManager;
@@ -1079,7 +1037,7 @@ export default class SymbioticPredictionSystem {
         if (this.symbiosisContainer) this.symbiosisContainer.destroy();
         if (this.echoGraphics) this.echoGraphics.destroy();
         
-        // Note: connectionGraphics is not used when UnifiedGraphicsManager is active
-        if (this.connectionGraphics) this.connectionGraphics.destroy();
+        // Note: Connection lines are rendered via UnifiedGraphicsManager
+        // No local graphics object to clean up - manager handles its own lifecycle
     }
 }

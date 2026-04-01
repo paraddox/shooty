@@ -23,6 +23,12 @@ import Phaser from 'phaser';
  * This transforms the game from static challenge into a living conversation.
  * 
  * Color: Teal-cyan (#00d4ff) shifting through the spectrum as it learns
+ * 
+ * MIGRATED to UnifiedGraphicsManager (April 2025):
+ * - Glitch overlay rendering now uses UnifiedGraphicsManager on 'effects' layer
+ * - Mutation bar rendering now uses UnifiedGraphicsManager on 'ui' layer
+ * - ObserverEcho aura rendering migrated to UnifiedGraphicsManager
+ * - Eliminated 3 per-frame graphics.clear() calls (now handled by UnifiedGraphicsManager)
  */
 
 export default class ObserverEffectSystem {
@@ -872,6 +878,12 @@ export default class ObserverEffectSystem {
         this.observerEchoes.forEach(e => e.destroy());
         if (this.observerGod) this.observerGod.destroy();
         if (this.echoSpawnTimer) this.echoSpawnTimer.remove();
+        
+        // Legacy graphics cleanup (only if not using UnifiedGraphicsManager)
+        if (!this.useUnifiedRenderer) {
+            if (this.mutationBar) this.mutationBar.destroy();
+            if (this.glitchOverlay) this.glitchOverlay.destroy();
+        }
     }
 }
 

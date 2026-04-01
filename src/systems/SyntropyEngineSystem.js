@@ -126,6 +126,12 @@ import Phaser from 'phaser';
  * 
  * Color: Cyan-to-Gold gradient (#00ffff → #ffd700)
  *      Represents the transformation from potential (cyan) to realized order (gold)
+ * 
+ * MIGRATED to UnifiedGraphicsManager (April 2025):
+ * - Attractor node visualization now uses UnifiedGraphicsManager on 'effects' layer
+ * - Syntropy glow rendering now uses UnifiedGraphicsManager on 'effects' layer
+ * - Anchor graphics references use defensive checks for compatibility
+ * - Eliminated per-attractor graphics objects (now batched via UnifiedGraphicsManager)
  */
 
 export default class SyntropyEngineSystem {
@@ -175,7 +181,8 @@ export default class SyntropyEngineSystem {
         this.echoAmpDuration = 12000;
         
         // ===== VISUAL EFFECTS =====
-        // this.syntropyGlow - now rendered via UnifiedGraphicsManager 'effects' layer
+        // syntropyGlow: MIGRATED - now rendered via UnifiedGraphicsManager on 'effects' layer (see updateSyntropyGlow())
+        // attractorGraphics: MIGRATED - now rendered via UnifiedGraphicsManager on 'effects' layer (see renderAttractors())
         this.cascadeVignette = null;
         this.harmonicParticles = null;
         
@@ -221,8 +228,8 @@ export default class SyntropyEngineSystem {
     
     createSyntropyGlow() {
         // Player glow that intensifies with syntropy
-        // NOTE: Now rendered via UnifiedGraphicsManager 'effects' layer
-        // No direct graphics object needed - commands registered in updateSyntropyGlow()
+        // MIGRATED: Now rendered via UnifiedGraphicsManager on 'effects' layer
+        // See updateSyntropyGlow() for render command registration
     }
     
     createHarmonicParticles() {
@@ -672,25 +679,9 @@ export default class SyntropyEngineSystem {
             created: this.scene.time.now,
             strength: this.attractorStrength,
             radius: this.attractorRadius,
-            bulletsCurved: 0,
-            graphics: this.scene.add.graphics()
+            bulletsCurved: 0
+            // Note: graphics object removed - now rendered via UnifiedGraphicsManager
         };
-        
-        // Visual
-        attractor.graphics.lineStyle(2, 0x00ffff, 0.3);
-        attractor.graphics.strokeCircle(attractor.x, attractor.y, 10);
-        attractor.graphics.setDepth(-1);
-        
-        // Pulse animation
-        this.scene.tweens.add({
-            targets: attractor.graphics,
-            scaleX: 15,
-            scaleY: 15,
-            alpha: 0,
-            duration: 2000,
-            repeat: -1,
-            yoyo: false
-        });
         
         this.attractors.push(attractor);
         
@@ -698,17 +689,51 @@ export default class SyntropyEngineSystem {
         this.showFloatingText(attractor.x, attractor.y - 50, 'ATTRACTOR NODE', '#00ffff');
     }
     
+    /**
+     * Render attractor nodes via UnifiedGraphicsManager
+     * Called from updateAttractors to visualize active attractors on 'effects' layer
+     */
+    renderAttractors() {
+        const gm = this.scene.graphicsManager;
+        if (!gm) return;
+        
+        const now = this.scene.time.now;
+        
+        this.attractors.forEach(attractor => {
+            const age = now - attractor.created;
+            const progress = age / this.attractorDuration;
+            
+            // Pulsing ring effect
+            const pulsePhase = (age % 2000) / 2000; // 2 second pulse cycle
+            const ringRadius = 10 + pulsePhase * 140; // Expand from 10 to 150
+            const ringAlpha = 0.5 * (1 - pulsePhase); // Fade out as it expands
+            
+            // Draw outer pulse ring
+            if (ringAlpha > 0.05) {
+                gm.drawRing('effects', attractor.x, attractor.y, ringRadius, 0x00ffff, ringAlpha, 2);
+            }
+            
+            // Draw core circle
+            const coreAlpha = 0.3 + 0.2 * Math.sin(pulsePhase * Math.PI * 2);
+            gm.drawCircle('effects', attractor.x, attractor.y, 10, 0x00ffff, coreAlpha, true);
+            
+            // Draw radius indicator (subtle)
+            gm.drawRing('effects', attractor.x, attractor.y, this.attractorRadius, 0x00ffff, 0.1, 1);
+        });
+    }
+    
     updateAttractors(delta) {
         const now = this.scene.time.now;
         
         // Remove expired attractors
         this.attractors = this.attractors.filter(a => {
-            if (now - a.created > this.attractorDuration) {
-                a.graphics.destroy();
-                return false;
-            }
-            return true;
+            return now - a.created <= this.attractorDuration;
         });
+        
+        // Render active attractors via UnifiedGraphicsManager
+        if (this.attractors.length > 0) {
+            this.renderAttractors();
+        }
         
         // Apply attraction to all player bullets
         if (this.attractors.length > 0 || this.cascadeActive) {
@@ -889,12 +914,14 @@ export default class SyntropyEngineSystem {
         anchor.resonant = true;
         anchor.afterimageMultiplier = 2;
         
-        // Visual upgrade
-        anchor.graphics.clear();
-        anchor.graphics.lineStyle(3, 0x00ffff, 0.8);
-        anchor.graphics.strokeCircle(0, 0, 20);
-        anchor.graphics.lineStyle(2, 0x00ffff, 0.4);
-        anchor.graphics.strokeCircle(0, 0, 35);
+        // Visual upgrade - defensive check for graphics (may be managed by UnifiedGraphicsManager)
+        if (anchor.graphics) {
+            anchor.graphics.clear();
+            anchor.graphics.lineStyle(3, 0x00ffff, 0.8);
+            anchor.graphics.strokeCircle(0, 0, 20);
+            anchor.graphics.lineStyle(2, 0x00ffff, 0.4);
+            anchor.graphics.strokeCircle(0, 0, 35);
+        }
         
         this.showFloatingText(anchor.x, anchor.y - 40, 'RESONANT ANCHOR', '#00ffff');
     }

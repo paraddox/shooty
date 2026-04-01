@@ -107,32 +107,34 @@ export default class ParadoxEngineSystem {
     createVisuals() {
         // Check for UnifiedGraphicsManager
         this.useUnifiedRenderer = !!(this.scene.graphicsManager);
-        
+
         if (this.useUnifiedRenderer) {
-            // Register layer with UnifiedGraphicsManager
-            this.scene.graphicsManager.registerLayer('paradoxEffects', 55);
+            // Register layers with UnifiedGraphicsManager
+            // 'effects' for path/safe zones, 'echoes' for temporal echoes
+            this.scene.graphicsManager.registerLayer('effects', 50);
+            this.scene.graphicsManager.registerLayer('echoes', 55);
         }
-        
-        // Future echo graphics
+
+        // Future echo graphics (legacy)
         this.echoGraphics = this.scene.add.graphics();
         this.echoGraphics.setDepth(55);
-        
-        // Path trail graphics
+
+        // Path trail graphics (legacy)
         this.pathGraphics = this.scene.add.graphics();
         this.pathGraphics.setDepth(50);
-        
-        // Bullet prediction graphics
+
+        // Bullet prediction graphics (legacy)
         this.predictionGraphics = this.scene.add.graphics();
         this.predictionGraphics.setDepth(48);
-        
-        // Safe zone graphics
+
+        // Safe zone graphics (legacy)
         this.safeZoneGraphics = this.scene.add.graphics();
         this.safeZoneGraphics.setDepth(47);
-        
+
         // Paradox overlay (scanlines)
         this.createParadoxOverlay();
-        
-        // Projection charge bar
+
+        // Projection charge bar (UI element - stays as direct graphics)
         this.chargeGraphics = this.scene.add.graphics();
         this.chargeGraphics.setScrollFactor(0);
         this.chargeGraphics.setDepth(100);
@@ -481,22 +483,22 @@ export default class ParadoxEngineSystem {
     
     showCommittedPathUnified() {
         if (this.committedPath.length < 2) return;
-        
+
         const manager = this.scene.graphicsManager;
-        
-        // Draw gradient line along path
+
+        // Draw gradient line along path on 'effects' layer
         for (let i = 1; i < this.committedPath.length; i++) {
             const p1 = this.committedPath[i - 1];
             const p2 = this.committedPath[i];
-            
+
             const alpha = 0.6 - (i / this.committedPath.length) * 0.5;
-            manager.drawLine('paradoxEffects', p1.x, p1.y, p2.x, p2.y, this.PARADOX_COLOR, alpha, 3);
+            manager.drawLine('effects', p1.x, p1.y, p2.x, p2.y, this.PARADOX_COLOR, alpha, 3);
         }
-        
+
         // Add waypoint markers
         this.committedPath.forEach((point, i) => {
             if (i % 3 === 0) {
-                manager.drawCircle('paradoxEffects', point.x, point.y, 4, this.PARADOX_COLOR, 0.4);
+                manager.drawCircle('effects', point.x, point.y, 4, this.PARADOX_COLOR, 0.4);
             }
         });
     }
@@ -770,10 +772,13 @@ export default class ParadoxEngineSystem {
         this.paradoxActive = false;
         this.committedPath = [];
         this.projectionCooldown = this.projectionCooldownMax;
-        
+
         // Clear visuals
         if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            this.scene.graphicsManager.clearLayer('paradoxEffects');
+            // Clear 'effects' layer for path/safe zones
+            this.scene.graphicsManager.clearLayer('effects');
+            // Clear 'echoes' layer for temporal echoes
+            this.scene.graphicsManager.clearLayer('echoes');
         }
         this.pathGraphics.clear();
         this.safeZoneGraphics.clear();
@@ -791,13 +796,17 @@ export default class ParadoxEngineSystem {
     
     renderUnified() {
         const manager = this.scene.graphicsManager;
-        
+
+        // Clear graphics layers at the start of each frame
+        manager.clearLayer('effects');
+        manager.clearLayer('echoes');
+
         if (this.isProjecting && this.futureEcho.active) {
             this.renderFutureEchoUnified(manager);
             this.renderBulletPredictionsUnified(manager);
             this.renderSafeZonesUnified(manager);
         }
-        
+
         // Render charge bar (UI element, use legacy)
         this.renderChargeBar();
     }
@@ -867,45 +876,45 @@ export default class ParadoxEngineSystem {
     }
     
     renderFutureEchoUnified(manager) {
-        // Draw future echo silhouette
+        // Draw future echo silhouette on 'echoes' layer
         const lastPoint = this.futureEcho.path[this.futureEcho.path.length - 1];
         if (!lastPoint) return;
-        
+
         // Draw translucent echo at end of path
-        manager.drawCircle('paradoxEffects', lastPoint.x, lastPoint.y, 15, this.ECHO_COLOR, 0.3);
-        
+        manager.drawCircle('echoes', lastPoint.x, lastPoint.y, 15, this.ECHO_COLOR, 0.3);
+
         // Draw echo outline (stroke circle)
-        manager.drawCircle('paradoxEffects', lastPoint.x, lastPoint.y, 15, this.ECHO_COLOR, 0.6, 2, true);
-        
+        manager.drawCircle('echoes', lastPoint.x, lastPoint.y, 15, this.ECHO_COLOR, 0.6, 2, true);
+
         // Draw path line
         for (let i = 1; i < this.futureEcho.path.length; i++) {
             const p1 = this.futureEcho.path[i - 1];
             const p2 = this.futureEcho.path[i];
-            manager.drawLine('paradoxEffects', p1.x, p1.y, p2.x, p2.y, this.ECHO_COLOR, 0.4, 2);
+            manager.drawLine('echoes', p1.x, p1.y, p2.x, p2.y, this.ECHO_COLOR, 0.4, 2);
         }
-        
+
         // Draw velocity indicator
         const vx = this.futureEcho.vx;
         const vy = this.futureEcho.vy;
         const speed = Math.sqrt(vx * vx + vy * vy);
-        
+
         if (speed > 10) {
             const angle = Math.atan2(vy, vx);
             const arrowLen = 30;
             const endX = lastPoint.x + Math.cos(angle) * arrowLen;
             const endY = lastPoint.y + Math.sin(angle) * arrowLen;
-            
-            manager.drawLine('paradoxEffects', lastPoint.x, lastPoint.y, endX, endY, this.ECHO_COLOR, 0.8, 2);
-            
+
+            manager.drawLine('echoes', lastPoint.x, lastPoint.y, endX, endY, this.ECHO_COLOR, 0.8, 2);
+
             // Arrowhead (two lines)
             const headSize = 8;
-            manager.drawLine('paradoxEffects', 
+            manager.drawLine('echoes',
                 endX, endY,
                 endX - Math.cos(angle - 0.5) * headSize,
                 endY - Math.sin(angle - 0.5) * headSize,
                 this.ECHO_COLOR, 0.8, 2
             );
-            manager.drawLine('paradoxEffects',
+            manager.drawLine('echoes',
                 endX, endY,
                 endX - Math.cos(angle + 0.5) * headSize,
                 endY - Math.sin(angle + 0.5) * headSize,
@@ -936,16 +945,16 @@ export default class ParadoxEngineSystem {
     
     renderBulletPredictionsUnified(manager) {
         this.bulletPredictions.forEach(pred => {
-            // Draw prediction line
+            // Draw prediction line on 'effects' layer
             for (let i = 1; i < pred.path.length; i++) {
                 const p1 = pred.path[i - 1];
                 const p2 = pred.path[i];
-                manager.drawLine('paradoxEffects', p1.x, p1.y, p2.x, p2.y, this.PREDICTION_COLOR, 0.3, 1);
+                manager.drawLine('effects', p1.x, p1.y, p2.x, p2.y, this.PREDICTION_COLOR, 0.3, 1);
             }
-            
+
             // Draw endpoint marker
             const end = pred.path[pred.path.length - 1];
-            manager.drawCircle('paradoxEffects', end.x, end.y, 3, this.PREDICTION_COLOR, 0.2);
+            manager.drawCircle('effects', end.x, end.y, 3, this.PREDICTION_COLOR, 0.2);
         });
     }
     
@@ -988,10 +997,10 @@ export default class ParadoxEngineSystem {
     renderSafeZonesUnified(manager) {
         // Calculate safe corridors between bullet predictions
         const safePoints = [];
-        
+
         this.futureEcho.path.forEach(point => {
             let minBulletDist = Infinity;
-            
+
             this.bulletPredictions.forEach(pred => {
                 // Find closest bullet prediction point
                 pred.path.forEach(bulletPoint => {
@@ -1002,17 +1011,17 @@ export default class ParadoxEngineSystem {
                     minBulletDist = Math.min(minBulletDist, dist);
                 });
             });
-            
+
             // If far from bullets, mark as safe
             if (minBulletDist > 80) {
                 safePoints.push({ ...point, safety: minBulletDist });
             }
         });
-        
-        // Draw safe zone indicators
+
+        // Draw safe zone indicators on 'effects' layer
         safePoints.forEach(point => {
             const alpha = Math.min(0.3, (point.safety - 80) / 100 * 0.3);
-            manager.drawCircle('paradoxEffects', point.x, point.y, 8, this.SAFE_COLOR, alpha);
+            manager.drawCircle('effects', point.x, point.y, 8, this.SAFE_COLOR, alpha);
         });
     }
     
