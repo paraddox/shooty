@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import Enemy from '../entities/Enemy.js';
 
 /**
  * Oracle Protocol — Temporal Guidance from Unrealized Futures
@@ -940,7 +941,7 @@ export default class OracleProtocolSystem {
         if (tooClose) return null;
         
         // Spawn the enemy
-        const enemy = new Enemy(this.scene, x, y, type);
+        const enemy = new Enemy(this.scene, x, y, this.scene.player, type);
         this.scene.enemies.add(enemy);
         
         // Mark as oracle-spawned
