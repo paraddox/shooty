@@ -307,47 +307,60 @@ export default class GameScene extends Phaser.Scene {
         
         // Mouse wheel zoom - immediate centering on player
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-            const zoomStep = 0.2;
-            const camera = this.cameras.main;
-            const worldWidth = 1920;
-            const worldHeight = 1440;
-            
-            // Calculate new zoom
-            let newZoom;
-            if (deltaY > 0) {
-                newZoom = Math.max(0.5, this.targetZoom - zoomStep);
-            } else if (deltaY < 0) {
-                newZoom = Math.min(1.5, this.targetZoom + zoomStep);
-            } else {
-                return; // No change
+            try {
+                // IMPORTANT: Always use the main camera for zoom, regardless of what gameObjects
+                // the wheel event detected. The HUD camera (if present) should not handle zoom.
+                const zoomStep = 0.2;
+                const camera = this.cameras.main;
+                const worldWidth = 1920;
+                const worldHeight = 1440;
+                
+                // Validate camera exists
+                if (!camera) {
+                    console.error('[GameScene] Wheel event: main camera not found');
+                    return;
+                }
+                
+                // Calculate new zoom
+                let newZoom;
+                if (deltaY > 0) {
+                    newZoom = Math.max(0.5, this.targetZoom - zoomStep);
+                } else if (deltaY < 0) {
+                    newZoom = Math.min(1.5, this.targetZoom + zoomStep);
+                } else {
+                    return; // No change
+                }
+                
+                this.targetZoom = newZoom;
+                
+                // Calculate view size at new zoom
+                const viewWidth = camera.width / newZoom;
+                const viewHeight = camera.height / newZoom;
+                
+                // Calculate scroll to center on player (or center arena if view is larger)
+                let scrollX, scrollY;
+                
+                if (viewWidth < worldWidth) {
+                    scrollX = this.player.x - viewWidth / 2;
+                    scrollX = Phaser.Math.Clamp(scrollX, 0, worldWidth - viewWidth);
+                } else {
+                    scrollX = -(viewWidth - worldWidth) / 2;
+                }
+                
+                if (viewHeight < worldHeight) {
+                    scrollY = this.player.y - viewHeight / 2;
+                    scrollY = Phaser.Math.Clamp(scrollY, 0, worldHeight - viewHeight);
+                } else {
+                    scrollY = -(viewHeight - worldHeight) / 2;
+                }
+                
+                // Apply immediately - no interpolation
+                camera.setZoom(newZoom);
+                camera.setScroll(scrollX, scrollY);
+                
+            } catch (error) {
+                console.error('[GameScene] Error in wheel zoom handler:', error);
             }
-            
-            this.targetZoom = newZoom;
-            
-            // Calculate view size at new zoom
-            const viewWidth = camera.width / newZoom;
-            const viewHeight = camera.height / newZoom;
-            
-            // Calculate scroll to center on player (or center arena if view is larger)
-            let scrollX, scrollY;
-            
-            if (viewWidth < worldWidth) {
-                scrollX = this.player.x - viewWidth / 2;
-                scrollX = Phaser.Math.Clamp(scrollX, 0, worldWidth - viewWidth);
-            } else {
-                scrollX = -(viewWidth - worldWidth) / 2;
-            }
-            
-            if (viewHeight < worldHeight) {
-                scrollY = this.player.y - viewHeight / 2;
-                scrollY = Phaser.Math.Clamp(scrollY, 0, worldHeight - viewHeight);
-            } else {
-                scrollY = -(viewHeight - worldHeight) / 2;
-            }
-            
-            // Apply immediately - no interpolation
-            camera.setZoom(newZoom);
-            camera.setScroll(scrollX, scrollY);
         });
 
         // Bullet pool with trails - 500 for bullet hell

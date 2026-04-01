@@ -208,7 +208,13 @@ export default class HUDPanelManager {
         
         // IMPORTANT: Disable input on HUD camera so wheel events pass through to main camera
         // The HUD camera covers the entire screen, so without this it would intercept all input
+        // Phaser 3 uses 'inputEnabled' property on the camera
         hudCamera.inputEnabled = false;
+        
+        // Also disable interactive on the camera's matrix to prevent pointer capture
+        if (hudCamera.inputManager) {
+            hudCamera.inputManager.enabled = false;
+        }
         
         // Store reference
         this.hudCamera = hudCamera;

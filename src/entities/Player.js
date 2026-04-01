@@ -71,10 +71,23 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         const pointer = this.scene.input.activePointer;
         const camera = this.scene.cameras.main;
         
+        // Safety check: ensure camera is valid
+        if (!camera || typeof camera.zoom !== 'number' || camera.zoom <= 0) {
+            console.error('[Player] Invalid camera state in update');
+            return;
+        }
+        
         // Convert screen coordinates to world coordinates manually
         // accounting for camera zoom and scroll position
         const worldX = camera.scrollX + pointer.x / camera.zoom;
         const worldY = camera.scrollY + pointer.y / camera.zoom;
+        
+        // Safety check: ensure world coordinates are valid numbers
+        if (typeof worldX !== 'number' || typeof worldY !== 'number' ||
+            isNaN(worldX) || isNaN(worldY)) {
+            console.error('[Player] Invalid mouse world coordinates:', { worldX, worldY, zoom: camera.zoom });
+            return;
+        }
         
         const angle = Phaser.Math.Angle.Between(this.x, this.y, worldX, worldY);
         this.setRotation(angle + Math.PI / 2);
