@@ -388,25 +388,29 @@ export default class ApertureProtocolSystem {
     
     createUI() {
         // Register with panel-based HUD system
-        this.scene.hudPanels.registerSlot('APERTURE', (container, width) => {
+        this.scene.hudPanels.registerSlot('APERTURE', (container, width, layout) => {
             this.blinkIndicator = container;
             this.blinkIndicator.setDepth(100);
             
+            // Position elements so they don't extend into negative Y
+            // Circle with radius 25 centered at y=25 extends from 0 to 50
+            const centerY = 25;
+            
             // Background
-            const bg = this.scene.add.circle(0, 0, 25, 0x22222a, 0.8);
+            const bg = this.scene.add.circle(0, centerY, 25, 0x22222a, 0.8);
             bg.setStrokeStyle(2, 0x00d4aa);
             container.add(bg);
             
-            // Icon
-            this.blinkIcon = this.scene.add.text(0, 0, '◉', {
+            // Icon centered in the circle
+            this.blinkIcon = this.scene.add.text(0, centerY, '◉', {
                 fontFamily: 'monospace',
                 fontSize: '20px',
                 fill: '#00d4aa'
             }).setOrigin(0.5);
             container.add(this.blinkIcon);
             
-            // Attention meter (showing how many entities are charged)
-            this.attentionMeter = this.scene.add.text(0, 35, 'APERTURE: 0%', {
+            // Attention meter below the circle
+            this.attentionMeter = this.scene.add.text(0, centerY + 35, 'APERTURE: 0%', {
                 fontFamily: 'monospace',
                 fontSize: '10px',
                 fill: '#00d4aa'
