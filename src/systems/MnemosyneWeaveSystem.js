@@ -529,7 +529,7 @@ export default class MnemosyneWeaveSystem {
             const x = this.scene.player.x + Math.cos(angle) * dist;
             const y = this.scene.player.y + Math.sin(angle) * dist;
             
-            const enemy = new this.scene.entities.Enemy(
+            const enemy = new this.scene.EnemyClass(
                 this.scene, x, y, this.scene.player, 'enemy'
             );
             

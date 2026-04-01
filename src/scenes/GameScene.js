@@ -267,6 +267,9 @@ export default class GameScene extends Phaser.Scene {
 
         // Player
         this.player = new Player(this, worldWidth / 2, worldHeight / 2);
+        
+        // Make Enemy class available to systems
+        this.EnemyClass = Enemy;
 
         // Camera setup - zoom=1 base, mouse wheel can zoom
         this.cameras.main.setZoom(1.0);

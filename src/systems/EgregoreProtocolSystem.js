@@ -400,6 +400,31 @@ export default class EgregoreProtocolSystem {
         body.maxHealth = genome.health;
         body.scoreValue = 150 + (genome.generation * 50);
         
+        // Add takeDamage method for compatibility with hitEnemy
+        body.takeDamage = (amount) => {
+            body.health -= amount;
+            
+            // Flash white on hit
+            const originalTint = body.tintTopLeft;
+            body.setTint(0xffffff);
+            this.scene.time.delayedCall(50, () => {
+                if (body.active) body.setTint(originalTint);
+            });
+            
+            // Hit scale pulse on container
+            this.scene.tweens.add({
+                targets: container,
+                scaleX: 1.2,
+                scaleY: 1.2,
+                duration: 50,
+                yoyo: true
+            });
+            
+            if (body.health <= 0) {
+                this.destroyUnknownEnemy(body);
+            }
+        };
+        
         // Add to enemies group
         this.scene.enemies.add(body);
         
@@ -1080,6 +1105,44 @@ export default class EgregoreProtocolSystem {
     }
     
     // ===== CLEANUP =====
+    
+    destroyUnknownEnemy(body) {
+        // Get visual reference
+        const visual = this.unknownGeometryVisuals.get(body);
+        if (visual) {
+            visual.graphics.destroy();
+            visual.container.destroy();
+            this.unknownGeometryVisuals.delete(body);
+        }
+        
+        // Remove from active list
+        const index = this.activeUnknown.indexOf(body);
+        if (index > -1) {
+            this.activeUnknown.splice(index, 1);
+        }
+        
+        // Destroy physics body
+        body.destroy();
+        
+        // Score and effects
+        this.scene.score = (this.scene.score || 0) + (body.scoreValue || 150);
+        
+        // Particle burst
+        const burst = this.scene.add.graphics();
+        burst.fillStyle(body.tintTopLeft || 0xffffff, 1);
+        burst.fillCircle(0, 0, 20);
+        burst.setPosition(body.x, body.y);
+        
+        this.scene.tweens.add({
+            targets: burst,
+            scaleX: 3,
+            scaleY: 3,
+            alpha: 0,
+            duration: 300,
+            ease: 'Power2',
+            onComplete: () => burst.destroy()
+        });
+    }
     
     destroy() {
         // Clean up all unknown enemy visuals
