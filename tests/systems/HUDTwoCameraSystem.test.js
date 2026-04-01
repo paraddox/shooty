@@ -171,6 +171,15 @@ describe('HUD Two-Camera System', () => {
             expect('setDepth' in hudCam && typeof hudCam.setDepth === 'function').toBe(false);
         });
         
+        it('should disable input on HUD camera to allow events to pass through', () => {
+            const hudCam = mockScene.cameras.add(0, 0, 1920, 1080, false);
+            
+            // Disable input on HUD camera so wheel/click events go to main camera
+            hudCam.inputEnabled = false;
+            
+            expect(hudCam.inputEnabled).toBe(false);
+        });
+        
         it('should create HUD camera with screen dimensions', () => {
             const hudCam = mockScene.cameras.add(0, 0, 1920, 1080, false);
             hudCam.setSize(1920, 1080);

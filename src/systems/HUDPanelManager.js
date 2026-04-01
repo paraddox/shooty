@@ -206,6 +206,10 @@ export default class HUDPanelManager {
         // Cameras render in order of creation - this HUD camera (added second)
         // naturally renders on top of the main camera
         
+        // IMPORTANT: Disable input on HUD camera so wheel events pass through to main camera
+        // The HUD camera covers the entire screen, so without this it would intercept all input
+        hudCamera.inputEnabled = false;
+        
         // Store reference
         this.hudCamera = hudCamera;
         
