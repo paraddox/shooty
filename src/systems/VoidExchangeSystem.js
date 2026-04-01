@@ -317,9 +317,13 @@ export default class VoidExchangeSystem {
         this.ui.inventoryItems = [];
         
         this.marketInventory.forEach((item, index) => {
-            // FIX: Tighter spacing to stay within dialog bounds
-            const x = -210 + (index % 3) * 210; // Was 200, now 210 for better fit
-            const y = baseY + 30 + Math.floor(index / 3) * 28; // Slightly tighter vertical
+            // Proper 3-column grid layout with consistent left alignment
+            const col = index % 3;
+            const row = Math.floor(index / 3);
+            const colWidth = 200;
+            const startX = -270; // Align with EXCHANGE SHOP title
+            const x = startX + col * colWidth;
+            const y = baseY + 30 + row * 28;
             
             // Shorten long names to fit
             let displayName = item.name;
