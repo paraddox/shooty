@@ -10,6 +10,7 @@
 
 export default class HUDPanelManager {
     constructor(scene) {
+        console.log('[HUDPanelManager] CONSTRUCTOR CALLED');
         this.scene = scene;
         this.margin = 20;
         this.panelPadding = 12;
