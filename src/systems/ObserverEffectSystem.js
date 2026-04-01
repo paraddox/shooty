@@ -626,14 +626,7 @@ export default class ObserverEffectSystem {
         }
         
         // Layer will be cleared on next render cycle, no need for explicit cleanup
-        
-        // Chromatic aberration on camera (if supported)
-        if (this.scene.cameras.main.postFX) {
-            this.scene.cameras.main.postFX.addDisplacement(0.01, 0.01);
-            this.scene.time.delayedCall(duration, () => {
-                this.scene.cameras.main.clearPostFX();
-            });
-        }
+        // Glitch effect rendered via UnifiedGraphicsManager
     }
     
     activatePersonalityBoss() {
