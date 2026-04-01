@@ -69,27 +69,45 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         
         // Aim - account for camera zoom and scroll
         const pointer = this.scene.input.activePointer;
+        
+        // Get the main camera for world calculations
+        // Note: scene.cameras.main is always the first/default camera
         const camera = this.scene.cameras.main;
         
-        // Safety check: ensure camera is valid
-        if (!camera || typeof camera.zoom !== 'number' || camera.zoom <= 0) {
-            console.error('[Player] Invalid camera state in update');
+        // Debug logging to diagnose camera issues
+        if (!camera) {
+            console.error('[Player] Camera is null/undefined');
+            return;
+        }
+        
+        // Safety check: ensure camera has valid zoom
+        if (typeof camera.zoom !== 'number' || camera.zoom <= 0 || isNaN(camera.zoom)) {
+            console.error('[Player] Invalid camera zoom:', camera.zoom);
             return;
         }
         
         // Convert screen coordinates to world coordinates manually
         // accounting for camera zoom and scroll position
-        const worldX = camera.scrollX + pointer.x / camera.zoom;
-        const worldY = camera.scrollY + pointer.y / camera.zoom;
+        // Formula: world = scroll + (screen / zoom)
+        const worldX = camera.scrollX + (pointer.x / camera.zoom);
+        const worldY = camera.scrollY + (pointer.y / camera.zoom);
         
         // Safety check: ensure world coordinates are valid numbers
         if (typeof worldX !== 'number' || typeof worldY !== 'number' ||
             isNaN(worldX) || isNaN(worldY)) {
-            console.error('[Player] Invalid mouse world coordinates:', { worldX, worldY, zoom: camera.zoom });
+            console.error('[Player] Invalid world coordinates:', { 
+                worldX, worldY, 
+                pointerX: pointer.x, pointerY: pointer.y,
+                scrollX: camera.scrollX, scrollY: camera.scrollY,
+                zoom: camera.zoom 
+            });
             return;
         }
         
+        // Calculate angle from player to mouse world position
         const angle = Phaser.Math.Angle.Between(this.x, this.y, worldX, worldY);
+        
+        // Rotate player to face mouse (+90 degrees because sprite faces up)
         this.setRotation(angle + Math.PI / 2);
         
         // Shooting
