@@ -221,13 +221,14 @@ export default class MetaSystemOperator {
             
             this.nodeGraphics[index].container.setPosition(x, y);
             this.nodeGraphics[index].container.setVisible(true);
-            this.nodeGraphics[index].container.setAlpha(0);
+            this.nodeGraphics[index].container.setAlpha(1); // Set immediately visible
+            this.nodeGraphics[index].container.setScale(1);  // Set immediately at full scale
             
-            // Animate in
+            // Animate in (visual feedback, but already visible for immediate interaction)
             this.scene.tweens.add({
                 targets: this.nodeGraphics[index].container,
-                alpha: 1,
-                scale: { from: 0, to: 1 },
+                alpha: { from: 0.5, to: 1 },  // Start from partial opacity
+                scale: { from: 0.8, to: 1 },  // Start from slightly smaller
                 duration: 300,
                 delay: index * 50,
                 ease: 'Back.easeOut'

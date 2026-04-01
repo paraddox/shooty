@@ -31,11 +31,15 @@ export default class PauseSystem {
         this.scene.physics.world.pause();
         this.scene.physics.world.timeScale = 0;
 
-        // 2. Pause all tweens
-        this.scene.tweens.pauseAll();
+        // 2. Pause all tweens (but NOT for patch_mode - UI needs animations)
+        if (reason !== 'patch_mode') {
+            this.scene.tweens.pauseAll();
+        }
         
-        // 3. Pause the Time system (stops delayedCall and addEvent)
-        this.scene.time.paused = true;
+        // 3. Pause the Time system (stops delayedCall and addEvent) - but NOT for patch_mode
+        if (reason !== 'patch_mode') {
+            this.scene.time.paused = true;
+        }
         
         // 4. Stop all enemy movement
         this.scene.enemies?.children?.entries?.forEach(enemy => {
@@ -111,11 +115,15 @@ export default class PauseSystem {
         this.scene.physics.world.resume();
         this.scene.physics.world.timeScale = 1;
 
-        // 2. Resume all tweens
-        this.scene.tweens.resumeAll();
+        // 2. Resume all tweens (only if we paused them - not for patch_mode)
+        if (this.pauseReason !== 'patch_mode') {
+            this.scene.tweens.resumeAll();
+        }
         
-        // 3. Resume the Time system (allows delayedCall and addEvent again)
-        this.scene.time.paused = false;
+        // 3. Resume the Time system (only if we paused it - not for patch_mode)
+        if (this.pauseReason !== 'patch_mode') {
+            this.scene.time.paused = false;
+        }
 
         // 4. Restore enemy velocities
         this.scene.enemies?.children?.entries?.forEach(enemy => {
