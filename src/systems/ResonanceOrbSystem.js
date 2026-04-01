@@ -627,6 +627,9 @@ export default class ResonanceOrbSystem {
     }
     
     updateHUD(time) {
+        // Guard: panel elements may not be initialized yet
+        if (!this.hudContainer) return;
+        
         const orbCount = this.playerOrbs.size;
         
         if (orbCount === 0) {
