@@ -201,8 +201,13 @@ export default class MetaSystemOperator {
     enterPatchMode() {
         this.isPatchMode = true;
         
-        // Pause game time (not completely - systems still run)
-        this.scene.physics.world.timeScale = 0.1;
+        // Use PauseSystem to properly pause game (stops enemies, makes player invulnerable)
+        if (this.scene.pauseSystem) {
+            this.scene.pauseSystem.pause('patch_mode');
+        } else {
+            // Fallback if PauseSystem not available (shouldn't happen)
+            this.scene.physics.world.timeScale = 0.1;
+        }
         
         // Note: Graphics rendering is now handled by UnifiedGraphicsManager on 'effects' layer
         
@@ -241,8 +246,13 @@ export default class MetaSystemOperator {
         this.selectedSource = null;
         this.closePatchMenu();
         
-        // Resume game time
-        this.scene.physics.world.timeScale = 1;
+        // Resume game using PauseSystem (restores enemy velocities, player vulnerability)
+        if (this.scene.pauseSystem) {
+            this.scene.pauseSystem.resume('patch_mode');
+        } else {
+            // Fallback if PauseSystem not available
+            this.scene.physics.world.timeScale = 1;
+        }
         
         // Note: Graphics clearing is now handled by UnifiedGraphicsManager (no visibility toggle needed)
         
