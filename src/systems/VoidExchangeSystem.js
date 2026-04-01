@@ -357,103 +357,16 @@ export default class VoidExchangeSystem {
         this.ui.container.setVisible(isVisible);
         
         if (isVisible) {
-            // PROPERLY PAUSE the game while trading
-            this.scene.physics.world.pause();
-            this.scene.physics.world.timeScale = 0;
-            
-            // SET SCENE-WIDE PAUSE FLAG - other systems check this
-            this.scene.isExchangePaused = true;
-            
-            // Pause all tweens
-            this.scene.tweens.pauseAll();
-            
-            // Pause all enemy movement and updates
-            this.scene.enemies.children.entries.forEach(enemy => {
-                if (enemy.body) {
-                    enemy._pausedVelocity = { x: enemy.body.velocity.x, y: enemy.body.velocity.y };
-                    enemy.body.setVelocity(0, 0);
-                }
-                // Disable enemy updates
-                enemy._exchangePaused = true;
-            });
-            
-            // Pause enemy bullets
-            this.scene.enemyBullets.children.entries.forEach(bullet => {
-                if (bullet.body) {
-                    bullet._pausedVelocity = { x: bullet.body.velocity.x, y: bullet.body.velocity.y };
-                    bullet.body.setVelocity(0, 0);
-                }
-            });
-            
-            // Pause player bullets too
-            this.scene.bullets.children.entries.forEach(bullet => {
-                if (bullet.body) {
-                    bullet._pausedVelocity = { x: bullet.body.velocity.x, y: bullet.body.velocity.y };
-                    bullet.body.setVelocity(0, 0);
-                }
-            });
-            
-            // Disable player controls while exchange is open
-            if (this.scene.player) {
-                this.scene.player._exchangePaused = true;
-                // Make player invulnerable while trading
-                this.scene.player._wasInvulnerable = this.scene.player.isInvulnerable;
-                this.scene.player.isInvulnerable = true;
-            }
+            // Use unified PauseSystem
+            this.scene.pauseSystem?.pause('exchange');
             
             this.tradingParticles.start();
             this.showMarketAnnouncement('EXCHANGE OPENED');
-            
-            // Pause all systems updates
-            this._exchangePaused = true;
         } else {
-            // RESUME the game
-            this.scene.physics.world.resume();
-            this.scene.physics.world.timeScale = 1;
-            
-            // CLEAR SCENE-WIDE PAUSE FLAG
-            this.scene.isExchangePaused = false;
-            
-            // Resume all tweens
-            this.scene.tweens.resumeAll();
-            
-            // Resume enemy movement
-            this.scene.enemies.children.entries.forEach(enemy => {
-                if (enemy.body && enemy._pausedVelocity) {
-                    enemy.body.setVelocity(enemy._pausedVelocity.x, enemy._pausedVelocity.y);
-                    delete enemy._pausedVelocity;
-                }
-                delete enemy._exchangePaused;
-            });
-            
-            // Resume enemy bullets
-            this.scene.enemyBullets.children.entries.forEach(bullet => {
-                if (bullet.body && bullet._pausedVelocity) {
-                    bullet.body.setVelocity(bullet._pausedVelocity.x, bullet._pausedVelocity.y);
-                    delete bullet._pausedVelocity;
-                }
-            });
-            
-            // Resume player bullets
-            this.scene.bullets.children.entries.forEach(bullet => {
-                if (bullet.body && bullet._pausedVelocity) {
-                    bullet.body.setVelocity(bullet._pausedVelocity.x, bullet._pausedVelocity.y);
-                    delete bullet._pausedVelocity;
-                }
-            });
-            
-            // Re-enable player controls and restore invulnerability state
-            if (this.scene.player) {
-                this.scene.player._exchangePaused = false;
-                // Only remove invulnerability if player wasn't already invulnerable
-                if (!this.scene.player._wasInvulnerable) {
-                    this.scene.player.isInvulnerable = false;
-                }
-                delete this.scene.player._wasInvulnerable;
-            }
+            // Use unified PauseSystem
+            this.scene.pauseSystem?.resume('exchange');
             
             this.tradingParticles.stop();
-            this._exchangePaused = false;
         }
     }
     

@@ -59,6 +59,7 @@ import HeartfluxProtocolSystem from '../systems/HeartfluxProtocolSystem.js';
 import ExogenesisProtocolSystem from '../systems/ExogenesisProtocolSystem.js';
 import ProteusProtocolSystem from '../systems/ProteusProtocolSystem.js';
 import UnifiedGraphicsManager from '../systems/UnifiedGraphicsManager.js';
+import PauseSystem from '../systems/PauseSystem.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -253,9 +254,15 @@ export default class GameScene extends Phaser.Scene {
         
         // Equipped shard bonuses
         this.shardBonuses = {};
+        
+        // Pause System — Unified pause manager
+        this.pauseSystem = null;
     }
 
     create() {
+        // Initialize Pause System FIRST (needed by other systems)
+        this.pauseSystem = new PauseSystem(this);
+        
         // World bounds (game arena)
         const worldWidth = 1920;
         const worldHeight = 1440;
@@ -1676,8 +1683,8 @@ export default class GameScene extends Phaser.Scene {
     update(time, delta) {
         if (!this.player.active) return;
         
-        // FIX: Skip ALL system updates while dialogs are open (game is paused)
-        if (this.isExchangePaused || this.isContractPaused) {
+        // FIX: Skip ALL system updates while game is paused
+        if (this.pauseSystem?.paused || this.isExchangePaused || this.isContractPaused) {
             return;
         }
 
@@ -2570,8 +2577,8 @@ export default class GameScene extends Phaser.Scene {
     }
     
     playerHitByBullet(player, bullet) {
-        // FIX: Ignore collisions while dialogs are open (game is paused)
-        if (this.isExchangePaused || this.isContractPaused) {
+        // FIX: Ignore collisions while game is paused
+        if (this.pauseSystem?.paused || this.isExchangePaused || this.isContractPaused) {
             return;
         }
         
@@ -3193,8 +3200,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     hitEnemy(bullet, enemy) {
-        // FIX: Ignore collisions while dialogs are open (game is paused)
-        if (this.isExchangePaused || this.isContractPaused) {
+        // FIX: Ignore collisions while game is paused
+        if (this.pauseSystem?.paused || this.isExchangePaused || this.isContractPaused) {
             return;
         }
         
@@ -3403,8 +3410,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     playerHit(player, enemy) {
-        // FIX: Ignore collisions while dialogs are open (game is paused)
-        if (this.isExchangePaused || this.isContractPaused) {
+        // FIX: Ignore collisions while game is paused
+        if (this.pauseSystem?.paused || this.isExchangePaused || this.isContractPaused) {
             return;
         }
         
