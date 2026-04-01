@@ -550,6 +550,9 @@ export default class ChronoLoopSystem {
     }
     
     updateLoopIndicator() {
+        // Guard: loopSegments may not be initialized yet (panel-based HUD async)
+        if (!this.loopSegments) return;
+        
         // Update segment colors based on active echoes
         this.loopSegments.forEach((segment, i) => {
             if (i < this.pastEchoes.length) {
