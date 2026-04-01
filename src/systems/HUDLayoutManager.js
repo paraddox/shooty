@@ -88,14 +88,14 @@ export default class HUDLayoutManager {
                 RESONANCE_CASCADE: { x: null, y: 80 }, // Centered
             },
             TOP_RIGHT: {
-                WAVE_TIMER: { x: null, y: 15 }, // Right-aligned
-                RESONANCE_ORB: { x: null, y: 50 }, // Right-aligned
-                QUANTUM_IMMORTALITY: { x: null, y: 80 }, // Right-aligned
-                DEBT_DISPLAY: { x: null, y: 110 }, // Right-aligned
+                WAVE_TIMER: { x: null, y: 15 }, // Right-aligned - thin bar
+                RESONANCE_ORB: { x: null, y: 70 }, // Right-aligned (was 50, +20 for superpositionText headroom)
+                QUANTUM_IMMORTALITY: { x: null, y: 105 }, // Right-aligned (was 80, +25 for label headroom)
+                DEBT_DISPLAY: { x: null, y: 140 }, // Right-aligned (was 110, +30 spacing)
             },
             BOTTOM_RIGHT: {
-                META_SYSTEM: { x: null, y: -80 }, // Bottom relative
-                APERTURE: { x: null, y: -50 }, // Bottom relative
+                META_SYSTEM: { x: null, y: -100 }, // Bottom relative (was -80, -20 for full panel height)
+                APERTURE: { x: null, y: -50 }, // Bottom relative (50px gap below MetaSystem)
             }
         };
     }

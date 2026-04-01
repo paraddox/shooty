@@ -387,9 +387,6 @@ export default class ApertureProtocolSystem {
     }
     
     createUI() {
-        const screenW = this.scene.cameras.main.width;
-        const screenH = this.scene.cameras.main.height;
-        
         // Blink cooldown indicator
         const pos = this.scene.hudLayout.getSlotPosition('APERTURE', 'BOTTOM_RIGHT');
         this.blinkIndicator = this.scene.add.container(pos.x, pos.y);
@@ -412,15 +409,13 @@ export default class ApertureProtocolSystem {
         
         // Cooldown arc - MIGRATED: Uses UnifiedGraphicsManager layer created in createVisualElements()
         
-        // Attention meter (showing how many entities are charged)
-        this.attentionMeter = this.scene.add.text(screenW - 100, screenH - 40, 'APERTURE: 0%', {
+        // Attention meter (showing how many entities are charged) - inside container
+        this.attentionMeter = this.scene.add.text(0, 35, 'APERTURE: 0%', {
             fontFamily: 'monospace',
             fontSize: '10px',
             fill: '#00d4aa'
-        });
-        this.attentionMeter.setScrollFactor(0);
-        this.attentionMeter.setDepth(100);
-        this.attentionMeter.setOrigin(0.5);
+        }).setOrigin(0.5);
+        this.blinkIndicator.add(this.attentionMeter);
     }
     
     startTracking() {
