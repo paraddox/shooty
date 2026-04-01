@@ -131,6 +131,9 @@ export default class HUDPanelManager {
             panel.setScrollFactor(0);
             panel.setDepth(99);
             
+            // Mark as HUD element so main camera can ignore it
+            panel.isHUDElement = true;
+            
             // Calculate panel height based on slots
             const panelHeight = this.calculatePanelHeight(config);
             
@@ -175,6 +178,109 @@ export default class HUDPanelManager {
             
             this.containers.set(region, contentContainer);
         });
+        
+        // Set up separate HUD camera after all panels are created
+        this.setupHUDCamera();
+    }
+    
+    /**
+     * Set up a dedicated HUD camera that renders at fixed 1x zoom
+     * This keeps HUD elements at constant size regardless of main camera zoom
+     */
+    setupHUDCamera() {
+        const mainCamera = this.scene.cameras.main;
+        
+        // Create HUD camera FIRST (before setting up ignores)
+        const hudCamera = this.scene.cameras.add(
+            0, 0, // Position covers entire screen
+            this.scene.scale.width,
+            this.scene.scale.height,
+            false // Don't make it the main camera
+        );
+        
+        // HUD camera stays at 1x zoom always (fixed size regardless of main camera)
+        hudCamera.setZoom(1);
+        hudCamera.setScroll(0, 0); // Fixed position
+        
+        // Set depth so HUD renders on top
+        hudCamera.setDepth(100);
+        
+        // Store reference
+        this.hudCamera = hudCamera;
+        
+        // Now ignore HUD elements from main camera
+        // They will be rendered by the HUD camera only
+        this.panels.forEach((panel, region) => {
+            mainCamera.ignore(panel.container);
+        });
+        
+        // Ignore world objects from HUD camera (rendered by main camera instead)
+        this.ignoreWorldObjects(hudCamera);
+        
+        console.log('[HUDPanelManager] HUD camera initialized - fixed 1x zoom, screen-space positioning');
+    }
+    
+    /**
+     * Ignore all world/arena objects from a camera
+     * Called during setup and whenever new world objects are created
+     */
+    ignoreWorldObjects(camera) {
+        // Ignore player
+        if (this.scene.player) {
+            camera.ignore(this.scene.player);
+        }
+        
+        // Ignore enemies
+        if (this.scene.enemies?.getChildren) {
+            this.scene.enemies.getChildren().forEach(enemy => camera.ignore(enemy));
+        }
+        
+        // Ignore player bullets
+        if (this.scene.bullets?.getChildren) {
+            this.scene.bullets.getChildren().forEach(bullet => camera.ignore(bullet));
+        }
+        
+        // Ignore enemy bullets
+        if (this.scene.enemyBullets?.getChildren) {
+            this.scene.enemyBullets.getChildren().forEach(bullet => camera.ignore(bullet));
+        }
+        
+        // Ignore other world systems' visual elements
+        // These are checked by their existence
+        const worldSystems = [
+            'ripples', 'lithographyBodies', 'springs', 'crystals',
+            'graphics', 'visualEffects', 'particles'
+        ];
+        
+        worldSystems.forEach(systemName => {
+            const system = this.scene[systemName] || this.scene.cartographer?.[systemName];
+            if (system) {
+                if (Array.isArray(system)) {
+                    system.forEach(obj => {
+                        if (obj && obj.active !== false) camera.ignore(obj);
+                    });
+                }
+            }
+        });
+    }
+    
+    /**
+     * Register a world object to be ignored by HUD camera
+     * Call this when creating new game objects that shouldn't appear in HUD
+     */
+    registerWorldObject(gameObject) {
+        if (this.hudCamera && gameObject) {
+            this.hudCamera.ignore(gameObject);
+        }
+    }
+    
+    /**
+     * Update HUD camera on window resize
+     */
+    resizeHUDCamera() {
+        if (this.hudCamera) {
+            this.hudCamera.setSize(this.scene.scale.width, this.scene.scale.height);
+        }
     }
     
     createPanelBackground(width, height, accentColor) {
