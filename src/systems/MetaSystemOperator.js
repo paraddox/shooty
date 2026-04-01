@@ -1190,6 +1190,9 @@ export default class MetaSystemOperator {
     }
     
     revealHUD() {
+        // Guard: panel elements may not be initialized yet
+        if (!this.patchHUD) return;
+        
         // Called when system is unlocked
         this.patchHUD.setVisible(true);
         this.scene.tweens.add({

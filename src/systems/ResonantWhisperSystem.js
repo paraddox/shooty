@@ -947,6 +947,9 @@ export default class ResonantWhisperSystem {
     }
     
     updateKarmaDisplay() {
+        // Guard: panel elements may not be initialized yet
+        if (!this.karmaDisplay) return;
+        
         const karmaSymbols = ['○', '◐', '◑', '◒', '●'];
         const symbol = karmaSymbols[this.karmaLevel] || '○';
         this.karmaDisplay.setText(`≋ Karma ${symbol} ${this.karma} ≋`);
