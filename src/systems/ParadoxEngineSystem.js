@@ -68,11 +68,7 @@ export default class ParadoxEngineSystem {
         this.predictionHorizon = 2.0; // Seconds ahead to predict
         this.predictionSteps = 20; // Number of prediction points
         
-        // Visuals
-        this.echoGraphics = null;
-        this.pathGraphics = null;
-        this.predictionGraphics = null;
-        this.safeZoneGraphics = null;
+        // Paradox overlay
         this.paradoxOverlay = null;
         
         // Input
@@ -105,31 +101,10 @@ export default class ParadoxEngineSystem {
     }
     
     createVisuals() {
-        // Check for UnifiedGraphicsManager
-        this.useUnifiedRenderer = !!(this.scene.graphicsManager);
-
-        if (this.useUnifiedRenderer) {
-            // Register layers with UnifiedGraphicsManager
-            // 'effects' for path/safe zones, 'echoes' for temporal echoes
-            this.scene.graphicsManager.registerLayer('effects', 50);
-            this.scene.graphicsManager.registerLayer('echoes', 55);
-        }
-
-        // Future echo graphics (legacy)
-        this.echoGraphics = this.scene.add.graphics();
-        this.echoGraphics.setDepth(55);
-
-        // Path trail graphics (legacy)
-        this.pathGraphics = this.scene.add.graphics();
-        this.pathGraphics.setDepth(50);
-
-        // Bullet prediction graphics (legacy)
-        this.predictionGraphics = this.scene.add.graphics();
-        this.predictionGraphics.setDepth(48);
-
-        // Safe zone graphics (legacy)
-        this.safeZoneGraphics = this.scene.add.graphics();
-        this.safeZoneGraphics.setDepth(47);
+        // Register layers with UnifiedGraphicsManager
+        // 'effects' for path/safe zones, 'echoes' for temporal echoes
+        this.scene.graphicsManager?.registerLayer('effects', 50);
+        this.scene.graphicsManager?.registerLayer('echoes', 55);
 
         // Paradox overlay (scanlines)
         this.createParadoxOverlay();
@@ -453,38 +428,10 @@ export default class ParadoxEngineSystem {
     }
     
     showCommittedPath() {
-        // Draw the committed path as a glowing trail
-        this.pathGraphics.clear();
-        
         if (this.committedPath.length < 2) return;
         
-        if (this.useUnifiedRenderer) {
-            this.showCommittedPathUnified();
-        } else {
-            // Draw gradient line along path
-            for (let i = 1; i < this.committedPath.length; i++) {
-                const p1 = this.committedPath[i - 1];
-                const p2 = this.committedPath[i];
-                
-                const alpha = 0.6 - (i / this.committedPath.length) * 0.5;
-                this.pathGraphics.lineStyle(3, this.PARADOX_COLOR, alpha);
-                this.pathGraphics.lineBetween(p1.x, p1.y, p2.x, p2.y);
-            }
-            
-            // Add waypoint markers
-            this.committedPath.forEach((point, i) => {
-                if (i % 3 === 0) {
-                    this.pathGraphics.fillStyle(this.PARADOX_COLOR, 0.4);
-                    this.pathGraphics.fillCircle(point.x, point.y, 4);
-                }
-            });
-        }
-    }
-    
-    showCommittedPathUnified() {
-        if (this.committedPath.length < 2) return;
-
         const manager = this.scene.graphicsManager;
+        if (!manager) return;
 
         // Draw gradient line along path on 'effects' layer
         for (let i = 1; i < this.committedPath.length; i++) {
@@ -773,109 +720,35 @@ export default class ParadoxEngineSystem {
         this.committedPath = [];
         this.projectionCooldown = this.projectionCooldownMax;
 
-        // Clear visuals
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            // Clear 'effects' layer for path/safe zones
+        // Clear visuals using UnifiedGraphicsManager
+        if (this.scene.graphicsManager) {
             this.scene.graphicsManager.clearLayer('effects');
-            // Clear 'echoes' layer for temporal echoes
             this.scene.graphicsManager.clearLayer('echoes');
         }
-        this.pathGraphics.clear();
-        this.safeZoneGraphics.clear();
+        
         this.paradoxOverlay.setVisible(false);
         this.paradoxOverlay.setAlpha(0);
     }
     
     render() {
-        if (this.useUnifiedRenderer) {
-            this.renderUnified();
-        } else {
-            this.renderLegacy();
-        }
-    }
-    
-    renderUnified() {
         const manager = this.scene.graphicsManager;
+        if (!manager) return;
 
         // Clear graphics layers at the start of each frame
         manager.clearLayer('effects');
         manager.clearLayer('echoes');
 
         if (this.isProjecting && this.futureEcho.active) {
-            this.renderFutureEchoUnified(manager);
-            this.renderBulletPredictionsUnified(manager);
-            this.renderSafeZonesUnified(manager);
+            this.renderFutureEcho(manager);
+            this.renderBulletPredictions(manager);
+            this.renderSafeZones(manager);
         }
 
-        // Render charge bar (UI element, use legacy)
+        // Render charge bar (UI element, uses direct graphics)
         this.renderChargeBar();
     }
     
-    renderLegacy() {
-        this.echoGraphics.clear();
-        
-        if (this.isProjecting && this.futureEcho.active) {
-            this.renderFutureEcho();
-            this.renderBulletPredictions();
-            this.renderSafeZones();
-        }
-        
-        // Render charge bar
-        this.renderChargeBar();
-    }
-    
-    renderFutureEcho() {
-        // Draw future echo silhouette
-        const lastPoint = this.futureEcho.path[this.futureEcho.path.length - 1];
-        if (!lastPoint) return;
-        
-        // Draw translucent echo at end of path
-        this.echoGraphics.fillStyle(this.ECHO_COLOR, 0.3);
-        this.echoGraphics.fillCircle(lastPoint.x, lastPoint.y, 15);
-        
-        // Draw echo outline
-        this.echoGraphics.lineStyle(2, this.ECHO_COLOR, 0.6);
-        this.echoGraphics.strokeCircle(lastPoint.x, lastPoint.y, 15);
-        
-        // Draw path line
-        this.echoGraphics.lineStyle(2, this.ECHO_COLOR, 0.4);
-        
-        for (let i = 1; i < this.futureEcho.path.length; i++) {
-            const p1 = this.futureEcho.path[i - 1];
-            const p2 = this.futureEcho.path[i];
-            this.echoGraphics.lineBetween(p1.x, p1.y, p2.x, p2.y);
-        }
-        
-        // Draw velocity indicator
-        const vx = this.futureEcho.vx;
-        const vy = this.futureEcho.vy;
-        const speed = Math.sqrt(vx * vx + vy * vy);
-        
-        if (speed > 10) {
-            const angle = Math.atan2(vy, vx);
-            const arrowLen = 30;
-            const endX = lastPoint.x + Math.cos(angle) * arrowLen;
-            const endY = lastPoint.y + Math.sin(angle) * arrowLen;
-            
-            this.echoGraphics.lineStyle(2, this.ECHO_COLOR, 0.8);
-            this.echoGraphics.lineBetween(lastPoint.x, lastPoint.y, endX, endY);
-            
-            // Arrowhead
-            const headSize = 8;
-            this.echoGraphics.lineBetween(
-                endX, endY,
-                endX - Math.cos(angle - 0.5) * headSize,
-                endY - Math.sin(angle - 0.5) * headSize
-            );
-            this.echoGraphics.lineBetween(
-                endX, endY,
-                endX - Math.cos(angle + 0.5) * headSize,
-                endY - Math.sin(angle + 0.5) * headSize
-            );
-        }
-    }
-    
-    renderFutureEchoUnified(manager) {
+    renderFutureEcho(manager) {
         // Draw future echo silhouette on 'echoes' layer
         const lastPoint = this.futureEcho.path[this.futureEcho.path.length - 1];
         if (!lastPoint) return;
@@ -923,27 +796,7 @@ export default class ParadoxEngineSystem {
         }
     }
     
-    renderBulletPredictions() {
-        this.predictionGraphics.clear();
-        
-        this.bulletPredictions.forEach(pred => {
-            // Draw prediction line
-            this.predictionGraphics.lineStyle(1, this.PREDICTION_COLOR, 0.3);
-            
-            for (let i = 1; i < pred.path.length; i++) {
-                const p1 = pred.path[i - 1];
-                const p2 = pred.path[i];
-                this.predictionGraphics.lineBetween(p1.x, p1.y, p2.x, p2.y);
-            }
-            
-            // Draw endpoint marker
-            const end = pred.path[pred.path.length - 1];
-            this.predictionGraphics.fillStyle(this.PREDICTION_COLOR, 0.2);
-            this.predictionGraphics.fillCircle(end.x, end.y, 3);
-        });
-    }
-    
-    renderBulletPredictionsUnified(manager) {
+    renderBulletPredictions(manager) {
         this.bulletPredictions.forEach(pred => {
             // Draw prediction line on 'effects' layer
             for (let i = 1; i < pred.path.length; i++) {
@@ -958,43 +811,7 @@ export default class ParadoxEngineSystem {
         });
     }
     
-    renderSafeZones() {
-        this.safeZoneGraphics.clear();
-        
-        // Calculate safe corridors between bullet predictions
-        // Simple approach: highlight areas far from predicted bullet paths
-        
-        const safePoints = [];
-        
-        this.futureEcho.path.forEach(point => {
-            let minBulletDist = Infinity;
-            
-            this.bulletPredictions.forEach(pred => {
-                // Find closest bullet prediction point
-                pred.path.forEach(bulletPoint => {
-                    const dist = Phaser.Math.Distance.Between(
-                        point.x, point.y,
-                        bulletPoint.x, bulletPoint.y
-                    );
-                    minBulletDist = Math.min(minBulletDist, dist);
-                });
-            });
-            
-            // If far from bullets, mark as safe
-            if (minBulletDist > 80) {
-                safePoints.push({ ...point, safety: minBulletDist });
-            }
-        });
-        
-        // Draw safe zone indicators
-        safePoints.forEach(point => {
-            const alpha = Math.min(0.3, (point.safety - 80) / 100 * 0.3);
-            this.safeZoneGraphics.fillStyle(this.SAFE_COLOR, alpha);
-            this.safeZoneGraphics.fillCircle(point.x, point.y, 8);
-        });
-    }
-    
-    renderSafeZonesUnified(manager) {
+    renderSafeZones(manager) {
         // Calculate safe corridors between bullet predictions
         const safePoints = [];
 
@@ -1138,5 +955,35 @@ export default class ParadoxEngineSystem {
             }
             return true;
         });
+    }
+    
+    /**
+     * Clean up resources when the system is destroyed
+     */
+    destroy() {
+        // Clean up unified graphics layers
+        if (this.scene.graphicsManager) {
+            this.scene.graphicsManager.clearLayer('effects');
+            this.scene.graphicsManager.clearLayer('echoes');
+        }
+        
+        // Clean up charge bar graphics
+        if (this.chargeGraphics) {
+            this.chargeGraphics.destroy();
+            this.chargeGraphics = null;
+        }
+        
+        // Clean up paradox overlay
+        if (this.paradoxOverlay) {
+            this.paradoxOverlay.destroy();
+            this.paradoxOverlay = null;
+        }
+        
+        // Reset state
+        this.isProjecting = false;
+        this.paradoxActive = false;
+        this.committedPath = [];
+        this.bulletPredictions = [];
+        this.futureEcho.active = false;
     }
 }

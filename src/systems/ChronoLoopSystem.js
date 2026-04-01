@@ -43,10 +43,7 @@ export default class ChronoLoopSystem {
         this.maxEchoes = 3; // Maximum simultaneous echoes
         this.echoLifespan = 8.0; // Seconds each echo lives
         
-        // Visuals
-        this.recordingRing = null;
-        this.echoGraphics = null;
-        this.trailGraphics = null;
+        // Visuals - Pure unified renderer via graphicsManager
         this.loopIndicator = null;
         
         // Input
@@ -233,10 +230,15 @@ export default class ChronoLoopSystem {
     }
     
     spawnEchoEffect(x, y) {
-        // Teal explosion
-        const ring = this.scene.add.graphics();
-        ring.lineStyle(3, this.TEAL_COLOR, 0.8);
-        ring.strokeCircle(x, y, 20);
+        // Teal explosion ring - using unified renderer
+        const gm = this.scene.graphicsManager;
+        if (gm) {
+            gm.drawRing('effects', x, y, 20, 3, this.TEAL_COLOR, 0.8);
+        }
+        
+        // Create expanding ring using circle game object for animation
+        const ring = this.scene.add.circle(x, y, 20);
+        ring.setStrokeStyle(3, this.TEAL_COLOR, 0.8);
         ring.setDepth(55);
         
         this.scene.tweens.add({
@@ -275,10 +277,8 @@ export default class ChronoLoopSystem {
     dissipateEcho(echo) {
         echo.isDying = true;
         
-        // Fade out effect
-        const fade = this.scene.add.graphics();
-        fade.fillStyle(this.TEAL_COLOR, 0.4);
-        fade.fillCircle(echo.x, echo.y, 25);
+        // Fade out effect using circle game object
+        const fade = this.scene.add.circle(echo.x, echo.y, 25, this.TEAL_COLOR, 0.4);
         fade.setDepth(54);
         
         this.scene.tweens.add({
@@ -631,10 +631,8 @@ export default class ChronoLoopSystem {
         echo.health -= 10;
         echo.flashTime = this.scene.time.now / 1000;
         
-        // Hit effect
-        const hit = this.scene.add.graphics();
-        hit.fillStyle(0xffffff, 0.5);
-        hit.fillCircle(echo.x, echo.y, 15);
+        // Hit effect using circle game object
+        const hit = this.scene.add.circle(echo.x, echo.y, 15, 0xffffff, 0.5);
         hit.setDepth(55);
         
         this.scene.tweens.add({
@@ -653,10 +651,8 @@ export default class ChronoLoopSystem {
     destroyEcho(echo) {
         echo.isDying = true;
         
-        // Explosion effect
-        const explosion = this.scene.add.graphics();
-        explosion.fillStyle(this.TEAL_COLOR, 0.5);
-        explosion.fillCircle(echo.x, echo.y, 30);
+        // Explosion effect using circle game object
+        const explosion = this.scene.add.circle(echo.x, echo.y, 30, this.TEAL_COLOR, 0.5);
         explosion.setDepth(55);
         
         this.scene.tweens.add({

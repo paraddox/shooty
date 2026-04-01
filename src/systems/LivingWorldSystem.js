@@ -1,13 +1,7 @@
 import Phaser from 'phaser';
 
 /**
- * LivingWorldSystem.js - MIGRATED to UnifiedGraphicsManager
- * 
- * MIGRATION NOTES:
- * - Removed 1 direct graphics.clear() call (line ~761 in original)
- * - Removed direct graphics creation (this.territoryGraphics, this.territoryOverlay)
- * - All visual rendering now uses UnifiedGraphicsManager on 'effects' layer
- * - Uses manager.drawCircle() and manager.drawRing() for territory visualization
+ * LivingWorldSystem.js
  * 
  * The Living World Protocol — The 51st Dimension: AUTONOMOUS CONTINUITY
  * 
@@ -142,7 +136,7 @@ export default class LivingWorldSystem {
         };
         
         // ===== VISUALS =====
-        // Note: All visual rendering now handled by UnifiedGraphicsManager on 'effects' layer
+        // All visual rendering uses UnifiedGraphicsManager on 'effects' layer
         
         // ===== PERSISTENCE =====
         this.storageKey = 'shooty_living_world';
@@ -753,13 +747,11 @@ export default class LivingWorldSystem {
     // ===== VISUALS =====
     
     createVisuals() {
-        // Note: Visuals now rendered via UnifiedGraphicsManager on 'effects' layer
-        // No direct graphics creation - all rendering is batched through the manager
+        // Visuals rendered via UnifiedGraphicsManager on 'effects' layer
     }
     
     /**
-     * Update territory visuals via UnifiedGraphicsManager (migrated from direct graphics)
-     * Now registers draw commands with UnifiedGraphicsManager on 'effects' layer
+     * Update territory visuals via UnifiedGraphicsManager on 'effects' layer
      */
     updateTerritoryVisuals() {
         const manager = this.scene.graphicsManager;

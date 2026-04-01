@@ -87,11 +87,11 @@ import Phaser from 'phaser';
  * === MIGRATION NOTE ===
  * 
  * Migrated to UnifiedGraphicsManager (2026-04-01):
- * - Dream vignette rendering now uses UnifiedGraphicsManager on 'effects' layer
- * - graphics.clear() calls removed for UnifiedGraphicsManager compatibility
- * - 2 graphics.clear() calls eliminated from this system
- * - Dream symbols (mountains, rivers, crystals, etc.) use legacy GameObject
- *   containers as they're complex animated objects, not simple graphics primitives
+ * - Dream vignette rendering uses UnifiedGraphicsManager on 'effects' layer
+ * - All legacy Graphics objects removed (dreamGraphics, dreamVignette)
+ * - All graphics.clear() calls removed - UnifiedGraphicsManager clears automatically
+ * - Dream symbols use GameObject containers (complex animated objects)
+ * - Pure UnifiedGraphicsManager implementation - no legacy fallback code
  */
 
 export default class DreamStateProtocol {
@@ -150,7 +150,6 @@ export default class DreamStateProtocol {
         };
         
         // ===== VISUALS =====
-        this.dreamGraphics = null;
         this.dreamOverlay = null;
         this.symbolContainer = null;
         this.dreamParticles = null;
@@ -168,37 +167,14 @@ export default class DreamStateProtocol {
     }
     
     init() {
-        this.createDreamGraphics();
         this.createDreamOverlay();
         this.createSymbolContainer();
         this.setupDreamAudio();
         this.loadDreamArchive();
         this.setupEventListeners();
-    }
-    
-    createDreamGraphics() {
-        // Main dream canvas — separate from game rendering
-        // Note: Vignette rendering now uses UnifiedGraphicsManager on 'effects' layer
-        // This graphics object is kept for backward compatibility and symbol containers
-        this.dreamGraphics = this.scene.add.graphics();
-        this.dreamGraphics.setDepth(200);  // Above everything
-        this.dreamGraphics.setVisible(false);
         
         // Create dream particle texture
-        const canvas = document.createElement('canvas');
-        canvas.width = 64;
-        canvas.height = 64;
-        const ctx = canvas.getContext('2d');
-        
-        // Ethereal soft glow for dream symbols
-        const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-        gradient.addColorStop(0, 'rgba(75, 0, 130, 0.8)');
-        gradient.addColorStop(0.5, 'rgba(0, 212, 255, 0.4)');
-        gradient.addColorStop(1, 'rgba(75, 0, 130, 0)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 64, 64);
-        
-        this.scene.textures.addCanvas('dreamParticle', canvas);
+        this.createDreamParticleTexture();
     }
     
     createDreamOverlay() {
@@ -214,12 +190,24 @@ export default class DreamStateProtocol {
         this.dreamOverlay.setDepth(199);
         this.dreamOverlay.setScrollFactor(0);
         this.dreamOverlay.setVisible(false);
+    }
+    
+    createDreamParticleTexture() {
+        // Create dream particle texture
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext('2d');
         
-        // Vignette effect for dream state
-        this.dreamVignette = this.scene.add.graphics();
-        this.dreamVignette.setDepth(201);
-        this.dreamVignette.setVisible(false);
-        this.dreamVignette.setScrollFactor(0);
+        // Ethereal soft glow for dream symbols
+        const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+        gradient.addColorStop(0, 'rgba(75, 0, 130, 0.8)');
+        gradient.addColorStop(0.5, 'rgba(0, 212, 255, 0.4)');
+        gradient.addColorStop(1, 'rgba(75, 0, 130, 0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 64, 64);
+        
+        this.scene.textures.addCanvas('dreamParticle', canvas);
     }
     
     createSymbolContainer() {
@@ -473,8 +461,6 @@ export default class DreamStateProtocol {
         
         // Fade in dream overlay
         this.dreamOverlay.setVisible(true);
-        this.dreamVignette.setVisible(true);
-        this.dreamGraphics.setVisible(true);
         this.symbolContainer.setVisible(true);
         
         this.scene.tweens.add({
@@ -522,16 +508,10 @@ export default class DreamStateProtocol {
             ease: 'Power2',
             onComplete: () => {
                 this.dreamOverlay.setVisible(false);
-                this.dreamVignette.setVisible(false);
-                this.dreamGraphics.setVisible(false);
                 this.symbolContainer.setVisible(false);
                 this.symbolContainer.removeAll(true);
                 
-                // Legacy graphics clear (not needed with UnifiedGraphicsManager)
                 // Note: UnifiedGraphicsManager clears automatically each frame
-                if (!this.scene.graphicsManager) {
-                    this.dreamGraphics.clear();
-                }
             }
         });
         
@@ -1228,38 +1208,21 @@ export default class DreamStateProtocol {
         const cy = camera.height / 2;
         const maxRadius = Math.max(cx, cy);
         
-        // Use UnifiedGraphicsManager if available (new architecture)
-        if (this.scene.graphicsManager) {
-            const manager = this.scene.graphicsManager;
-            const baseAlpha = this.dreamState.dreamIntensity * 0.9;
-            
-            // Draw vignette rings with decreasing alpha toward center
-            const steps = 10;
-            for (let i = 0; i < steps; i++) {
-                const radius = maxRadius * 0.3 + (i / steps) * maxRadius * 0.7;
-                const alpha = (i / steps) * baseAlpha * 0.5; // Scale down for ring method
-                
-                // Use ring commands for vignette effect on 'effects' layer
-                manager.drawRing('effects', cx, cy, radius, this.VOID_DREAM_COLOR, alpha, 8);
-            }
-            
-            // Note: UnifiedGraphicsManager clears once per frame automatically
-            return;
-        }
+        // Use UnifiedGraphicsManager for vignette rendering
+        const manager = this.scene.graphicsManager;
+        const baseAlpha = this.dreamState.dreamIntensity * 0.9;
         
-        // Legacy: Direct graphics rendering (old architecture)
-        this.dreamVignette.clear();
-        
-        // Gradient vignette
-        const steps = 20;
+        // Draw vignette rings with decreasing alpha toward center
+        const steps = 10;
         for (let i = 0; i < steps; i++) {
-            const innerR = maxRadius * 0.3 + (i / steps) * maxRadius * 0.7;
-            const outerR = maxRadius * 0.3 + ((i + 1) / steps) * maxRadius * 0.7;
-            const alpha = (i / steps) * this.dreamState.dreamIntensity * 0.9;
+            const radius = maxRadius * 0.3 + (i / steps) * maxRadius * 0.7;
+            const alpha = (i / steps) * baseAlpha * 0.5; // Scale down for ring method
             
-            this.dreamVignette.fillStyle(this.VOID_DREAM_COLOR, alpha);
-            this.dreamVignette.fillCircle(cx, cy, outerR);
+            // Use ring commands for vignette effect on 'effects' layer
+            manager.drawRing('effects', cx, cy, radius, this.VOID_DREAM_COLOR, alpha, 8);
         }
+        
+        // Note: UnifiedGraphicsManager clears once per frame automatically
     }
     
     updateDreamAudio() {

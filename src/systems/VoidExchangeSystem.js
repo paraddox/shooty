@@ -9,10 +9,6 @@ import Phaser from 'phaser';
  * 
  * Core Innovation: The game becomes a market simulation where time itself is currency.
  * 
- * MIGRATED to UnifiedGraphicsManager (April 2025):
- * - Price chart rendering now uses UnifiedGraphicsManager on 'effects' layer
- * - Market aura (pulsing rings) rendering migrated to UnifiedGraphicsManager
- * - Removed graphics.clear() calls - now handled by UnifiedGraphicsManager
  */
 
 export default class VoidExchangeSystem {
@@ -105,12 +101,8 @@ export default class VoidExchangeSystem {
             container: null,
             priceDisplays: {},
             portfolioDisplay: null,
-            chartGraphics: null,
             tickerText: null
         };
-        
-        // Visual Effects
-        this.marketAura = null;
         this.tradingParticles = null;
         
         this.init();
@@ -137,9 +129,6 @@ export default class VoidExchangeSystem {
     }
     
     createVisuals() {
-        // Note: Market aura graphics removed - now rendered via UnifiedGraphicsManager on 'effects' layer
-        // Previously: this.marketAura = this.scene.add.graphics();
-        
         // Trading floor particle emitter
         const particles = this.scene.add.particles(0, 0, 'bullet', {
             scale: { start: 0.3, end: 0 },
@@ -309,10 +298,6 @@ export default class VoidExchangeSystem {
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
         closeBtn.on('pointerdown', () => this.toggleExchange());
         this.ui.container.add(closeBtn);
-        
-        // Note: Mini price chart graphics removed - now rendered via UnifiedGraphicsManager
-        // Previously: this.ui.chartGraphics = this.scene.add.graphics();
-        this.ui.chartGraphics = null; // Placeholder for compatibility
     }
     
     updateMarketInventoryDisplay(baseY) {
@@ -460,11 +445,6 @@ export default class VoidExchangeSystem {
         }
     }
     
-    /**
-     * Draw price chart via UnifiedGraphicsManager (migrated from direct graphics)
-     * Previously used: this.ui.chartGraphics.clear() and direct graphics drawing
-     * Now registers draw commands with UnifiedGraphicsManager on 'effects' layer
-     */
     drawPriceChart() {
         const graphicsManager = this.scene.graphicsManager;
         if (!graphicsManager) return;
@@ -922,11 +902,6 @@ export default class VoidExchangeSystem {
         }
     }
     
-    /**
-     * Update market visuals (migrated to UnifiedGraphicsManager)
-     * Previously used: this.marketAura.clear() and direct graphics drawing
-     * Now registers draw commands with UnifiedGraphicsManager on 'effects' layer
-     */
     update(dt, player) {
         // Update market aura visual via UnifiedGraphicsManager
         const graphicsManager = this.scene.graphicsManager;
@@ -1002,7 +977,6 @@ export default class VoidExchangeSystem {
     
     destroy() {
         if (this.ui.container) this.ui.container.destroy();
-        if (this.marketAura) this.marketAura.destroy();
         if (this.tradingParticles) this.tradingParticles.destroy();
         if (this.ui.tickerText) this.ui.tickerText.destroy();
     }

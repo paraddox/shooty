@@ -64,10 +64,7 @@ export default class AthenaeumProtocolSystem {
         // Activity tracking for current frame
         this.activityBuffer = new Map();
         
-        // Visuals
-        this.regionGraphics = null;
-        this.regionOverlays = [];
-        this.connectionLines = null;
+        // Unified rendering via graphicsManager - no direct graphics objects
         
         // Player position tracking
         this.playerPath = []; // Recent positions for trail effects
@@ -77,9 +74,7 @@ export default class AthenaeumProtocolSystem {
         this.currentRegion = null;
         this.regionEffectTimer = 0;
         
-        // Throttling for expensive graphics operations
-        this.renderFrameInterval = 3; // Only render every 3rd frame
-        this.renderFrameCounter = 0;
+        // Throttling handled by UnifiedGraphicsManager
         
         // UI
         this.regionIndicator = null;
@@ -92,15 +87,8 @@ export default class AthenaeumProtocolSystem {
     }
     
     init() {
-        this.createVisuals();
         this.createUI();
         this.initializeAtlas();
-    }
-    
-    createVisuals() {
-        // Graphics are now rendered via UnifiedGraphicsManager on 'effects' layer
-        // No direct graphics objects needed - reduces GPU clear() calls
-        this.useUnifiedGraphics = !!this.scene.graphicsManager;
     }
     
     createUI() {
@@ -196,13 +184,9 @@ export default class AthenaeumProtocolSystem {
         // Check current region and apply effects
         this.updateCurrentRegion(player, dt);
         
-        // Render visuals (throttled for performance)
-        this.renderFrameCounter++;
-        if (this.renderFrameCounter >= this.renderFrameInterval) {
-            this.renderFrameCounter = 0;
-            this.renderRegions();
-            this.renderConnections();
-        }
+        // Render via UnifiedGraphicsManager
+        this.renderRegions();
+        this.renderConnections();
         
         // Clear activity buffer
         this.activityBuffer.clear();
@@ -506,8 +490,8 @@ export default class AthenaeumProtocolSystem {
     }
     
     renderRegions() {
-        // Use UnifiedGraphicsManager on 'effects' layer
-        if (!this.useUnifiedGraphics || !this.scene.graphicsManager) return;
+        // Render via UnifiedGraphicsManager on 'effects' layer
+        if (!this.scene.graphicsManager) return;
         
         const gm = this.scene.graphicsManager;
         
@@ -588,8 +572,8 @@ export default class AthenaeumProtocolSystem {
     }
     
     renderConnections() {
-        // Use UnifiedGraphicsManager on 'effects' layer
-        if (!this.useUnifiedGraphics || !this.scene.graphicsManager) return;
+        // Render via UnifiedGraphicsManager on 'effects' layer
+        if (!this.scene.graphicsManager) return;
         
         const gm = this.scene.graphicsManager;
         

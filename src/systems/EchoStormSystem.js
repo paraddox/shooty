@@ -9,10 +9,6 @@ import Phaser from 'phaser';
  * 
  * This transforms defensive dodging into offensive setup, creating a risk/reward
  * loop where skilled grazing leads to spectacular counter-attacks.
- * 
- * MIGRATED to UnifiedGraphicsManager (2026-04-01):
- * - echoRing rendering now uses UnifiedGraphicsManager on 'effects' layer
- * - Removed direct graphics.clear() call
  */
 
 export default class EchoStormSystem {
@@ -26,10 +22,7 @@ export default class EchoStormSystem {
         this.maxEchoTrails = 100;
         
         // Echo visuals
-        this.echoGraphics = null;
         this.echoCore = null;
-        
-        // Note: echoRing now rendered via UnifiedGraphicsManager on 'effects' layer
         
         // Configuration
         this.ECHO_LIFETIME = 3000; // How long echoes persist (ms)
@@ -52,8 +45,6 @@ export default class EchoStormSystem {
     }
     
     createEchoVisuals() {
-        // Note: echoRing now rendered via UnifiedGraphicsManager on 'effects' layer
-        
         // Create echo core (glowing center)
         const canvas = document.createElement('canvas');
         canvas.width = 64;
@@ -131,7 +122,6 @@ export default class EchoStormSystem {
         // Show echo visuals
         this.echoCore.setVisible(true);
         this.echoCounter.setVisible(true);
-        // Note: echoRing now rendered via UnifiedGraphicsManager
         
         // Convert all active enemy bullets to echo state
         this.scene.enemyBullets.children.entries.forEach(bullet => {
@@ -251,9 +241,7 @@ export default class EchoStormSystem {
         // Update echo ring position and pulse via UnifiedGraphicsManager
         const pulseAlpha = 0.3 + Math.sin(this.scene.time.now / 200) * 0.2;
         const ringRadius = this.getEmpatheticAbsorbRadius();
-        if (this.scene.graphicsManager) {
-            this.scene.graphicsManager.drawRing('effects', player.x, player.y, ringRadius, this.ECHO_COLOR, pulseAlpha, 2);
-        }
+        this.scene.graphicsManager.drawRing('effects', player.x, player.y, ringRadius, this.ECHO_COLOR, pulseAlpha, 2);
         
         // Update echo core
         this.echoCore.setPosition(player.x, player.y);
@@ -387,7 +375,6 @@ export default class EchoStormSystem {
         // Hide visuals
         this.echoCore.setVisible(false);
         this.echoCounter.setVisible(false);
-        // Note: echoRing now rendered via UnifiedGraphicsManager (no visibility toggle needed)
         
         // Fire absorbed echoes as homing bullets
         if (this.absorbedEchoes > 0) {
@@ -570,6 +557,5 @@ export default class EchoStormSystem {
         this.echoTrailPool.forEach(echo => echo.destroy());
         this.echoCore?.destroy();
         this.echoCounter?.destroy();
-        // Note: echoRing now rendered via UnifiedGraphicsManager (no cleanup needed)
     }
 }

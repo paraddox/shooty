@@ -128,10 +128,14 @@ import Phaser from 'phaser';
  *      Represents the transformation from potential (cyan) to realized order (gold)
  * 
  * MIGRATED to UnifiedGraphicsManager (April 2025):
- * - Attractor node visualization now uses UnifiedGraphicsManager on 'effects' layer
- * - Syntropy glow rendering now uses UnifiedGraphicsManager on 'effects' layer
- * - Anchor graphics references use defensive checks for compatibility
+ * - Attractor node visualization now uses UnifiedGraphicsManager on 'effects' layer (renderAttractors())
+ * - Syntropy glow rendering now uses UnifiedGraphicsManager on 'effects' layer (updateSyntropyGlow())
+ * - Anchor visuals are rendered by TemporalRewindSystem via UnifiedGraphicsManager
  * - Eliminated per-attractor graphics objects (now batched via UnifiedGraphicsManager)
+ * 
+ * PURE UNIFIED RENDERING (April 2025):
+ * - All graphics rendered through UnifiedGraphicsManager
+ * - No legacy Graphics objects or defensive checks remain
  */
 
 export default class SyntropyEngineSystem {
@@ -181,8 +185,7 @@ export default class SyntropyEngineSystem {
         this.echoAmpDuration = 12000;
         
         // ===== VISUAL EFFECTS =====
-        // syntropyGlow: MIGRATED - now rendered via UnifiedGraphicsManager on 'effects' layer (see updateSyntropyGlow())
-        // attractorGraphics: MIGRATED - now rendered via UnifiedGraphicsManager on 'effects' layer (see renderAttractors())
+        // All graphics rendered via UnifiedGraphicsManager (no legacy Graphics objects)
         this.cascadeVignette = null;
         this.harmonicParticles = null;
         
@@ -227,9 +230,7 @@ export default class SyntropyEngineSystem {
     }
     
     createSyntropyGlow() {
-        // Player glow that intensifies with syntropy
-        // MIGRATED: Now rendered via UnifiedGraphicsManager on 'effects' layer
-        // See updateSyntropyGlow() for render command registration
+        // Player glow rendered via UnifiedGraphicsManager in updateSyntropyGlow()
     }
     
     createHarmonicParticles() {
@@ -680,7 +681,7 @@ export default class SyntropyEngineSystem {
             strength: this.attractorStrength,
             radius: this.attractorRadius,
             bulletsCurved: 0
-            // Note: graphics object removed - now rendered via UnifiedGraphicsManager
+            // Rendered via renderAttractors() using UnifiedGraphicsManager
         };
         
         this.attractors.push(attractor);
@@ -913,15 +914,7 @@ export default class SyntropyEngineSystem {
         const anchor = rewind.anchors[rewind.anchors.length - 1];
         anchor.resonant = true;
         anchor.afterimageMultiplier = 2;
-        
-        // Visual upgrade - defensive check for graphics (may be managed by UnifiedGraphicsManager)
-        if (anchor.graphics) {
-            anchor.graphics.clear();
-            anchor.graphics.lineStyle(3, 0x00ffff, 0.8);
-            anchor.graphics.strokeCircle(0, 0, 20);
-            anchor.graphics.lineStyle(2, 0x00ffff, 0.4);
-            anchor.graphics.strokeCircle(0, 0, 35);
-        }
+        // Anchor visuals are rendered via UnifiedGraphicsManager (TemporalRewindSystem)
         
         this.showFloatingText(anchor.x, anchor.y - 40, 'RESONANT ANCHOR', '#00ffff');
     }

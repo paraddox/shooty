@@ -113,7 +113,6 @@ export default class MnemosyneWeaveSystem {
         this.ghostTime = 0; // Current playback time
         
         // ===== VISUALS =====
-        this.portalGraphics = null;
         this.tranceOverlay = null;
         this.butterflyParticles = null;
         this.weaveConnections = [];
@@ -136,10 +135,6 @@ export default class MnemosyneWeaveSystem {
     }
     
     createVisuals() {
-        // Portal graphics pool
-        this.portalGraphics = this.scene.add.graphics();
-        this.portalGraphics.setDepth(80);
-        
         // Trance overlay (iridescent sheen)
         const canvas = document.createElement('canvas');
         canvas.width = 256;
@@ -357,27 +352,10 @@ export default class MnemosyneWeaveSystem {
         else if (isBraided) color = this.PORTAL_COLORS.braided;
         
         // Portal visuals
-        const graphics = this.scene.add.graphics();
-        
         // Outer ring (pulsing)
         const outerRing = this.scene.add.circle(0, 0, 50, color, 0.3);
         outerRing.setBlendMode(Phaser.BlendModes.ADD);
         container.add(outerRing);
-        
-        // Inner vortex
-        graphics.lineStyle(3, color, 0.8);
-        graphics.beginPath();
-        for (let i = 0; i < 8; i++) {
-            const a = (i / 8) * Math.PI * 2;
-            const r = 35 + Math.sin(i * 1.5) * 10;
-            const px = Math.cos(a) * r;
-            const py = Math.sin(a) * r;
-            if (i === 0) graphics.moveTo(px, py);
-            else graphics.lineTo(px, py);
-        }
-        graphics.closePath();
-        graphics.strokePath();
-        container.add(graphics);
         
         // Shard info text
         const infoText = this.scene.add.text(0, -70, this.getShardLabel(shard), {
@@ -403,17 +381,9 @@ export default class MnemosyneWeaveSystem {
             repeat: -1
         });
         
-        this.scene.tweens.add({
-            targets: graphics,
-            rotation: Math.PI * 2,
-            duration: 8000,
-            repeat: -1
-        });
-        
         return {
             container,
             shard,
-            graphics,
             outerRing,
             color,
             isCorrupted,
@@ -492,11 +462,6 @@ export default class MnemosyneWeaveSystem {
         const body = this.scene.add.circle(0, 0, 15, 0x00f0ff, 0.4);
         body.setBlendMode(Phaser.BlendModes.ADD);
         this.ghostPlayer.add(body);
-        
-        // Ghost trail
-        const trail = this.scene.add.graphics();
-        trail.lineStyle(2, 0x00f0ff, 0.3);
-        this.ghostPlayer.add(trail);
         
         // Load path data from shard
         this.ghostPath = shard.pathData || [];

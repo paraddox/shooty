@@ -64,10 +64,9 @@ import Phaser from 'phaser';
  * "In the beginning was the rhythm, and the rhythm was with the void, 
  *  and the rhythm was the void."
  * 
- * === MIGRATED to UnifiedGraphicsManager (April 2025) ===
+ * === UNIFIED GRAPHICS IMPLEMENTATION ===
  * 
- * - Beat indicators now rendered on 'ui' layer via UnifiedGraphicsManager
- * - Eliminated 3 graphics.clear() calls (beatIndicator, measureRing, beatFlash)
+ * - Beat indicators rendered on 'ui' layer via UnifiedGraphicsManager
  * - All visual state managed through pulseState, flashState, measureRingState
  * - Rendering batched through UnifiedGraphicsManager for 90% GPU efficiency gain
  */
@@ -138,10 +137,7 @@ export default class RhythmOfTheVoidSystem {
     }
     
     createVisualElements() {
-        // UnifiedGraphicsManager is now required
-        this.useUnifiedRenderer = true;
-        
-        // State for unified rendering
+        // UnifiedGraphicsManager state for rendering
         this.pulseState = { active: false, progress: 0, color: 0xffd700, maxRadius: 50 };
         this.flashState = { active: false, alpha: 0 };
     }
@@ -791,13 +787,8 @@ export default class RhythmOfTheVoidSystem {
     // ===== UNIFIED RENDERING =====
     
     render() {
-        // Beat indicators rendered on 'ui' layer
-        if (this.scene.graphicsManager) {
-            this.renderUnified();
-        }
-    }
-    
-    renderUnified() {
+        if (!this.scene.graphicsManager) return;
+        
         const manager = this.scene.graphicsManager;
         
         // Render beat pulse on 'ui' layer

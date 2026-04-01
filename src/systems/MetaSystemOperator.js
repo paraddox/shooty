@@ -73,7 +73,6 @@ export default class MetaSystemOperator {
         
         // Visuals
         this.nodeGraphics = [];
-        this.flowLines = [];
         this.patchMenuContainer = null;
         this.patchHUD = null;
         // Note: Graphics rendering is now handled by UnifiedGraphicsManager
@@ -850,18 +849,17 @@ export default class MetaSystemOperator {
         const sourcePos = this.nodeGraphics[sourceIndex].container;
         const targetPos = this.nodeGraphics[targetIndex].container;
         
-        // Flash line
-        const flash = this.scene.add.graphics();
-        flash.lineStyle(4, 0xffffff, 1);
-        flash.lineBetween(sourcePos.x, sourcePos.y, targetPos.x, targetPos.y);
-        flash.setDepth(94);
-        
-        this.scene.tweens.add({
-            targets: flash,
-            alpha: 0,
-            duration: 500,
-            onComplete: () => flash.destroy()
-        });
+        // Flash line - using UnifiedGraphicsManager
+        const manager = this.scene.graphicsManager;
+        if (manager) {
+            // Draw bright flash line on effects layer
+            manager.drawLine('effects', sourcePos.x, sourcePos.y, targetPos.x, targetPos.y, 0xffffff, 1, 4);
+            
+            // Schedule removal after animation duration
+            this.scene.time.delayedCall(500, () => {
+                // Line will be cleared on next frame render
+            });
+        }
         
         // Text announcement
         const midX = (sourcePos.x + targetPos.x) / 2;

@@ -16,12 +16,11 @@ import Phaser from 'phaser';
  * - Phase 3 (50-25%): Paradox Fields - zones where time flows backwards
  * - Phase 4 (25-0%): Chrono-Singularity - the boss becomes a temporal black hole
  * 
- * MIGRATED to UnifiedGraphicsManager (April 2025):
- * - Tesseract wireframe rendering -> 'effects' layer via renderTesseractUnified()
- * - Face indicators (HUD) -> 'ui' layer via updateFaceIndicatorsUnified()
- * - Chrono-singularity rings -> 'effects' layer via updateChronoSingularityUnified()
- * - Attack telegraph warnings -> 'effects' layer via telegraphAttack() unified path
- * - Legacy graphics.clear() calls eliminated in unified mode
+ * RENDERING via UnifiedGraphicsManager:
+ * - Tesseract wireframe rendering -> 'effects' layer
+ * - Face indicators (HUD) -> 'ui' layer
+ * - Chrono-singularity rings -> 'effects' layer
+ * - Attack telegraph warnings -> 'effects' layer
  */
 export default class TesseractTitan {
     constructor(scene) {
@@ -42,7 +41,6 @@ export default class TesseractTitan {
         this.totalHealth = 2000;
         
         // Visual components
-        this.graphics = null;
         this.coreGlow = null;
         this.faceIndicators = [];
         
@@ -77,9 +75,6 @@ export default class TesseractTitan {
         this.edges = [];
         this.projectedVertices = [];
         
-        // Warning system for attacks
-        this.warningGraphics = null;
-        
         // Death orbs from defeated faces
         this.faceDeathOrbs = [];
         
@@ -90,9 +85,6 @@ export default class TesseractTitan {
         // Throttling for performance
         this.renderInterval = 2; // Render every 2nd frame (30fps)
         this.renderCounter = 0;
-        
-        // UnifiedGraphicsManager support
-        this.useUnifiedRenderer = false;
     }
     
     /**
@@ -115,19 +107,7 @@ export default class TesseractTitan {
     spawn() {
         this.active = true;
         
-        // Check for UnifiedGraphicsManager - migrate to unified rendering
-        if (this.scene.graphicsManager) {
-            this.useUnifiedRenderer = true;
-            // Note: No legacy graphics objects created - rendering via UnifiedGraphicsManager
-        } else {
-            // Legacy fallback: Create graphics for tesseract rendering
-            this.graphics = this.scene.add.graphics();
-            this.graphics.setDepth(50);
-            
-            // Warning graphics for attack telegraphs
-            this.warningGraphics = this.scene.add.graphics();
-            this.warningGraphics.setDepth(49);
-        }
+        // Rendering via UnifiedGraphicsManager
         
         // Core glow sprite
         this.coreGlow = this.scene.add.image(this.x, this.y, 'particle');
@@ -181,15 +161,8 @@ export default class TesseractTitan {
         ];
         
         for (let i = 0; i < 4; i++) {
-            // In unified mode, we don't create graphics objects - render via UnifiedGraphicsManager
-            // In legacy mode, create graphics objects for face indicators
-            let indicator = null;
-            if (!this.useUnifiedRenderer) {
-                indicator = this.scene.add.graphics();
-                indicator.setDepth(51);
-            }
+            // Render via UnifiedGraphicsManager - no graphics objects needed
             this.faceIndicators.push({
-                graphics: indicator,
                 color: colors[i],
                 offset: offsets[i],
                 health: this.faceHealth[i]
@@ -377,17 +350,8 @@ export default class TesseractTitan {
     }
     
     renderTesseract() {
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            this.renderTesseractUnified();
-        } else {
-            this.renderTesseractLegacy();
-        }
-    }
-    
-    /**
-     * New unified rendering - registers commands instead of direct drawing
-     */
-    renderTesseractUnified() {
+        if (!this.scene.graphicsManager) return;
+        
         const manager = this.scene.graphicsManager;
         
         // Define edges of tesseract (which vertices connect)
@@ -440,76 +404,10 @@ export default class TesseractTitan {
             manager.drawCircle('effects', v.x, v.y, size, currentColor, alpha);
         });
     }
-    
-    /**
-     * Legacy direct graphics rendering
-     */
-    renderTesseractLegacy() {
-        this.graphics.clear();
-        
-        // Define edges of tesseract (which vertices connect)
-        // Inner cube: 0-1-3-2-0, 4-5-7-6-4
-        // Connecting edges: 0-4, 1-5, 2-6, 3-7
-        const edges = [
-            [0,1], [1,3], [3,2], [2,0], // Inner square face
-            [4,5], [5,7], [7,6], [6,4], // Outer square face  
-            [0,4], [1,5], [2,6], [3,7]  // Connecting edges
-        ];
-        
-        // Get current face color based on which face is vulnerable
-        const faceColors = [0x00d4ff, 0xffd700, 0xff0066, 0x9d4edd];
-        const currentColor = faceColors[this.currentFace];
-        const dimColor = 0x444444;
-        
-        // Draw edges with depth-based opacity
-        edges.forEach((edge, index) => {
-            const v1 = this.projectedVertices[edge[0]];
-            const v2 = this.projectedVertices[edge[1]];
-            
-            if (!v1 || !v2) return;
-            
-            // Calculate average z for depth
-            const avgZ = (v1.z + v2.z) / 2;
-            const alpha = 0.3 + (avgZ + 1) / 2 * 0.7; // 0.3 to 1.0 based on depth
-            
-            // Color based on edge type and current face
-            let color = currentColor;
-            let lineWidth = 2;
-            
-            // Highlight edges of current vulnerable face
-            const isFaceEdge = (index >= this.currentFace * 3 && index < (this.currentFace + 1) * 3);
-            if (isFaceEdge && !this.invulnerable) {
-                lineWidth = 4;
-                this.graphics.lineStyle(lineWidth, color, alpha);
-            } else {
-                // Dim other edges
-                const dimmedColor = Phaser.Display.Color.IntegerToColor(currentColor);
-                dimmedColor.darken(50);
-                this.graphics.lineStyle(1, dimmedColor.color, alpha * 0.5);
-            }
-            
-            this.graphics.lineBetween(v1.x, v1.y, v2.x, v2.y);
-        });
-        
-        // Draw vertices as small circles
-        this.projectedVertices.forEach((v, i) => {
-            if (!v) return;
-            const alpha = 0.5 + (v.z + 1) / 2 * 0.5;
-            const size = 3 + (v.z + 1) / 2 * 2;
-            this.graphics.fillStyle(currentColor, alpha);
-            this.graphics.fillCircle(v.x, v.y, size);
-        });
-    }
-    
+
     updateFaceIndicators() {
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            this.updateFaceIndicatorsUnified();
-        } else {
-            this.updateFaceIndicatorsLegacy();
-        }
-    }
-    
-    updateFaceIndicatorsUnified() {
+        if (!this.scene.graphicsManager) return;
+        
         const manager = this.scene.graphicsManager;
         
         this.faceIndicators.forEach((indicator, i) => {
@@ -537,38 +435,6 @@ export default class TesseractTitan {
                 manager.drawLine('ui', x + 25, y - 8, x + 25, y + 8, indicator.color, 0.8, 2);
                 manager.drawLine('ui', x + 25, y + 8, x - 25, y + 8, indicator.color, 0.8, 2);
                 manager.drawLine('ui', x - 25, y + 8, x - 25, y - 8, indicator.color, 0.8, 2);
-            }
-        });
-    }
-    
-    updateFaceIndicatorsLegacy() {
-        this.faceIndicators.forEach((indicator, i) => {
-            const g = indicator.graphics;
-            g.clear();
-            
-            // Position relative to camera
-            const camera = this.scene.cameras.main;
-            const x = camera.width / 2 + indicator.offset.x;
-            const y = 60 + indicator.offset.y;
-            
-            // Background
-            g.fillStyle(0x000000, 0.7);
-            g.fillRoundedRect(x - 25, y - 8, 50, 16, 4);
-            
-            // Health bar
-            const healthPercent = this.faceHealth[i] / this.faceMaxHealth;
-            const healthWidth = 46 * healthPercent;
-            
-            if (healthPercent > 0) {
-                const color = i === this.currentFace ? indicator.color : 0x444444;
-                g.fillStyle(color, i === this.currentFace ? 1 : 0.3);
-                g.fillRoundedRect(x - 23, y - 6, healthWidth, 12, 2);
-            }
-            
-            // Active indicator glow
-            if (i === this.currentFace && !this.invulnerable) {
-                g.lineStyle(2, indicator.color, 0.8);
-                g.strokeRoundedRect(x - 25, y - 8, 50, 16, 4);
             }
         });
     }
@@ -876,15 +742,9 @@ export default class TesseractTitan {
             player.body.velocity.y += (dy / dist) * pullForce * dt;
         }
         
-        // Visual - draw singularity rings
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            this.updateChronoSingularityUnified();
-        } else {
-            this.updateChronoSingularityLegacy();
-        }
-    }
-    
-    updateChronoSingularityUnified() {
+        // Visual - draw singularity rings via UnifiedGraphicsManager
+        if (!this.scene.graphicsManager) return;
+        
         const manager = this.scene.graphicsManager;
         const time = this.scene.time.now / 1000;
         
@@ -902,18 +762,6 @@ export default class TesseractTitan {
             }
             points.push(points[0]); // Close the loop
             manager.drawPath('effects', points, 0xff0066, alpha, 2);
-        }
-    }
-    
-    updateChronoSingularityLegacy() {
-        this.warningGraphics.clear();
-        const time = this.scene.time.now / 1000;
-        
-        for (let i = 0; i < 3; i++) {
-            const radius = this.singularityRadius * (0.5 + i * 0.25);
-            const alpha = 0.2 + Math.sin(time * 2 + i) * 0.1;
-            this.warningGraphics.lineStyle(2, 0xff0066, alpha);
-            this.warningGraphics.strokeCircle(this.x, this.y, radius);
         }
     }
     
@@ -949,54 +797,37 @@ export default class TesseractTitan {
             onComplete: () => warning.destroy()
         });
         
-        // Flash warning ring
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            // Use unified renderer for warning - add a temporary command
-            const manager = this.scene.graphicsManager;
-            const startTime = this.scene.time.now;
-            
-            // Create a one-time draw command via the next frame
-            const drawWarning = () => {
-                const elapsed = this.scene.time.now - startTime;
-                if (elapsed < 800) {
-                    const progress = elapsed / 800;
-                    const ringRadius = 100 + progress * 100;
-                    const alpha = 0.8 * (1 - progress);
-                    
-                    // Draw ring as octagon path
-                    const points = [];
-                    for (let j = 0; j < 8; j++) {
-                        const angle = (j / 8) * Math.PI * 2;
-                        points.push({
-                            x: this.x + Math.cos(angle) * ringRadius,
-                            y: this.y + Math.sin(angle) * ringRadius
-                        });
-                    }
-                    points.push(points[0]);
-                    manager.drawPath('effects', points, 0xff4444, alpha, 3);
+        // Flash warning ring via UnifiedGraphicsManager
+        if (!this.scene.graphicsManager) return;
+        
+        const manager = this.scene.graphicsManager;
+        const startTime = this.scene.time.now;
+        
+        // Create a one-time draw command via the next frame
+        const drawWarning = () => {
+            const elapsed = this.scene.time.now - startTime;
+            if (elapsed < 800) {
+                const progress = elapsed / 800;
+                const ringRadius = 100 + progress * 100;
+                const alpha = 0.8 * (1 - progress);
+                
+                // Draw ring as octagon path
+                const points = [];
+                for (let j = 0; j < 8; j++) {
+                    const angle = (j / 8) * Math.PI * 2;
+                    points.push({
+                        x: this.x + Math.cos(angle) * ringRadius,
+                        y: this.y + Math.sin(angle) * ringRadius
+                    });
                 }
-            };
-            
-            // Register for a few frames
-            for (let i = 0; i < 10; i++) {
-                this.scene.time.delayedCall(i * 80, drawWarning);
+                points.push(points[0]);
+                manager.drawPath('effects', points, 0xff4444, alpha, 3);
             }
-        } else {
-            this.warningGraphics.clear();
-            this.warningGraphics.lineStyle(3, 0xff4444, 0.8);
-            this.warningGraphics.strokeCircle(this.x, this.y, 100);
-            
-            this.scene.tweens.add({
-                targets: { radius: 100, alpha: 0.8 },
-                radius: 200,
-                alpha: 0,
-                duration: 800,
-                onUpdate: (tween) => {
-                    this.warningGraphics.clear();
-                    this.warningGraphics.lineStyle(3, 0xff4444, tween.getValue());
-                    this.warningGraphics.strokeCircle(this.x, this.y, 100 + tween.getValue() * 100);
-                }
-            });
+        };
+        
+        // Register for a few frames
+        for (let i = 0; i < 10; i++) {
+            this.scene.time.delayedCall(i * 80, drawWarning);
         }
     }
     
@@ -1489,24 +1320,9 @@ export default class TesseractTitan {
     destroy() {
         this.active = false;
         
-        // Only destroy legacy graphics objects (not used in unified mode)
-        if (this.graphics) {
-            this.graphics.destroy();
-            this.graphics = null;
-        }
-        if (this.warningGraphics) {
-            this.warningGraphics.destroy();
-            this.warningGraphics = null;
-        }
-        
         // Core visual components (always exist)
         if (this.coreGlow) this.coreGlow.destroy();
         if (this.coreParticles) this.coreParticles.destroy();
-        
-        // Face indicator graphics (only exist in legacy mode)
-        this.faceIndicators.forEach(f => {
-            if (f.graphics) f.graphics.destroy();
-        });
         
         // Clean up any remaining echoes, clones, fields
         this.temporalEchoes = [];

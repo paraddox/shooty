@@ -87,11 +87,7 @@ import Phaser from 'phaser';
  * "In the depths of the void, the aurora whispers: 'Here is safety. 
  * Here is danger. Here is the path you seek.'"
  * 
- * MIGRATED to UnifiedGraphicsManager (2026-04-01):
- * - All aurora rendering now uses UnifiedGraphicsManager on 'effects' layer
- * - 4 graphics.clear() calls eliminated (auroraGraphics, gravityWellGraphics, wakeLine, echo.graphics)
- * - Gravity well rings, flow lines, field cells, wake trails, memory echoes all unified
- * - Legacy graphics object creation removed
+ * All rendering uses UnifiedGraphicsManager on 'effects' layer.
  */
 
 export default class TychosAuroraSystem {
@@ -124,7 +120,6 @@ export default class TychosAuroraSystem {
         };
         
         // ===== AURORA RENDERING =====
-        // Note: All graphics rendering now handled by UnifiedGraphicsManager on 'effects' layer
         this.flowLines = [];
         this.gravityWells = [];
         this.wakeParticles = [];
@@ -185,10 +180,7 @@ export default class TychosAuroraSystem {
     }
     
     createAuroraGraphics() {
-        // Note: All graphics rendering now handled by UnifiedGraphicsManager on 'effects' layer
-        // No direct graphics objects created - all rendering via graphicsManager
-        
-        // Aurora texture for shader (still needed)
+        // Aurora texture for shader
         this.auroraCanvas = document.createElement('canvas');
         this.auroraCanvas.width = this.columns;
         this.auroraCanvas.height = this.rows;
@@ -259,9 +251,6 @@ export default class TychosAuroraSystem {
     }
     
     createGravityWells() {
-        // Note: Gravity well rings now rendered via UnifiedGraphicsManager on 'effects' layer
-        // No direct graphics objects created
-        
         // Well sprites pool (game objects for well visualization)
         this.wellPool = [];
         for (let i = 0; i < 8; i++) {
@@ -274,8 +263,7 @@ export default class TychosAuroraSystem {
     
     createEyeGlow() {
         // The "Eye" - optimal position guidance
-        this.eyeGraphics = this.scene.add.graphics();
-        this.eyeGraphics.setDepth(7);
+        // Note: All rendering via UnifiedGraphicsManager on 'effects' layer
         
         this.eyeGlow = this.scene.add.circle(960, 720, 50, this.colors.optimal, 0.2);
         this.eyeGlow.setDepth(7);
@@ -294,8 +282,7 @@ export default class TychosAuroraSystem {
     }
     
     createWakeSystem() {
-        // Note: Player wake visualization now rendered via UnifiedGraphicsManager on 'effects' layer
-        // No direct graphics objects created
+        // Wake system uses UnifiedGraphicsManager for rendering
     }
     
     update(delta) {
@@ -799,11 +786,9 @@ export default class TychosAuroraSystem {
     
     addMemoryEcho(x, y) {
         if (this.memoryEchoes.length >= this.maxEchoes) {
-            // Remove oldest - no graphics cleanup needed (UnifiedGraphicsManager handles it)
             this.memoryEchoes.shift();
         }
         
-        // Note: Echo rendering now handled by UnifiedGraphicsManager - no graphics object needed
         this.memoryEchoes.push({
             x, y,
             vx: (Math.random() - 0.5) * 0.5,
@@ -845,18 +830,12 @@ export default class TychosAuroraSystem {
     }
     
     shutdown() {
-        // Note: Graphics objects are now managed by UnifiedGraphicsManager - no direct cleanup needed
-        
-        // Clean up game objects (not graphics)
-        if (this.eyeGraphics) this.eyeGraphics.destroy();
+        // Clean up game objects
         if (this.eyeGlow) this.eyeGlow.destroy();
         
         // Clean up well sprites
         this.wellPool.forEach(well => well.destroy());
         
-        // Note: Memory echoes don't have graphics objects to clean up (UnifiedGraphicsManager handles it)
         this.memoryEchoes = [];
-        
-        // Note: UnifiedGraphicsManager handles cleanup of all graphics objects
     }
 }

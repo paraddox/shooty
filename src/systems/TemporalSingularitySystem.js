@@ -45,7 +45,6 @@ export default class TemporalSingularitySystem {
         
         // Visuals
         this.singularityCore = null;
-        this.chargeBar = null;
         
         // Input
         this.spaceKey = null;
@@ -65,12 +64,7 @@ export default class TemporalSingularitySystem {
     }
     
     createVisuals() {
-        // Charge bar for UI layer (UI is not batched the same way)
-        this.chargeBar = this.scene.add.graphics();
-        this.chargeBar.setScrollFactor(0);
-        this.chargeBar.setDepth(100);
-        
-        // Singularity core (glowing orb) - sprite-based, not affected by migration
+        // Singularity core (glowing orb) - sprite-based
         const canvas = document.createElement('canvas');
         canvas.width = 128;
         canvas.height = 128;
@@ -203,10 +197,10 @@ export default class TemporalSingularitySystem {
     }
     
     spawnDeployEffect() {
-        // Ring explosion
-        const ring = this.scene.add.graphics();
-        ring.lineStyle(3, this.SINGULARITY_COLOR, 1);
-        ring.strokeCircle(this.singularityX, this.singularityY, 10);
+        // Ring explosion - using circle with stroke (sprite-based)
+        const ring = this.scene.add.circle(this.singularityX, this.singularityY, 10);
+        ring.setStrokeStyle(3, this.SINGULARITY_COLOR, 1);
+        ring.setFillStyle(0, 0); // Transparent fill
         ring.setDepth(46);
         
         this.scene.tweens.add({
@@ -351,10 +345,14 @@ export default class TemporalSingularitySystem {
     }
     
     collapseSingularity(trappedCount) {
-        // Implosion effect
-        const implosion = this.scene.add.graphics();
-        implosion.fillStyle(this.SINGULARITY_COLOR, 0.5);
-        implosion.fillCircle(this.singularityX, this.singularityY, this.singularityRadius);
+        // Implosion effect - using circle (sprite-based)
+        const implosion = this.scene.add.circle(
+            this.singularityX, 
+            this.singularityY, 
+            this.singularityRadius, 
+            this.SINGULARITY_COLOR, 
+            0.5
+        );
         implosion.setDepth(47);
         
         this.scene.tweens.add({
@@ -547,28 +545,26 @@ export default class TemporalSingularitySystem {
     }
     
     updateChargeBar() {
+        const manager = this.scene.graphicsManager;
+        if (!manager) return;
+        
         const margin = 30;
         const barY = 44; // Below momentum bar
         const width = 200;
         const height = 4;
         
-        this.chargeBar.clear();
-        
         // Background
-        this.chargeBar.fillStyle(0x22222a, 1);
-        this.chargeBar.fillRect(margin, barY, width, height);
+        manager.drawRect('effects', margin, barY, width, height, 0x22222a, 1);
         
         // Fill
         const fill = this.charge / this.maxCharge;
         const color = fill >= 1 ? 0xdc143c : 0xff6b6b;
-        this.chargeBar.fillStyle(color, 1);
-        this.chargeBar.fillRect(margin, barY, width * fill, height);
+        manager.drawRect('effects', margin, barY, width * fill, height, color, 1);
         
-        // Glow when full
+        // Glow when full - drawn as slightly larger rect with different alpha
         if (fill >= 1) {
             const pulse = 0.5 + Math.sin(this.scene.time.now / 100) * 0.3;
-            this.chargeBar.lineStyle(1, 0xdc143c, pulse);
-            this.chargeBar.strokeRect(margin, barY, width, height);
+            manager.drawRect('effects', margin - 1, barY - 1, width + 2, height + 2, 0xdc143c, pulse * 0.3);
         }
     }
     
@@ -723,7 +719,6 @@ export default class TemporalSingularitySystem {
     }
     
     destroy() {
-        this.chargeBar.destroy();
         this.singularityCore.destroy();
         this.spaceKey.destroy();
     }

@@ -85,7 +85,6 @@ export default class CartographerProtocolSystem {
         this.pathSegments = new Map(); // key: "x,y" → segment data
         this.lithographyThreshold = 5; // crossings to crystallize
         this.lithographyLifespan = 120000; // 2 minutes
-        this.lithographyGraphics = null;
         this.lithographyBodies = [];
         
         // Stillness Springs (regenerative zones)
@@ -99,14 +98,12 @@ export default class CartographerProtocolSystem {
         // Bullet Sculpting (embedded bullets)
         this.crystals = [];
         this.maxCrystals = 50;
-        this.crystalGraphics = null;
         
         // Territorial Resonance (floor control)
         this.territoryGrid = [];
         this.gridSize = 64; // pixels per cell
         this.gridWidth = Math.ceil(1920 / this.gridSize);
         this.gridHeight = Math.ceil(1440 / this.gridSize);
-        this.territoryGraphics = null;
         this.territoryDecay = 0.98; // decay per second
         
         // Player tracking for path detection
@@ -118,9 +115,6 @@ export default class CartographerProtocolSystem {
     
     init() {
         this.initTerritoryGrid();
-        
-        // Check for UnifiedGraphicsManager (new architecture)
-        this.useUnifiedRenderer = !!(this.scene.graphicsManager);
     }
     
     initTerritoryGrid() {
@@ -615,28 +609,12 @@ export default class CartographerProtocolSystem {
     
     // === RENDERING ===
     renderAll() {
-        // Use UnifiedGraphicsManager if available (new architecture)
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            this.renderRipplesUnified();
-            this.renderTerritoryUnified();
-            this.renderSpringsUnified();
-        }
+        this.renderRipplesUnified();
+        this.renderTerritoryUnified();
+        this.renderSpringsUnified();
     }
     
-    // Legacy render methods - replaced by UnifiedGraphicsManager versions
-    renderRipples() {
-        // Now handled by renderRipplesUnified() via UnifiedGraphicsManager
-    }
-    
-    renderTerritory() {
-        // Now handled by renderTerritoryUnified() via UnifiedGraphicsManager
-    }
-    
-    renderSprings() {
-        // Now handled by renderSpringsUnified() via UnifiedGraphicsManager
-    }
-    
-    // Unified Rendering Methods (UnifiedGraphicsManager)
+    // Unified Rendering Methods
     renderRipplesUnified() {
         const manager = this.scene.graphicsManager;
         
@@ -761,8 +739,6 @@ export default class CartographerProtocolSystem {
     
     // === CLEANUP ===
     destroy() {
-        // Note: Graphics objects are now managed by UnifiedGraphicsManager
-        
         // Clean up physics bodies
         this.pathSegments.forEach(segment => {
             if (segment.body) segment.body.destroy();

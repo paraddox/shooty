@@ -85,12 +85,10 @@ export default class QuantumImmortalitySystem {
         this.mergeRequiredEchoes = 3;  // Need 3 echoes to merge
         
         // Visuals
-        this.graphics = null;
         this.entropyBar = null;
         this.entropyText = null;
         this.echoIndicator = null;
         this.mergePrompt = null;
-        this.entropyOverlay = null;
         
         // Death tracking
         this.deathCount = 0;
@@ -110,15 +108,7 @@ export default class QuantumImmortalitySystem {
     }
     
     createVisuals() {
-        // Use UnifiedGraphicsManager if available (new architecture)
-        if (this.scene.graphicsManager) {
-            this.useUnifiedRenderer = true;
-            // Note: No legacy graphics objects created - rendering via UnifiedGraphicsManager
-        } else {
-            // Legacy: Main graphics for rendering echoes
-            this.graphics = this.scene.add.graphics();
-            this.graphics.setDepth(45); // Below player (50), above enemies
-        }
+        // Rendering via UnifiedGraphicsManager
         
         // Entropy bar (top-right of screen)
         const screenWidth = this.scene.scale.width;
@@ -164,14 +154,6 @@ export default class QuantumImmortalitySystem {
         this.mergePrompt.setScrollFactor(0);
         this.mergePrompt.setDepth(100);
         this.mergePrompt.setVisible(false);
-        
-        // Entropy overlay (visual corruption effect at high entropy)
-        if (!this.useUnifiedRenderer) {
-            // Legacy: Only create when not using UnifiedGraphicsManager
-            this.entropyOverlay = this.scene.add.graphics();
-            this.entropyOverlay.setScrollFactor(0);
-            this.entropyOverlay.setDepth(98);
-        }
         
         // Quantum vignette texture
         this.createQuantumVignette();
@@ -458,25 +440,14 @@ export default class QuantumImmortalitySystem {
         const intensity = (this.timelineEntropy - 30) / 70; // 0.0 to 1.0
         if (this.timelineEntropy < 30 || intensity <= 0) return;
         
-        // Draw corruption lines at high entropy
+        // Draw corruption lines at high entropy via UnifiedGraphicsManager
         const w = this.scene.scale.width;
         const h = this.scene.scale.height;
         const time = this.scene.time.now / 1000;
         
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            // Unified: Register commands with UnifiedGraphicsManager
-            for (let i = 0; i < 5 * intensity; i++) {
-                const y = (i / (5 * intensity)) * h + Math.sin(time + i) * 20;
-                this.scene.graphicsManager.drawLine('effects', 0, y, w, y, this.ECHO_GLOW, intensity * 0.3, 1);
-            }
-        } else if (this.entropyOverlay) {
-            // Legacy: Direct graphics rendering
-            this.entropyOverlay.clear();
-            this.entropyOverlay.lineStyle(1, this.ECHO_GLOW, intensity * 0.3);
-            for (let i = 0; i < 5 * intensity; i++) {
-                const y = (i / (5 * intensity)) * h + Math.sin(time + i) * 20;
-                this.entropyOverlay.lineBetween(0, y, w, y);
-            }
+        for (let i = 0; i < 5 * intensity; i++) {
+            const y = (i / (5 * intensity)) * h + Math.sin(time + i) * 20;
+            this.scene.graphicsManager.drawLine('effects', 0, y, w, y, this.ECHO_GLOW, intensity * 0.3, 1);
         }
     }
     
@@ -961,21 +932,12 @@ export default class QuantumImmortalitySystem {
     }
     
     render() {
-        // Use UnifiedGraphicsManager if available (new architecture)
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            this.renderUnified();
-            return;
-        }
-        
-        // Legacy direct graphics rendering (deprecated - migrate to UnifiedGraphicsManager)
-        // Note: graphics.clear() is eliminated when using UnifiedGraphicsManager
-        this.graphics.clear();
-        this.renderEchoes(this.graphics);
+        // Render via UnifiedGraphicsManager
+        this.renderUnified();
     }
     
     /**
      * Unified rendering via UnifiedGraphicsManager - registers commands instead of direct drawing
-     * This is the active rendering path when graphicsManager is available
      */
     renderUnified() {
         const manager = this.scene.graphicsManager;
@@ -1044,91 +1006,6 @@ export default class QuantumImmortalitySystem {
     }
     
     /**
-     * Legacy echo rendering for direct graphics mode (deprecated)
-     * Now handled by renderUnified() via UnifiedGraphicsManager on 'effects' layer
-     */
-    renderEchoes(graphics) {
-        // Draw each echo
-        this.quantumEchoes.forEach(echo => {
-            // Trail
-            if (echo.trail.length > 1) {
-                graphics.lineStyle(2, this.ECHO_COLOR, 0.3);
-                graphics.beginPath();
-                graphics.moveTo(echo.trail[0].x, echo.trail[0].y);
-                for (let i = 1; i < echo.trail.length; i++) {
-                    graphics.lineTo(echo.trail[i].x, echo.trail[i].y);
-                }
-                graphics.strokePath();
-            }
-            
-            // Color based on state
-            let color = this.ECHO_COLOR;
-            let glowColor = this.ECHO_GLOW;
-            
-            if (this.mergeActive) {
-                color = this.MERGE_COLOR;
-                glowColor = this.MERGE_COLOR;
-            } else if (echo.isSentient) {
-                color = this.SENTIENT_COLOR;
-            }
-            
-            // Glow
-            graphics.fillStyle(glowColor, 0.3);
-            graphics.fillCircle(echo.x, echo.y, 18);
-            
-            // Core
-            graphics.fillStyle(color, 0.9);
-            graphics.fillCircle(echo.x, echo.y, 10);
-            
-            // Triangle shape pointing in movement direction
-            const angle = echo.rotation;
-            const size = 12;
-            graphics.fillStyle(color, 1);
-            graphics.beginPath();
-            graphics.moveTo(
-                echo.x + Math.cos(angle) * size,
-                echo.y + Math.sin(angle) * size
-            );
-            graphics.lineTo(
-                echo.x + Math.cos(angle + 2.5) * size * 0.6,
-                echo.y + Math.sin(angle + 2.5) * size * 0.6
-            );
-            graphics.lineTo(
-                echo.x + Math.cos(angle - 2.5) * size * 0.6,
-                echo.y + Math.sin(angle - 2.5) * size * 0.6
-            );
-            graphics.closePath();
-            graphics.fillPath();
-            
-            // Health dots
-            if (echo.health < 3) {
-                graphics.fillStyle(0xff0000, 0.8);
-                for (let i = 0; i < (3 - echo.health); i++) {
-                    graphics.fillCircle(echo.x - 8 + i * 8, echo.y - 18, 2);
-                }
-            }
-            
-            // Sentient sparkle
-            if (echo.isSentient && !this.mergeActive) {
-                const time = this.scene.time.now / 1000;
-                const sparkleX = echo.x + Math.cos(time * 3) * 15;
-                const sparkleY = echo.y + Math.sin(time * 2.5) * 15;
-                graphics.fillStyle(this.SENTIENT_COLOR, 0.8);
-                graphics.fillCircle(sparkleX, sparkleY, 3);
-            }
-        });
-        
-        // Merge connection lines
-        if (this.mergeActive && this.quantumEchoes.length >= 2) {
-            graphics.lineStyle(2, this.MERGE_COLOR, 0.4);
-            const player = this.scene.player;
-            this.quantumEchoes.forEach(echo => {
-                graphics.lineBetween(player.x, player.y, echo.x, echo.y);
-            });
-        }
-    }
-    
-    /**
      * Get modified spawn delay based on entropy
      */
     getModifiedSpawnDelay(baseDelay) {
@@ -1151,14 +1028,7 @@ export default class QuantumImmortalitySystem {
     }
     
     destroy() {
-        // Legacy graphics cleanup (only if not using UnifiedGraphicsManager)
-        if (this.graphics) {
-            this.graphics.destroy();
-        }
-        if (this.entropyOverlay) {
-            this.entropyOverlay.destroy();
-        }
-        // Note: UnifiedGraphicsManager handles its own cleanup
+        // UnifiedGraphicsManager handles its own cleanup
         
         this.entropyContainer.destroy();
         this.mergePrompt.destroy();

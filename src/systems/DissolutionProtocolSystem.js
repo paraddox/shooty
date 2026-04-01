@@ -137,16 +137,11 @@ export default class DissolutionProtocolSystem {
         this.registerAllSystems();
         
         // ===== VISUAL EFFECTS =====
-        this.dissolutionGraphics = null;
         this.essenceDisplay = null;
         this.dissolutionOverlay = null;
         
-        // ===== UNIFIED RENDERER =====
-        this.useUnifiedRenderer = false;
-        
         // ===== RESERVOIR STATE =====
         this.inReservoir = false;
-        this.reservoirGraphics = null;
         
         // ===== INPUT =====
         this.initInput();
@@ -249,22 +244,6 @@ export default class DissolutionProtocolSystem {
     }
     
     createVisuals() {
-        // Check for UnifiedGraphicsManager (new architecture)
-        if (this.scene.graphicsManager) {
-            this.useUnifiedRenderer = true;
-        } else {
-            // Legacy: Create graphics objects directly
-            // Dissolution overlay graphics
-            this.dissolutionGraphics = this.scene.add.graphics();
-            this.dissolutionGraphics.setDepth(100);
-            this.dissolutionGraphics.setVisible(false);
-            
-            // Reservoir graphics
-            this.reservoirGraphics = this.scene.add.graphics();
-            this.reservoirGraphics.setDepth(200);
-            this.reservoirGraphics.setVisible(false);
-        }
-        
         // Essence display (bottom right)
         this.createEssenceDisplay();
     }
@@ -356,25 +335,18 @@ export default class DissolutionProtocolSystem {
                     void: 0x333333
                 }[type];
                 
-                if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-                    // Unified renderer: Use 'ui' layer for progress bars
-                    // Note: Store bar state for rendering in update()
-                    display.currentWidth = width;
-                    display.currentColor = colorHex;
-                    display.needsRedraw = true;
-                } else {
-                    // Legacy: Direct graphics manipulation
-                    display.bar.clear();
-                    display.bar.fillStyle(colorHex, 0.5);
-                    display.bar.fillRect(20, display.bar.y || 0, width, 6);
-                }
+                // Unified renderer: Use 'ui' layer for progress bars
+                // Note: Store bar state for rendering in update()
+                display.currentWidth = width;
+                display.currentColor = colorHex;
+                display.needsRedraw = true;
             }
         });
     }
     
     renderEssenceBars() {
         // Called from update() to render essence bars via unified renderer
-        if (!this.useUnifiedRenderer || !this.scene.graphicsManager) return;
+        if (!this.scene.graphicsManager) return;
         
         const gm = this.scene.graphicsManager;
         const containerX = this.essenceContainer.x;
@@ -403,23 +375,7 @@ export default class DissolutionProtocolSystem {
         // Slow time
         this.scene.physics.world.timeScale = 0.1;
         
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            // Unified renderer: Register overlay command
-            // Note: The actual drawing happens in updateDissolutionVisuals() each frame
-        } else {
-            // Legacy: Show overlay
-            this.dissolutionGraphics.setVisible(true);
-            this.dissolutionGraphics.clear();
-            
-            // Darken screen
-            this.dissolutionGraphics.fillStyle(0x000000, 0.5);
-            this.dissolutionGraphics.fillRect(
-                this.scene.cameras.main.scrollX,
-                this.scene.cameras.main.scrollY,
-                this.scene.cameras.main.width,
-                this.scene.cameras.main.height
-            );
-        }
+        // Unified renderer: Overlay drawing happens in updateDissolutionVisuals() each frame
         
         // Show available systems
         this.visualizeSystems();
@@ -440,13 +396,7 @@ export default class DissolutionProtocolSystem {
         // Restore time
         this.scene.physics.world.timeScale = 1.0;
         
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            // Unified renderer: Layer auto-clears each frame - no action needed
-        } else {
-            // Legacy: Hide and clear overlay
-            this.dissolutionGraphics.setVisible(false);
-            this.dissolutionGraphics.clear();
-        }
+        // Unified renderer: Layer auto-clears each frame - no action needed
         
         // Remove system labels
         if (this.systemLabels) {
@@ -942,22 +892,7 @@ export default class DissolutionProtocolSystem {
         this.inReservoir = true;
         this.reservoirActive = true; // Flag for unified renderer to draw background
         
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            // Unified renderer: Background will be drawn in update()
-        } else {
-            // Legacy: Create reservoir visualization
-            this.reservoirGraphics.setVisible(true);
-            this.reservoirGraphics.clear();
-            
-            // Draw liminal space
-            this.reservoirGraphics.fillStyle(0x1a0a2e, 0.9);
-            this.reservoirGraphics.fillRect(
-                this.scene.cameras.main.scrollX,
-                this.scene.cameras.main.scrollY,
-                this.scene.cameras.main.width,
-                this.scene.cameras.main.height
-            );
-        }
+        // Unified renderer: Background will be drawn in update()
         
         // Show dissolved systems
         let yOffset = 150;
@@ -1023,13 +958,7 @@ export default class DissolutionProtocolSystem {
         this.inReservoir = false;
         this.reservoirActive = false; // Clear flag for unified renderer
         
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            // Unified renderer: Layer auto-clears each frame - no action needed
-        } else {
-            // Legacy: Hide graphics
-            this.reservoirGraphics.setVisible(false);
-            this.reservoirGraphics.clear();
-        }
+        // Unified renderer: Layer auto-clears each frame - no action needed
         
         if (this.reservoirLabels) {
             this.reservoirLabels.forEach(label => label.destroy());
@@ -1141,39 +1070,24 @@ export default class DissolutionProtocolSystem {
         }
         
         // Render essence bars via unified renderer
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            this.renderEssenceBars();
-        }
+        this.renderEssenceBars();
     }
     
     updateDissolutionVisuals(time) {
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            const manager = this.scene.graphicsManager;
-            const cam = this.scene.cameras.main;
-            
-            // Draw dissolution mode overlay (pulsing effect)
-            if (this.dissolutionMode) {
-                const alpha = 0.3 + Math.sin(time / 500) * 0.1;
-                manager.drawRect('effects', cam.scrollX, cam.scrollY, cam.width, cam.height, 0x2d1f3d, alpha, true);
-            }
-            
-            // Draw reservoir background
-            if (this.reservoirActive) {
-                manager.drawRect('effects', cam.scrollX, cam.scrollY, cam.width, cam.height, 0x1a0a2e, 0.9, true);
-            }
-        } else {
-            // Legacy: Direct graphics manipulation
-            if (this.dissolutionMode) {
-                const alpha = 0.3 + Math.sin(time / 500) * 0.1;
-                this.dissolutionGraphics.clear();
-                this.dissolutionGraphics.fillStyle(0x2d1f3d, alpha);
-                this.dissolutionGraphics.fillRect(
-                    this.scene.cameras.main.scrollX,
-                    this.scene.cameras.main.scrollY,
-                    this.scene.cameras.main.width,
-                    this.scene.cameras.main.height
-                );
-            }
+        if (!this.scene.graphicsManager) return;
+        
+        const manager = this.scene.graphicsManager;
+        const cam = this.scene.cameras.main;
+        
+        // Draw dissolution mode overlay (pulsing effect)
+        if (this.dissolutionMode) {
+            const alpha = 0.3 + Math.sin(time / 500) * 0.1;
+            manager.drawRect('effects', cam.scrollX, cam.scrollY, cam.width, cam.height, 0x2d1f3d, alpha, true);
+        }
+        
+        // Draw reservoir background
+        if (this.reservoirActive) {
+            manager.drawRect('effects', cam.scrollX, cam.scrollY, cam.width, cam.height, 0x1a0a2e, 0.9, true);
         }
     }
     

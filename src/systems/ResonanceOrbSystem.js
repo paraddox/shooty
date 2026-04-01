@@ -129,10 +129,9 @@ export default class ResonanceOrbSystem {
         
         // Visual group
         this.orbGroup = null;
-        this.graphics = null;
         
-        // Unified renderer flag
-        this.useUnifiedRenderer = false;
+        // Unified renderer flag (always true - uses UnifiedGraphicsManager)
+        this.useUnifiedRenderer = true;
         
         // Superposition tracking
         this.superpositionLevel = 0;
@@ -155,10 +154,6 @@ export default class ResonanceOrbSystem {
         
         // Create visual group for orbs
         this.orbGroup = this.scene.add.group();
-        
-        // MIGRATED: Use UnifiedGraphicsManager for all orb rendering (no legacy graphics)
-        // All orb visuals are rendered via UnifiedGraphicsManager on 'effects' layer
-        this.useUnifiedRenderer = true;
         
         // Create UI container for active orb indicators
         this.createOrbHUD();

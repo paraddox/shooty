@@ -45,8 +45,6 @@ export default class ResonanceCascadeSystem {
         this.chainDisplay = null;
         this.multiplierText = null;
         this.sequenceDots = [];
-        this.cascadeFlash = null;
-        // Note: resonance ring and chain glow now rendered via UnifiedGraphicsManager
         
         // Damage tracking for multiplier
         this.pendingDamageBonus = 1.0;
@@ -64,9 +62,6 @@ export default class ResonanceCascadeSystem {
         this.chainContainer.setScrollFactor(0);
         this.chainContainer.setDepth(100);
         this.chainContainer.setVisible(false);
-        
-        // Note: Background glow and resonance ring now rendered via UnifiedGraphicsManager
-        // on the 'effects' layer for better performance (batched rendering, single clear per frame)
         
         // Multiplier text (large, central)
         this.multiplierText = this.scene.add.text(0, 0, '', {
@@ -224,7 +219,6 @@ export default class ResonanceCascadeSystem {
     onChainStart() {
         this.chainContainer.setVisible(true);
         this.multiplierText.setVisible(true);
-        // Note: Resonance ring now rendered via UnifiedGraphicsManager on 'effects' layer
         
         // Initial pulse effect
         const player = this.scene.player;
@@ -243,25 +237,6 @@ export default class ResonanceCascadeSystem {
     }
     
     onChainStep() {
-        // Visual pulse on step
-        const state = this.resonanceStates[this.resonanceState];
-        const color = state ? state.color : 0x00f0ff;
-        
-        const player = this.scene.player;
-        const burst = this.scene.add.graphics();
-        burst.fillStyle(color, 0.3);
-        burst.fillCircle(player.x, player.y, 25);
-        burst.setDepth(47);
-        
-        this.scene.tweens.add({
-            targets: burst,
-            scale: 2,
-            alpha: 0,
-            duration: 300,
-            ease: 'Power2',
-            onComplete: () => burst.destroy()
-        });
-        
         // Update sequence display
         this.updateSequenceDisplay();
     }
@@ -662,21 +637,6 @@ export default class ResonanceCascadeSystem {
             onComplete: () => this.cascadeText.setVisible(false)
         });
         
-        // Shockwave effect
-        const shockwave = this.scene.add.graphics();
-        shockwave.lineStyle(3, color, 1);
-        shockwave.strokeCircle(player.x, player.y, 10);
-        shockwave.setDepth(150);
-        
-        this.scene.tweens.add({
-            targets: shockwave,
-            scale: chainLength * 3,
-            alpha: 0,
-            duration: 600,
-            ease: 'Power2',
-            onComplete: () => shockwave.destroy()
-        });
-        
         // Screen shake proportional to chain
         this.scene.cameras.main.shake(200 + chainLength * 50, 0.002 + chainLength * 0.001);
         
@@ -813,8 +773,6 @@ export default class ResonanceCascadeSystem {
         this.chainContainer.setVisible(false);
         this.chainContainer.removeAll(true);
         this.multiplierText.setVisible(false);
-        // Note: Graphics now rendered via UnifiedGraphicsManager on 'effects' layer
-        // No need to clear individual graphics - manager clears once per frame
     }
     
     /**

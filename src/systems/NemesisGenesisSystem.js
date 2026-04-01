@@ -1,15 +1,6 @@
 import Phaser from 'phaser';
 
 /**
- * MIGRATION NOTICE (April 2025):
- * This system has been migrated to use UnifiedGraphicsManager for rendering:
- * - Crimson foresight prediction lines now use graphicsManager.drawLine() on 'effects' layer
- * - Removed direct graphics.clear() call (was 1 clear per effect use)
- * - Removed this.graphics Phaser Graphics object creation
- * - UnifiedGraphicsManager batches all effects layer rendering with single clear per frame
- * 
- * Benefits: Reduced GPU flushes, centralized rendering, consistent layer management
- * 
  * Nemesis Genesis System — The Adversarial Mirror
  * 
  * Every game has bosses. No game has a boss that IS you.
@@ -129,7 +120,6 @@ export default class NemesisGenesisSystem {
         this.lastClusterUpdate = 0;
         
         // ===== VISUALS =====
-        // Note: Nemesis genesis effects now rendered via UnifiedGraphicsManager on 'effects' layer
         this.nemesisGlow = null;
         this.crimsonForesightActive = false;
         this.crimsonForesightEndTime = 0;
@@ -146,8 +136,7 @@ export default class NemesisGenesisSystem {
     }
     
     createVisuals() {
-        // Note: Graphics rendering now handled by UnifiedGraphicsManager on 'effects' layer
-        // No direct graphics objects needed - reduces GPU flushes
+        // Effects rendered via UnifiedGraphicsManager on 'effects' layer
     }
     
     // ===== BEHAVIORAL PROFILING =====
@@ -1009,7 +998,6 @@ export default class NemesisGenesisSystem {
             this.nemesis.destroy();
             this.nemesis = null;
         }
-        // Note: No graphics object to destroy - UnifiedGraphicsManager handles cleanup
         if (this.nemesisHealthBg) this.nemesisHealthBg.destroy();
         if (this.nemesisHealthBar) this.nemesisHealthBar.destroy();
         if (this.nemesisNameText) this.nemesisNameText.destroy();

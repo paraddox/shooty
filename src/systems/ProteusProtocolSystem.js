@@ -1,22 +1,6 @@
 import Phaser from 'phaser';
 
 /**
- * MIGRATED to UnifiedGraphicsManager (April 2025):
- * - DNA helix visualization now uses UnifiedGraphicsManager on 'effects' layer
- * - Fitness mini-graph now uses UnifiedGraphicsManager on 'effects' layer  
- * - Removed: this.ui.helixGraphics (Phaser Graphics object)
- * - Removed: this.ui.fitnessGraph (Phaser Graphics object)
- * - Removed: 2 graphics.clear() calls
- * 
- * Previously each frame did:
- *   this.ui.helixGraphics.clear() + draw helix
- *   this.ui.fitnessGraph.clear() + draw graph
- * 
- * Now registers draw commands with UnifiedGraphicsManager which batches
- * all rendering and clears once per frame per layer.
- */
-
-/**
  * PROTEUS PROTOCOL — The 57th Dimension: THE EVOLUTION OF RULES 🧬
  * 
  * The game becomes a living organism. Its fundamental parameters — enemy speed,
@@ -310,7 +294,6 @@ export default class ProteusProtocolSystem {
             speciesText: null,
             mutationTicker: null,
             chromosomeDisplay: null
-            // Note: helixGraphics and fitnessGraph removed - now rendered via UnifiedGraphicsManager
         };
         
         // Speciation thresholds
@@ -440,9 +423,6 @@ export default class ProteusProtocolSystem {
         this.ui.container.setDepth(1000);
         this.ui.container.setAlpha(0.9);
         
-        // Note: DNA Helix and fitness graph now rendered via UnifiedGraphicsManager
-        // Previously used: this.ui.helixGraphics and this.ui.fitnessGraph with clear()
-        
         // Generation counter
         this.ui.generationText = this.scene.add.text(0, -35, `GEN ${this.genome.generation}`, {
             fontFamily: 'monospace',
@@ -460,8 +440,6 @@ export default class ProteusProtocolSystem {
         }).setOrigin(0.5);
         this.ui.container.add(this.ui.speciesText);
         
-        // Note: Fitness mini-graph now rendered via UnifiedGraphicsManager on 'effects' layer
-        
         // Mutation ticker
         this.ui.mutationTicker = this.scene.add.text(0, 45, '', {
             fontFamily: 'monospace',
@@ -469,8 +447,6 @@ export default class ProteusProtocolSystem {
             color: '#00d4aa'
         }).setOrigin(0.5);
         this.ui.container.add(this.ui.mutationTicker);
-        
-        // Initial draw calls now handled in update() via UnifiedGraphicsManager
         
         // Initial phenotype expression
         this.applyToGameScene();
@@ -483,9 +459,7 @@ export default class ProteusProtocolSystem {
     }
     
     /**
-     * Draw DNA helix via UnifiedGraphicsManager (migrated from direct graphics)
-     * Previously used: this.ui.helixGraphics.clear() and direct drawing
-     * Now registers draw commands with UnifiedGraphicsManager on 'effects' layer
+     * Draw DNA helix via UnifiedGraphicsManager on 'effects' layer
      */
     drawHelix() {
         const manager = this.scene.graphicsManager;
@@ -534,9 +508,7 @@ export default class ProteusProtocolSystem {
     }
     
     /**
-     * Draw fitness graph via UnifiedGraphicsManager (migrated from direct graphics)
-     * Previously used: this.ui.fitnessGraph.clear() and direct drawing
-     * Now registers draw commands with UnifiedGraphicsManager on 'effects' layer
+     * Draw fitness graph via UnifiedGraphicsManager on 'effects' layer
      */
     drawFitnessGraph() {
         const manager = this.scene.graphicsManager;
@@ -1137,7 +1109,5 @@ export default class ProteusProtocolSystem {
         if (this.ui.container) {
             this.ui.container.destroy();
         }
-        // Note: No graphics objects to destroy - helix and fitness graph are now 
-        // rendered via UnifiedGraphicsManager which handles its own cleanup
     }
 }

@@ -135,11 +135,8 @@ export default class OracleProtocolSystem {
         
         // ===== VISUALS =====
         this.echoGraphics = null;
-        this.oracleGlow = null;
-        this.resonanceRings = [];
         
         // ===== UNIFIED RENDERING =====
-        this.useUnifiedRenderer = false;
         this.renderInterval = 2; // Render every 2nd frame for glow
         this.renderCounter = 0;
         this.activeRings = []; // For unified renderer ring tracking
@@ -167,11 +164,6 @@ export default class OracleProtocolSystem {
     }
     
     createVisuals() {
-        // Check for UnifiedGraphicsManager
-        if (this.scene.graphicsManager) {
-            this.useUnifiedRenderer = true;
-        }
-        
         // Main graphics for rendering echoes (one-time static graphics, not cleared per-frame)
         this.echoGraphics = this.scene.add.graphics();
         this.echoGraphics.setDepth(45); // Above enemies, below UI
@@ -179,12 +171,6 @@ export default class OracleProtocolSystem {
         // Prophecy compass graphics (one-time use)
         this.prophecyGraphics = this.scene.add.graphics();
         this.prophecyGraphics.setDepth(44);
-        
-        // Oracle glow around player - only create if not using unified renderer
-        if (!this.useUnifiedRenderer) {
-            this.oracleGlow = this.scene.add.graphics();
-            this.oracleGlow.setDepth(-1);
-        }
         
         // Vision overlay (chromatic aberration effect)
         this.createVisionOverlay();
@@ -620,43 +606,6 @@ export default class OracleProtocolSystem {
     }
     
     createResonanceRing(x, y, color) {
-        // Use UnifiedGraphicsManager if available (no direct graphics/clear calls)
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            this.createResonanceRingUnified(x, y, color);
-            return;
-        }
-        
-        // Legacy mode: direct graphics with clear() calls
-        const ring = this.scene.add.graphics();
-        ring.lineStyle(2, color, 0.5);
-        ring.strokeCircle(x, y, 10);
-        
-        this.resonanceRings.push(ring);
-        
-        // Expand animation
-        let radius = 10;
-        const expandEvent = this.scene.time.addEvent({
-            delay: 50,
-            callback: () => {
-                radius += 5;
-                ring.clear();
-                ring.lineStyle(2, color, 0.5 - (radius / 200));
-                ring.strokeCircle(x, y, radius);
-                
-                if (radius > 100) {
-                    expandEvent.remove();
-                    ring.destroy();
-                    this.resonanceRings = this.resonanceRings.filter(r => r !== ring);
-                }
-            },
-            loop: true
-        });
-    }
-    
-    /**
-     * Unified rendering for resonance rings - no graphics.clear() calls
-     */
-    createResonanceRingUnified(x, y, color) {
         const ringId = Phaser.Math.RND.uuid();
         const ringData = {
             id: ringId,
@@ -693,9 +642,7 @@ export default class OracleProtocolSystem {
     /**
      * Render all active resonance rings via UnifiedGraphicsManager
      */
-    renderResonanceRingsUnified() {
-        if (!this.useUnifiedRenderer || !this.scene.graphicsManager) return;
-        
+    renderResonanceRings() {
         const manager = this.scene.graphicsManager;
         
         for (const ring of this.activeRings) {
@@ -736,15 +683,13 @@ export default class OracleProtocolSystem {
             this.echoCooldown = 5000; // 5s between echoes
         }
         
-        // Update visuals (throttled for unified renderer)
-        if (!this.useUnifiedRenderer || this.renderCounter % this.renderInterval === 0) {
+        // Update visuals (throttled)
+        if (this.renderCounter % this.renderInterval === 0) {
             this.updateOracleGlow();
         }
         
-        // Unified rendering for resonance rings
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            this.renderResonanceRingsUnified();
-        }
+        // Render resonance rings
+        this.renderResonanceRings();
         
         this.renderEchoes();
     }
@@ -1050,37 +995,6 @@ export default class OracleProtocolSystem {
     }
     
     updateOracleGlow() {
-        // Use UnifiedGraphicsManager if available (no graphics.clear() calls)
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            this.updateOracleGlowUnified();
-            return;
-        }
-        
-        // Legacy mode: direct graphics with clear() calls
-        const player = this.scene.player;
-        const time = this.scene.time.now;
-        
-        this.oracleGlow.clear();
-        
-        // Base glow when oracle is active
-        if (this.echoes.length > 0) {
-            const pulse = (Math.sin(time / 500) + 1) / 2; // 0-1
-            const alpha = 0.1 + pulse * 0.15;
-            const radius = 60 + pulse * 20;
-            
-            // Gradient rings
-            this.oracleGlow.fillStyle(this.ECHO_COLORS.PREMONITION_GLOW, alpha * 0.3);
-            this.oracleGlow.fillCircle(player.x, player.y, radius + 20);
-            
-            this.oracleGlow.fillStyle(this.ECHO_COLORS.PROPHECY, alpha * 0.2);
-            this.oracleGlow.fillCircle(player.x, player.y, radius);
-        }
-    }
-    
-    /**
-     * Unified rendering for oracle glow - no graphics.clear() calls
-     */
-    updateOracleGlowUnified() {
         const player = this.scene.player;
         const time = this.scene.time.now;
         
@@ -1235,7 +1149,6 @@ export default class OracleProtocolSystem {
         // Clean up visuals
         if (this.echoGraphics) this.echoGraphics.destroy();
         if (this.prophecyGraphics) this.prophecyGraphics.destroy();
-        if (this.oracleGlow) this.oracleGlow.destroy();
         if (this.visionOverlay) this.visionOverlay.destroy();
         
         // Clean up active echoes
@@ -1244,9 +1157,6 @@ export default class OracleProtocolSystem {
             if (echo.ghostBullets) echo.ghostBullets.destroy();
             if (echo.ghostFuture) echo.ghostFuture.destroy();
         });
-        
-        // Clean up resonance rings (legacy mode)
-        this.resonanceRings.forEach(ring => ring.destroy());
         
         // Clean up unified renderer rings
         this.activeRings = [];

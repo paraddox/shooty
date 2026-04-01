@@ -24,11 +24,11 @@ import Phaser from 'phaser';
  * 
  * Color: Teal-cyan (#00d4ff) shifting through the spectrum as it learns
  * 
- * MIGRATED to UnifiedGraphicsManager (April 2025):
- * - Glitch overlay rendering now uses UnifiedGraphicsManager on 'effects' layer
- * - Mutation bar rendering now uses UnifiedGraphicsManager on 'ui' layer
- * - ObserverEcho aura rendering migrated to UnifiedGraphicsManager
- * - Eliminated 3 per-frame graphics.clear() calls (now handled by UnifiedGraphicsManager)
+ * UnifiedGraphicsManager Implementation (April 2025):
+ * - Glitch overlay rendering uses UnifiedGraphicsManager on 'effects' layer
+ * - Mutation bar rendering uses UnifiedGraphicsManager on 'ui' layer
+ * - ObserverEcho aura rendering uses UnifiedGraphicsManager
+ * - No per-frame graphics.clear() calls (handled by UnifiedGraphicsManager)
  */
 
 export default class ObserverEffectSystem {
@@ -146,13 +146,6 @@ export default class ObserverEffectSystem {
     }
     
     createObserverVisuals() {
-        // Check for UnifiedGraphicsManager (new architecture)
-        if (this.scene.graphicsManager) {
-            this.useUnifiedRenderer = true;
-        } else {
-            this.useUnifiedRenderer = false;
-        }
-        
         // Observer eye indicator (top-right, subtle)
         const canvas = document.createElement('canvas');
         canvas.width = 64;
@@ -196,21 +189,6 @@ export default class ObserverEffectSystem {
         );
         this.analysisText.setScrollFactor(0);
         this.analysisText.setDepth(100);
-        
-        // Mutation level bar - legacy only if not using unified renderer
-        if (!this.useUnifiedRenderer) {
-            this.mutationBar = this.scene.add.graphics();
-            this.mutationBar.setScrollFactor(0);
-            this.mutationBar.setDepth(100);
-        }
-        
-        // Reality glitch overlay - legacy only if not using unified renderer
-        if (!this.useUnifiedRenderer) {
-            this.glitchOverlay = this.scene.add.graphics();
-            this.glitchOverlay.setScrollFactor(0);
-            this.glitchOverlay.setDepth(99);
-            this.glitchOverlay.setAlpha(0);
-        }
     }
     
     setupAnalysis() {
@@ -632,45 +610,22 @@ export default class ObserverEffectSystem {
     triggerGlitchEffect() {
         const duration = 100 + Math.random() * 300;
         
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            // Unified renderer: Register glitch rectangles as render commands on 'effects' layer
-            const manager = this.scene.graphicsManager;
-            const cam = this.scene.cameras.main;
+        // Unified renderer: Register glitch rectangles as render commands on 'effects' layer
+        const manager = this.scene.graphicsManager;
+        const cam = this.scene.cameras.main;
+        
+        // Random glitch rectangles (screen-space, so use camera-relative coordinates)
+        for (let i = 0; i < 5; i++) {
+            const x = cam.scrollX + Math.random() * cam.width;
+            const y = cam.scrollY + Math.random() * cam.height;
+            const w = 50 + Math.random() * 200;
+            const h = 5 + Math.random() * 20;
+            const color = Math.random() > 0.5 ? 0x00d4ff : 0xff00ff;
             
-            // Random glitch rectangles (screen-space, so use camera-relative coordinates)
-            for (let i = 0; i < 5; i++) {
-                const x = cam.scrollX + Math.random() * cam.width;
-                const y = cam.scrollY + Math.random() * cam.height;
-                const w = 50 + Math.random() * 200;
-                const h = 5 + Math.random() * 20;
-                const color = Math.random() > 0.5 ? 0x00d4ff : 0xff00ff;
-                
-                manager.drawRect('effects', x, y, w, h, color, 0.5);
-            }
-            
-            // Layer will be cleared on next render cycle, no need for explicit cleanup
-        } else {
-            // Legacy: Direct graphics manipulation
-            this.glitchOverlay.clear();
-            this.glitchOverlay.setAlpha(0.3);
-            
-            // Random glitch rectangles
-            for (let i = 0; i < 5; i++) {
-                const x = Math.random() * this.scene.cameras.main.width;
-                const y = Math.random() * this.scene.cameras.main.height;
-                const w = 50 + Math.random() * 200;
-                const h = 5 + Math.random() * 20;
-                const color = Math.random() > 0.5 ? 0x00d4ff : 0xff00ff;
-                
-                this.glitchOverlay.fillStyle(color, 0.5);
-                this.glitchOverlay.fillRect(x, y, w, h);
-            }
-            
-            this.scene.time.delayedCall(duration, () => {
-                this.glitchOverlay.clear();
-                this.glitchOverlay.setAlpha(0);
-            });
+            manager.drawRect('effects', x, y, w, h, color, 0.5);
         }
+        
+        // Layer will be cleared on next render cycle, no need for explicit cleanup
         
         // Chromatic aberration on camera (if supported)
         if (this.scene.cameras.main.postFX) {
@@ -756,27 +711,14 @@ export default class ObserverEffectSystem {
         );
         const fillColor = (color.r << 16) | (color.g << 8) | color.b;
         
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            // Unified renderer: Register bar render commands on 'ui' layer
-            const manager = this.scene.graphicsManager;
-            
-            // Background
-            manager.drawRect('ui', barX, barY, barWidth, barHeight, 0x333333, 0.5);
-            
-            // Fill
-            manager.drawRect('ui', barX, barY, fillWidth, barHeight, fillColor, 1);
-        } else {
-            // Legacy: Direct graphics manipulation
-            this.mutationBar.clear();
-            
-            // Background
-            this.mutationBar.fillStyle(0x333333, 0.5);
-            this.mutationBar.fillRect(barX, barY, barWidth, barHeight);
-            
-            // Fill
-            this.mutationBar.fillStyle(fillColor, 1);
-            this.mutationBar.fillRect(barX, barY, fillWidth, barHeight);
-        }
+        // Unified renderer: Register bar render commands on 'ui' layer
+        const manager = this.scene.graphicsManager;
+        
+        // Background
+        manager.drawRect('ui', barX, barY, barWidth, barHeight, 0x333333, 0.5);
+        
+        // Fill
+        manager.drawRect('ui', barX, barY, fillWidth, barHeight, fillColor, 1);
     }
     
     showMutationAnnouncement(mutationType) {
@@ -878,12 +820,6 @@ export default class ObserverEffectSystem {
         this.observerEchoes.forEach(e => e.destroy());
         if (this.observerGod) this.observerGod.destroy();
         if (this.echoSpawnTimer) this.echoSpawnTimer.remove();
-        
-        // Legacy graphics cleanup (only if not using UnifiedGraphicsManager)
-        if (!this.useUnifiedRenderer) {
-            if (this.mutationBar) this.mutationBar.destroy();
-            if (this.glitchOverlay) this.glitchOverlay.destroy();
-        }
     }
 }
 
@@ -928,14 +864,7 @@ class ObserverEcho {
     }
     
     createAura() {
-        // Check for UnifiedGraphicsManager (new architecture)
-        if (this.scene.graphicsManager) {
-            this.useUnifiedRenderer = true;
-        } else {
-            this.useUnifiedRenderer = false;
-            // Legacy: Glowing aura that pulses
-            this.aura = this.scene.add.graphics();
-        }
+        // Aura is rendered via UnifiedGraphicsManager in update()
     }
     
     announce() {
@@ -968,28 +897,19 @@ class ObserverEcho {
             return;
         }
         
-        // Update aura
+        // Update aura via UnifiedGraphicsManager
         const pulse = 1 + Math.sin(this.age * 3) * 0.2;
         const alpha = 0.3 * (1 - this.age / this.lifespan);
         
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            // Unified renderer: Register aura as render command on 'effects' layer
-            // Note: UnifiedGraphicsManager doesn't have strokeCircle, so we draw a small rect as placeholder
-            // or register a circle command if the manager supports it
-            this.scene.graphicsManager.addCommand('effects', 'circle', {
-                x: this.sprite.x,
-                y: this.sprite.y,
-                radius: 25 * pulse,
-                color: 0x00d4ff,
-                alpha: alpha,
-                filled: false
-            });
-        } else {
-            // Legacy: Direct graphics manipulation
-            this.aura.clear();
-            this.aura.lineStyle(2, 0x00d4ff, alpha);
-            this.aura.strokeCircle(this.sprite.x, this.sprite.y, 25 * pulse);
-        }
+        // Unified renderer: Register aura as render command on 'effects' layer
+        this.scene.graphicsManager.addCommand('effects', 'circle', {
+            x: this.sprite.x,
+            y: this.sprite.y,
+            radius: 25 * pulse,
+            color: 0x00d4ff,
+            alpha: alpha,
+            filled: false
+        });
         
         // AI behavior based on player's profile
         const distToTarget = Phaser.Math.Distance.Between(
@@ -1056,13 +976,8 @@ class ObserverEcho {
     
     die() {
         // Fade out
-        const targets = [this.sprite];
-        if (!this.useUnifiedRenderer && this.aura) {
-            targets.push(this.aura);
-        }
-        
         this.scene.tweens.add({
-            targets: targets,
+            targets: this.sprite,
             alpha: 0,
             scale: 0,
             duration: 500,
@@ -1072,9 +987,6 @@ class ObserverEcho {
     
     destroy() {
         this.sprite.destroy();
-        if (!this.useUnifiedRenderer && this.aura) {
-            this.aura.destroy();
-        }
         if (this.onDestroy) this.onDestroy();
     }
 }

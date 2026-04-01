@@ -39,7 +39,6 @@ export default class CinematicArchiveSystem {
         
         // Visual feedback
         this.captureFlash = null;
-        this.frameOverlay = null;
         this.letterboxBars = [];
         
         // Composite score thresholds for auto-capture
@@ -54,11 +53,6 @@ export default class CinematicArchiveSystem {
     }
     
     init() {
-        // Use UnifiedGraphicsManager if available (new architecture)
-        if (this.scene.graphicsManager) {
-            this.useUnifiedRenderer = true;
-        }
-        
         this.loadExistingArchive();
         this.createVisualFeedback();
         this.setupInputHandlers();
@@ -76,14 +70,6 @@ export default class CinematicArchiveSystem {
         );
         this.captureFlash.setScrollFactor(0);
         this.captureFlash.setDepth(1000);
-        
-        // Cinematic frame overlay (subtle amber border)
-        // Use UnifiedGraphicsManager if available, else legacy graphics
-        if (!this.useUnifiedRenderer) {
-            this.frameOverlay = this.scene.add.graphics();
-            this.frameOverlay.setScrollFactor(0);
-            this.frameOverlay.setDepth(999);
-        }
         
         // Letterbox bars for "cinematic mode"
         const barHeight = 40;
@@ -109,39 +95,20 @@ export default class CinematicArchiveSystem {
         const thickness = 2;
         const cornerSize = 30;
         
-        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-            // New way: register commands with UnifiedGraphicsManager on 'effects' layer
-            // Amber corner brackets (subtle cinematic framing)
-            // Top-left
-            this.scene.graphicsManager.drawLine('effects', 10, 10, 10 + cornerSize, 10, this.AMBER_COLOR, 0.3, thickness);
-            this.scene.graphicsManager.drawLine('effects', 10, 10, 10, 10 + cornerSize, this.AMBER_COLOR, 0.3, thickness);
-            // Top-right
-            this.scene.graphicsManager.drawLine('effects', w - 10, 10, w - 10 - cornerSize, 10, this.AMBER_COLOR, 0.3, thickness);
-            this.scene.graphicsManager.drawLine('effects', w - 10, 10, w - 10, 10 + cornerSize, this.AMBER_COLOR, 0.3, thickness);
-            // Bottom-left
-            this.scene.graphicsManager.drawLine('effects', 10, h - 10, 10 + cornerSize, h - 10, this.AMBER_COLOR, 0.3, thickness);
-            this.scene.graphicsManager.drawLine('effects', 10, h - 10, 10, h - 10 - cornerSize, this.AMBER_COLOR, 0.3, thickness);
-            // Bottom-right
-            this.scene.graphicsManager.drawLine('effects', w - 10, h - 10, w - 10 - cornerSize, h - 10, this.AMBER_COLOR, 0.3, thickness);
-            this.scene.graphicsManager.drawLine('effects', w - 10, h - 10, w - 10, h - 10 - cornerSize, this.AMBER_COLOR, 0.3, thickness);
-        } else {
-            // Legacy way: direct graphics manipulation
-            this.frameOverlay.clear();
-            this.frameOverlay.lineStyle(thickness, this.AMBER_COLOR, 0.3);
-            
-            // Top-left
-            this.frameOverlay.lineBetween(10, 10, 10 + cornerSize, 10);
-            this.frameOverlay.lineBetween(10, 10, 10, 10 + cornerSize);
-            // Top-right
-            this.frameOverlay.lineBetween(w - 10, 10, w - 10 - cornerSize, 10);
-            this.frameOverlay.lineBetween(w - 10, 10, w - 10, 10 + cornerSize);
-            // Bottom-left
-            this.frameOverlay.lineBetween(10, h - 10, 10 + cornerSize, h - 10);
-            this.frameOverlay.lineBetween(10, h - 10, 10, h - 10 - cornerSize);
-            // Bottom-right
-            this.frameOverlay.lineBetween(w - 10, h - 10, w - 10 - cornerSize, h - 10);
-            this.frameOverlay.lineBetween(w - 10, h - 10, w - 10, h - 10 - cornerSize);
-        }
+        // UnifiedGraphicsManager: register commands on 'effects' layer
+        // Amber corner brackets (subtle cinematic framing)
+        // Top-left
+        this.scene.graphicsManager.drawLine('effects', 10, 10, 10 + cornerSize, 10, this.AMBER_COLOR, 0.3, thickness);
+        this.scene.graphicsManager.drawLine('effects', 10, 10, 10, 10 + cornerSize, this.AMBER_COLOR, 0.3, thickness);
+        // Top-right
+        this.scene.graphicsManager.drawLine('effects', w - 10, 10, w - 10 - cornerSize, 10, this.AMBER_COLOR, 0.3, thickness);
+        this.scene.graphicsManager.drawLine('effects', w - 10, 10, w - 10, 10 + cornerSize, this.AMBER_COLOR, 0.3, thickness);
+        // Bottom-left
+        this.scene.graphicsManager.drawLine('effects', 10, h - 10, 10 + cornerSize, h - 10, this.AMBER_COLOR, 0.3, thickness);
+        this.scene.graphicsManager.drawLine('effects', 10, h - 10, 10, h - 10 - cornerSize, this.AMBER_COLOR, 0.3, thickness);
+        // Bottom-right
+        this.scene.graphicsManager.drawLine('effects', w - 10, h - 10, w - 10 - cornerSize, h - 10, this.AMBER_COLOR, 0.3, thickness);
+        this.scene.graphicsManager.drawLine('effects', w - 10, h - 10, w - 10, h - 10 - cornerSize, this.AMBER_COLOR, 0.3, thickness);
     }
     
     setupInputHandlers() {
@@ -537,48 +504,25 @@ export default class CinematicArchiveSystem {
             const h = this.scene.scale.height;
             const cornerSize = 40;
             
-            if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-                // New way: register commands with UnifiedGraphicsManager on 'effects' layer
-                // Draw base frame
-                this.drawFrameOverlay();
-                // Enhance corners when moment is building with pulsing effect
-                // Top-left
-                this.scene.graphicsManager.drawLine('effects', 10, 10, 10 + cornerSize, 10, this.AMBER_COLOR, pulse, 3);
-                this.scene.graphicsManager.drawLine('effects', 10, 10, 10, 10 + cornerSize, this.AMBER_COLOR, pulse, 3);
-                // Top-right
-                this.scene.graphicsManager.drawLine('effects', w - 10, 10, w - 10 - cornerSize, 10, this.AMBER_COLOR, pulse, 3);
-                this.scene.graphicsManager.drawLine('effects', w - 10, 10, w - 10, 10 + cornerSize, this.AMBER_COLOR, pulse, 3);
-                // Bottom-left
-                this.scene.graphicsManager.drawLine('effects', 10, h - 10, 10 + cornerSize, h - 10, this.AMBER_COLOR, pulse, 3);
-                this.scene.graphicsManager.drawLine('effects', 10, h - 10, 10, h - 10 - cornerSize, this.AMBER_COLOR, pulse, 3);
-                // Bottom-right
-                this.scene.graphicsManager.drawLine('effects', w - 10, h - 10, w - 10 - cornerSize, h - 10, this.AMBER_COLOR, pulse, 3);
-                this.scene.graphicsManager.drawLine('effects', w - 10, h - 10, w - 10, h - 10 - cornerSize, this.AMBER_COLOR, pulse, 3);
-            } else {
-                // Legacy way: direct graphics manipulation
-                this.frameOverlay.clear();
-                this.drawFrameOverlay();
-                // Enhance corners when moment is building
-                this.frameOverlay.lineStyle(3, this.AMBER_COLOR, pulse);
-                // Redraw with enhanced glow
-                this.frameOverlay.lineBetween(10, 10, 10 + cornerSize, 10);
-                this.frameOverlay.lineBetween(10, 10, 10, 10 + cornerSize);
-                this.frameOverlay.lineBetween(w - 10, 10, w - 10 - cornerSize, 10);
-                this.frameOverlay.lineBetween(w - 10, 10, w - 10, 10 + cornerSize);
-                this.frameOverlay.lineBetween(10, h - 10, 10 + cornerSize, h - 10);
-                this.frameOverlay.lineBetween(10, h - 10, 10, h - 10 - cornerSize);
-                this.frameOverlay.lineBetween(w - 10, h - 10, w - 10 - cornerSize, h - 10);
-                this.frameOverlay.lineBetween(w - 10, h - 10, w - 10, h - 10 - cornerSize);
-            }
+            // UnifiedGraphicsManager: register commands on 'effects' layer
+            // Draw base frame
+            this.drawFrameOverlay();
+            // Enhance corners when moment is building with pulsing effect
+            // Top-left
+            this.scene.graphicsManager.drawLine('effects', 10, 10, 10 + cornerSize, 10, this.AMBER_COLOR, pulse, 3);
+            this.scene.graphicsManager.drawLine('effects', 10, 10, 10, 10 + cornerSize, this.AMBER_COLOR, pulse, 3);
+            // Top-right
+            this.scene.graphicsManager.drawLine('effects', w - 10, 10, w - 10 - cornerSize, 10, this.AMBER_COLOR, pulse, 3);
+            this.scene.graphicsManager.drawLine('effects', w - 10, 10, w - 10, 10 + cornerSize, this.AMBER_COLOR, pulse, 3);
+            // Bottom-left
+            this.scene.graphicsManager.drawLine('effects', 10, h - 10, 10 + cornerSize, h - 10, this.AMBER_COLOR, pulse, 3);
+            this.scene.graphicsManager.drawLine('effects', 10, h - 10, 10, h - 10 - cornerSize, this.AMBER_COLOR, pulse, 3);
+            // Bottom-right
+            this.scene.graphicsManager.drawLine('effects', w - 10, h - 10, w - 10 - cornerSize, h - 10, this.AMBER_COLOR, pulse, 3);
+            this.scene.graphicsManager.drawLine('effects', w - 10, h - 10, w - 10, h - 10 - cornerSize, this.AMBER_COLOR, pulse, 3);
         } else {
-            if (this.useUnifiedRenderer && this.scene.graphicsManager) {
-                // New way: just draw the base frame (no clear needed - UnifiedGraphicsManager handles it)
-                this.drawFrameOverlay();
-            } else {
-                // Legacy way
-                this.frameOverlay.clear();
-                this.drawFrameOverlay();
-            }
+            // UnifiedGraphicsManager: just draw the base frame (no clear needed - UnifiedGraphicsManager handles it)
+            this.drawFrameOverlay();
         }
     }
     
@@ -669,7 +613,6 @@ export default class CinematicArchiveSystem {
     
     destroy() {
         if (this.captureFlash) this.captureFlash.destroy();
-        if (this.frameOverlay) this.frameOverlay.destroy(); // Legacy cleanup
         this.letterboxBars.forEach(bar => bar.destroy());
     }
 }

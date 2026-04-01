@@ -78,8 +78,7 @@ export default class FractureSystem {
             });
         }
         
-        // Note: Graphics rendering is now handled by UnifiedGraphicsManager
-        // this.momentumBar, this.fractureRing, this.ghostRing are now command-based
+        // All graphics rendering is handled by UnifiedGraphicsManager
     }
     
     setupInput() {
@@ -219,18 +218,7 @@ export default class FractureSystem {
             fireRate: 150 // Slightly faster than player
         };
         
-        // Create ghost visual
-        this.ghostVisual = this.scene.add.image(
-            this.ghostPlayer.x, 
-            this.ghostPlayer.y, 
-            'player'
-        );
-        this.ghostVisual.setTint(0xffd700);
-        this.ghostVisual.setAlpha(0.8);
-        this.ghostVisual.setScale(1.0);
-        this.ghostVisual.setDepth(5);
-        
-        // Note: Ghost ring is now drawn via UnifiedGraphicsManager in updateFracture()
+        // Ghost visual is drawn via UnifiedGraphicsManager in updateFracture()
     }
     
     onFractureStart() {
@@ -245,8 +233,6 @@ export default class FractureSystem {
         
         // Trail effect
         this.spawnFractureTrails();
-        
-        // Note: Fracture ring is now drawn via UnifiedGraphicsManager in updateFracture()
     }
     
     spawnFractureTrails() {
@@ -429,9 +415,7 @@ export default class FractureSystem {
         this.ghostPlayer.vx = vx;
         this.ghostPlayer.vy = vy;
         
-        // Update visual
-        this.ghostVisual.setPosition(this.ghostPlayer.x, this.ghostPlayer.y);
-        this.ghostVisual.setRotation(this.ghostPlayer.rotation);
+        // Ghost visual is drawn via UnifiedGraphicsManager in updateFracture()
         
         // Ghost shooting
         if (this.scene.time.now > this.ghostPlayer.lastFired + this.ghostPlayer.fireRate) {
@@ -534,22 +518,7 @@ export default class FractureSystem {
         // Show resolve text
         this.showResolveText(bonus);
         
-        // Clean up ghost
-        if (this.ghostVisual) {
-            // Fade out ghost
-            this.scene.tweens.add({
-                targets: this.ghostVisual,
-                alpha: 0,
-                scale: 0,
-                duration: 300,
-                onComplete: () => {
-                    this.ghostVisual.destroy();
-                    this.ghostVisual = null;
-                }
-            });
-        }
-        
-        // Note: Ghost ring cleanup is now handled by UnifiedGraphicsManager
+        // Ghost cleanup is handled by UnifiedGraphicsManager
         // No direct graphics object to destroy
         
         this.ghostPlayer = null;
@@ -565,9 +534,6 @@ export default class FractureSystem {
         // Screen shake based on performance
         const intensity = 0.002 + this.killsInFracture * 0.001;
         this.scene.cameras.main.shake(200, intensity);
-        
-        // Note: Fracture ring clearing is now handled by UnifiedGraphicsManager
-        // Graphics are cleared once per frame, no manual clear needed
     }
     
     calculateBonus() {
@@ -707,15 +673,9 @@ export default class FractureSystem {
     damageGhost(amount) {
         if (!this.isFractured || !this.ghostPlayer) return;
         
-        // Visual feedback
-        this.scene.tweens.add({
-            targets: this.ghostVisual,
-            alpha: 0.3,
-            duration: 50,
-            yoyo: true
-        });
+        // Visual feedback is handled by UnifiedGraphicsManager
         
-        // Ghost flickers and takes reduced damage tracking
+        // Ghost takes reduced damage tracking
         this.damageTakenInFracture += amount * 0.5; // Ghost damage is halved
         
         // Check if ghost should die
@@ -728,10 +688,8 @@ export default class FractureSystem {
     destroy() {
         this.afterImages.forEach(img => img.sprite.destroy());
         
-        if (this.ghostVisual) this.ghostVisual.destroy();
-        
         this.shiftKey.destroy();
         
-        // Note: No graphics objects to destroy - UnifiedGraphicsManager handles cleanup
+        // UnifiedGraphicsManager handles all graphics cleanup
     }
 }
