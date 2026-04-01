@@ -254,6 +254,9 @@ export default class OmniWeaponSystem {
     }
     
     updateUI() {
+        // Guard: panel elements may not be initialized yet
+        if (!this.modIcons) return;
+        
         const slotIcons = {
             RAPID: 'R', PIERCE: '|', SPREAD: 'W',
             EXPLOSIVE: '◈', ELEMENTAL: '✦', PHASING: '○',
@@ -263,6 +266,9 @@ export default class OmniWeaponSystem {
         Object.keys(this.slots).forEach(slotName => {
             const mod = this.slots[slotName];
             const ui = this.modIcons[slotName];
+            
+            // Guard: individual slot UI may not be initialized
+            if (!ui) return;
             
             if (mod) {
                 ui.empty.setVisible(false);
