@@ -368,8 +368,10 @@ export default class HUDPanelManager {
                     let maxY = 0;
                     
                     contentContainer.list.forEach(child => {
-                        const top = child.y - (child.displayHeight || child.height || 0) * (child.originY || 0.5);
-                        const bottom = child.y + (child.displayHeight || child.height || 0) * (1 - (child.originY || 0.5));
+                        const originY = child.originY !== undefined ? child.originY : 0.5;
+                        const height = child.displayHeight || child.height || 0;
+                        const top = child.y - height * originY;
+                        const bottom = child.y + height * (1 - originY);
                         minY = Math.min(minY, top);
                         maxY = Math.max(maxY, bottom);
                     });
@@ -385,8 +387,10 @@ export default class HUDPanelManager {
                     let maxY = 0;
                     
                     contentContainer.list.forEach(child => {
-                        const top = child.y - (child.displayHeight || child.height || 0) * (child.originY || 0.5);
-                        const bottom = child.y + (child.displayHeight || child.height || 0) * (1 - (child.originY || 0.5));
+                        const originY = child.originY !== undefined ? child.originY : 0.5;
+                        const height = child.displayHeight || child.height || 0;
+                        const top = child.y - height * originY;
+                        const bottom = child.y + height * (1 - originY);
                         minY = Math.min(minY, top);
                         maxY = Math.max(maxY, bottom);
                     });
