@@ -768,21 +768,24 @@ export default class BootstrapProtocolSystem {
     
     updateUI() {
         // Update momentum arc via UnifiedGraphicsManager
+        // Note: UnifiedGraphicsManager clears layers automatically each frame
         const manager = this.scene.graphicsManager;
-        if (manager && this.indicatorPos) {
-            // Clear previous frame's arc for this system
-            manager.clearLayer('bootstrap_momentum');
+        if (manager && this.indicatorPos && this.paradoxMomentum > 0) {
+            const radius = 18;
+            const startAngle = -Math.PI / 2;
+            const endAngle = startAngle + (this.paradoxMomentum / 100) * Math.PI * 2;
             
-            if (this.paradoxMomentum > 0) {
-                const radius = 18;
-                const startAngle = -Math.PI / 2;
-                const endAngle = startAngle + (this.paradoxMomentum / 100) * Math.PI * 2;
-                
-                // Draw arc using UnifiedGraphicsManager
-                manager.drawArc('effects', this.indicatorPos.x, this.indicatorPos.y, radius, startAngle, endAngle, {
-                    lineStyle: { width: 3, color: this.BOOTSTRAP_COLOR, alpha: 0.9 }
+            // Draw arc as a series of line segments using drawPath
+            const segments = 20;
+            const points = [];
+            for (let i = 0; i <= segments; i++) {
+                const angle = startAngle + (endAngle - startAngle) * (i / segments);
+                points.push({
+                    x: this.indicatorPos.x + Math.cos(angle) * radius,
+                    y: this.indicatorPos.y + Math.sin(angle) * radius
                 });
             }
+            manager.drawPath('ui', points, this.BOOTSTRAP_COLOR, 0.9, 3);
         }
         
         // Update level text
