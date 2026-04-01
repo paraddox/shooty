@@ -156,25 +156,25 @@ export default class VoidCoherenceSystem {
             this.coherenceContainer.setDepth(100);
             
             const barWidth = Math.min(200, width);
-            const barY = 2; // Position within content area
             
+            // Use top-left origin so elements stay within content bounds (y >= 0)
             // Background
-            const bg = this.scene.add.rectangle(0, barY, barWidth, 4, 0x1a1a25);
-            bg.setOrigin(0, 0.5);
+            const bg = this.scene.add.rectangle(0, 0, barWidth, 4, 0x1a1a25);
+            bg.setOrigin(0, 0); // Top-left origin
             container.add(bg);
             
             // Coherence fill (purple→cyan gradient effect)
-            this.coherenceFill = this.scene.add.rectangle(0, barY, 0, 4, 0x6b00ff);
-            this.coherenceFill.setOrigin(0, 0.5);
+            this.coherenceFill = this.scene.add.rectangle(0, 0, 0, 4, 0x6b00ff);
+            this.coherenceFill.setOrigin(0, 0); // Top-left origin
             container.add(this.coherenceFill);
             
             // Structure count indicator - below the bar
-            this.structureIndicator = this.scene.add.text(barWidth/2, barY + 8, '◈ 0', {
+            this.structureIndicator = this.scene.add.text(barWidth/2, 6, '◈ 0', {
                 fontFamily: 'monospace',
                 fontSize: '10px',
                 letterSpacing: 1,
                 fill: '#9d4edd'
-            }).setOrigin(0.5);
+            }).setOrigin(0.5, 0); // Top-center origin
             container.add(this.structureIndicator);
         }, 'TOP_LEFT');
         

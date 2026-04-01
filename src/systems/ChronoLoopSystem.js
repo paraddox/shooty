@@ -79,28 +79,28 @@ export default class ChronoLoopSystem {
             this.loopIndicator = container;
             this.loopIndicator.setDepth(100);
             
-            // Use layout helper for consistent positioning
-            const barY = 4; // Center in content area
+            // Use top-left origin so elements stay within content bounds (y >= 0)
+            const barHeight = 8;
             
-            // Background bar
-            const bg = this.scene.add.rectangle(0, barY, 60, 8, 0x22222a);
-            bg.setOrigin(0, 0.5);
+            // Background bar - positioned at top of content area
+            const bg = this.scene.add.rectangle(0, 0, 60, barHeight, 0x22222a);
+            bg.setOrigin(0, 0); // Top-left origin
             container.add(bg);
             
-            // Teal segments for each possible echo
+            // Teal segments for each possible echo - positioned within the bar
             this.loopSegments = [];
             for (let i = 0; i < this.maxEchoes; i++) {
                 const segment = this.scene.add.rectangle(
-                    -25 + i * 21, barY, 18, 6, this.TEAL_COLOR, 0.3
+                    -25 + i * 21, 1, 18, 6, this.TEAL_COLOR, 0.3
                 );
-                segment.setOrigin(0, 0.5);
+                segment.setOrigin(0, 0); // Top-left origin
                 this.loopSegments.push(segment);
                 container.add(segment);
             }
             
-            // Recording progress bar (hidden by default)
-            this.recordProgressBar = this.scene.add.rectangle(-30, barY, 0, 4, this.TEAL_GLOW);
-            this.recordProgressBar.setOrigin(0, 0.5);
+            // Recording progress bar (hidden by default) - within the bar
+            this.recordProgressBar = this.scene.add.rectangle(0, 2, 0, 4, this.TEAL_GLOW);
+            this.recordProgressBar.setOrigin(0, 0); // Top-left origin
             this.recordProgressBar.setVisible(false);
             container.add(this.recordProgressBar);
         }, 'TOP_LEFT');

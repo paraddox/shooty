@@ -263,6 +263,9 @@ export default class HUDPanelManager {
                 if (existing) existing.destroy();
             }
             
+            // Calculate any offset needed for negative Y content
+            const contentOffsetY = 0; // Will be calculated after content creation
+            
             // Create slot container at the allocated position
             const slotContainer = this.scene.add.container(0, panel.nextY);
             slotContainer.setDepth(100);
@@ -277,7 +280,7 @@ export default class HUDPanelManager {
             slotContainer.add(label);
             const labelHeight = label.height; // Measure actual label height
             
-            // Create content area below label - measure after creation
+            // Create content area below label
             const contentY = labelHeight + 2; // 2px gap after label
             const contentContainer = this.scene.add.container(0, contentY);
             slotContainer.add(contentContainer);
@@ -357,32 +360,61 @@ export default class HUDPanelManager {
                     return elements;
                 },
                 
-                // Get current content height
+                // Get current content height - accounts for elements extending into negative Y
                 getContentHeight: () => {
-                    return contentContainer.list.reduce((max, child) => {
-                        const childBottom = child.y + (child.height || 0);
-                        return Math.max(max, childBottom);
-                    }, 0);
+                    if (contentContainer.list.length === 0) return 0;
+                    
+                    let minY = 0;
+                    let maxY = 0;
+                    
+                    contentContainer.list.forEach(child => {
+                        const top = child.y - (child.displayHeight || child.height || 0) * (child.originY || 0.5);
+                        const bottom = child.y + (child.displayHeight || child.height || 0) * (1 - (child.originY || 0.5));
+                        minY = Math.min(minY, top);
+                        maxY = Math.max(maxY, bottom);
+                    });
+                    
+                    return maxY - minY; // Total height including any negative Y extension
+                },
+                
+                // Get content bounds including negative Y space
+                getContentBounds: () => {
+                    if (contentContainer.list.length === 0) return { top: 0, bottom: 0, height: 0 };
+                    
+                    let minY = 0;
+                    let maxY = 0;
+                    
+                    contentContainer.list.forEach(child => {
+                        const top = child.y - (child.displayHeight || child.height || 0) * (child.originY || 0.5);
+                        const bottom = child.y + (child.displayHeight || child.height || 0) * (1 - (child.originY || 0.5));
+                        minY = Math.min(minY, top);
+                        maxY = Math.max(maxY, bottom);
+                    });
+                    
+                    return { top: minY, bottom: maxY, height: maxY - minY };
                 }
             };
             
             // Let the system create its elements in the content container
             const userElements = createFn(contentContainer, layoutHelpers.width, layoutHelpers);
             
-            // Measure actual content height after creation
-            const contentHeight = layoutHelpers.getContentHeight();
+            // Measure actual content bounds after creation (handles negative Y space)
+            const bounds = layoutHelpers.getContentBounds();
+            const contentHeight = bounds.height;
+            // total slot height = label + gap + content extending below label + any negative extension
             const totalSlotHeight = contentY + contentHeight;
             
             // Add to panel
             panel.content.add(slotContainer);
             
-            // Store reference with actual measured height
+            // Store reference with actual measured height and bounds
             panel.slotMap.set(slotId, {
                 container: slotContainer,
                 content: contentContainer,
                 elements: userElements,
                 config: slotConfig,
-                measuredHeight: totalSlotHeight
+                measuredHeight: totalSlotHeight,
+                contentBounds: bounds
             });
             
             // Advance nextY based on ACTUAL measured content height
