@@ -681,6 +681,9 @@ export default class HeartfluxProtocolSystem {
         // Visual updates happen in tween onRepeat
         // Analysis happens in the interval callback
         
+        // Guard: container may not be initialized yet (panel-based HUD async)
+        if (!this.container) return;
+        
         // Update container position for camera
         const camera = this.scene.cameras.main;
         this.container.x = camera.scrollX + camera.width - 60;
