@@ -60,7 +60,7 @@ import ExogenesisProtocolSystem from '../systems/ExogenesisProtocolSystem.js';
 import ProteusProtocolSystem from '../systems/ProteusProtocolSystem.js';
 import UnifiedGraphicsManager from '../systems/UnifiedGraphicsManager.js';
 import PauseSystem from '../systems/PauseSystem.js';
-import HUDLayoutManager from '../systems/HUDLayoutManager.js';
+import HUDPanelManager from '../systems/HUDPanelManager.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -264,8 +264,8 @@ export default class GameScene extends Phaser.Scene {
         // Initialize Pause System FIRST (needed by other systems)
         this.pauseSystem = new PauseSystem(this);
         
-        // Initialize HUD Layout Manager for centralized HUD positioning
-        this.hudLayout = new HUDLayoutManager(this);
+        // Initialize Panel-based HUD Manager for clean organized HUD
+        this.hudPanels = new HUDPanelManager(this);
         
         // World bounds (game arena)
         const worldWidth = 1920;
@@ -2868,118 +2868,138 @@ export default class GameScene extends Phaser.Scene {
     }
 
     createHUD() {
-        // Use HUDLayoutManager for centralized positioning
-        const layout = this.hudLayout;
+        // Use HUDPanelManager for organized panel-based HUD
+        const panels = this.hudPanels;
         
-        // Health bar - TOP_LEFT region
-        const healthPos = layout.getSlotPosition('HEALTH_BAR', 'TOP_LEFT');
-        this.healthBarBg = this.add.rectangle(healthPos.x, healthPos.y, 200, 6, 0x22222a);
-        this.healthBar = this.add.rectangle(healthPos.x, healthPos.y, 200, 6, 0x00f0ff);
-        this.healthBar.setOrigin(0, 0.5);
-        this.healthBarBg.setOrigin(0, 0.5);
+        // Register TOP_LEFT panel slots
         
-        // Score - TOP_LEFT region
-        const scorePos = layout.getSlotPosition('SCORE', 'TOP_LEFT');
-        this.scoreText = this.add.text(scorePos.x, scorePos.y, '0', {
-            fontFamily: 'monospace',
-            fontSize: '24px',
-            fill: '#ffffff'
-        });
+        // Health bar slot
+        panels.registerSlot('HEALTH_BAR', (container, width) => {
+            this.healthBarBg = this.add.rectangle(0, 0, width, 6, 0x22222a);
+            this.healthBar = this.add.rectangle(0, 0, width, 6, 0x00f0ff);
+            this.healthBar.setOrigin(0, 0.5);
+            this.healthBarBg.setOrigin(0, 0.5);
+            container.add([this.healthBarBg, this.healthBar]);
+        }, 'TOP_LEFT');
         
-        // Wave indicator - TOP_LEFT region
-        const wavePos = layout.getSlotPosition('WAVE', 'TOP_LEFT');
-        this.waveText = this.add.text(wavePos.x, wavePos.y, 'WAVE 1', {
-            fontFamily: 'monospace',
-            fontSize: '14px',
-            letterSpacing: 2,
-            fill: '#666677'
-        });
-
-        // Enemy count - TOP_LEFT region
-        const enemyPos = layout.getSlotPosition('ENEMY_COUNT', 'TOP_LEFT');
-        this.enemyText = this.add.text(enemyPos.x, enemyPos.y, '0 ENEMIES', {
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            letterSpacing: 1,
-            fill: '#ff3366'
-        });
-
-        // Near-miss streak indicator (hidden by default) - TOP_LEFT region
-        const nearMissPos = layout.getSlotPosition('NEAR_MISS', 'TOP_LEFT');
-        this.nearMissText = this.add.text(nearMissPos.x, nearMissPos.y, '', {
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            letterSpacing: 1,
-            fontStyle: 'bold',
-            fill: '#ffd700'
-        });
+        // Score slot
+        panels.registerSlot('SCORE', (container, width) => {
+            this.scoreText = this.add.text(0, 0, '0', {
+                fontFamily: 'monospace',
+                fontSize: '24px',
+                fill: '#ffffff'
+            });
+            container.add(this.scoreText);
+        }, 'TOP_LEFT');
         
-        // Syntropy display - TOP_LEFT region
-        const syntropyPos = layout.getSlotPosition('SYNTROPY', 'TOP_LEFT');
-        this.syntropyText = this.add.text(syntropyPos.x, syntropyPos.y, '◈ 0', {
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            letterSpacing: 1,
-            fill: '#00ffff'
-        });
+        // Wave slot
+        panels.registerSlot('WAVE', (container, width) => {
+            this.waveText = this.add.text(0, 0, 'WAVE 1', {
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                letterSpacing: 2,
+                fill: '#aaaaaa'
+            });
+            container.add(this.waveText);
+        }, 'TOP_LEFT');
         
-        // Convergence indicator - TOP_LEFT region
-        const convergencePos = layout.getSlotPosition('CONVERGENCE', 'TOP_LEFT');
-        this.convergenceText = this.add.text(convergencePos.x, convergencePos.y, '', {
-            fontFamily: 'monospace',
-            fontSize: '11px',
-            letterSpacing: 1,
-            fill: '#ffffff'
-        });
+        // Enemy count slot
+        panels.registerSlot('ENEMY_COUNT', (container, width) => {
+            this.enemyText = this.add.text(0, 0, '0 ENEMIES', {
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                letterSpacing: 1,
+                fill: '#ff3366'
+            });
+            container.add(this.enemyText);
+        }, 'TOP_LEFT');
         
-        // Axiom Nexus - synthesis discovery counter - TOP_LEFT region
-        const synthesisPos = layout.getSlotPosition('SYNTHESIS', 'TOP_LEFT');
-        this.synthesisText = this.add.text(synthesisPos.x, synthesisPos.y, '◇ 0/50', {
-            fontFamily: 'monospace',
-            fontSize: '11px',
-            letterSpacing: 1,
-            fill: '#ffeebb'
-        });
+        // Syntropy slot
+        panels.registerSlot('SYNTROPY', (container, width) => {
+            this.syntropyText = this.add.text(0, 0, '◈ 0', {
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                letterSpacing: 1,
+                fill: '#00ffff'
+            });
+            container.add(this.syntropyText);
+        }, 'TOP_LEFT');
         
-        // Apophenia Protocol - pattern discovery counter - TOP_LEFT region
-        const patternPos = layout.getSlotPosition('PATTERN', 'TOP_LEFT');
-        this.patternText = this.add.text(patternPos.x, patternPos.y, '◈ 0 patterns', {
-            fontFamily: 'monospace',
-            fontSize: '11px',
-            letterSpacing: 1,
-            fill: '#f0f0f0'
-        });
-
-        // Wave timer bar - TOP_RIGHT region
-        const waveTimerPos = layout.getSlotPosition('WAVE_TIMER', 'TOP_RIGHT');
-        this.waveTimerBg = this.add.rectangle(waveTimerPos.x, waveTimerPos.y, 100, 3, 0x22222a);
-        this.waveTimerBar = this.add.rectangle(waveTimerPos.x, waveTimerPos.y, 100, 3, 0xffff00);
-        this.waveTimerBg.setOrigin(1, 0.5);
-        this.waveTimerBar.setOrigin(1, 0.5);
-
-        // Set high depth so UI renders on top
-        [this.healthBarBg, this.healthBar, this.scoreText, this.waveText, 
-         this.enemyText, this.nearMissText, this.syntropyText, this.convergenceText, 
-         this.synthesisText, this.patternText, this.waveTimerBg, this.waveTimerBar].forEach(el => {
-            el.setDepth(100);
-            el.setScrollFactor(0);
-        });
-
+        // Convergence slot (hidden by default)
+        panels.registerSlot('CONVERGENCE', (container, width) => {
+            this.convergenceText = this.add.text(0, 0, '', {
+                fontFamily: 'monospace',
+                fontSize: '11px',
+                letterSpacing: 1,
+                fill: '#ffffff'
+            });
+            container.add(this.convergenceText);
+        }, 'TOP_LEFT');
+        
+        // Near-miss slot (hidden by default)
+        panels.registerSlot('NEAR_MISS', (container, width) => {
+            this.nearMissText = this.add.text(0, 0, '', {
+                fontFamily: 'monospace',
+                fontSize: '11px',
+                letterSpacing: 1,
+                fontStyle: 'bold',
+                fill: '#ffd700'
+            });
+            container.add(this.nearMissText);
+        }, 'TOP_LEFT');
+        
+        // Synthesis slot
+        panels.registerSlot('SYNTHESIS', (container, width) => {
+            this.synthesisText = this.add.text(0, 0, '◇ 0/50', {
+                fontFamily: 'monospace',
+                fontSize: '11px',
+                letterSpacing: 1,
+                fill: '#ffeebb'
+            });
+            container.add(this.synthesisText);
+        }, 'TOP_LEFT');
+        
+        // Pattern slot
+        panels.registerSlot('PATTERN', (container, width) => {
+            this.patternText = this.add.text(0, 0, '◈ 0 patterns', {
+                fontFamily: 'monospace',
+                fontSize: '11px',
+                letterSpacing: 1,
+                fill: '#f0f0f0'
+            });
+            container.add(this.patternText);
+        }, 'TOP_LEFT');
+        
+        // Register TOP_RIGHT panel slots
+        
+        // Wave timer slot
+        panels.registerSlot('WAVE_TIMER', (container, width) => {
+            this.waveTimerBg = this.add.rectangle(width, 0, width, 3, 0x22222a);
+            this.waveTimerBar = this.add.rectangle(width, 0, width, 3, 0xffff00);
+            this.waveTimerBg.setOrigin(1, 0.5);
+            this.waveTimerBar.setOrigin(1, 0.5);
+            container.add([this.waveTimerBg, this.waveTimerBar]);
+        }, 'TOP_RIGHT');
+        
+        // Placeholder slots for systems to fill in
+        // OmniWeapon, VoidCoherence, ChronoLoop, CausalLink, TemporalRewind
+        // These will be populated by their respective systems
+        
         this.score = 0;
-        this.scoreMultiplier = 1.0;  // For Dream State Protocol residue effects
+        this.scoreMultiplier = 1.0;
         
         // Handle window resize
         this.scale.on('resize', this.resizeHUD, this);
     }
     
     resizeHUD(gameSize) {
-        const margin = 30;
         const worldWidth = 1920;
         const worldHeight = 1440;
         
-        // Update wave timer bar position (top right of screen)
-        this.waveTimerBg.x = this.scale.width - margin;
-        this.waveTimerBar.x = this.scale.width - margin;
+        // Let panel manager handle all HUD element repositioning
+        if (this.hudPanels) {
+            this.hudPanels.onResize();
+        }
         
         // Camera always at zoom=1 - just update bounds and viewport
         this.cameras.main.setZoom(1.0);

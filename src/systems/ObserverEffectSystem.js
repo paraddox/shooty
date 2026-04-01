@@ -165,9 +165,11 @@ export default class ObserverEffectSystem {
         ctx.fill();
         
         this.scene.textures.addCanvas('observerEye', canvas);
+        // Observer icon - positioned via HUDLayoutManager (below Temporal Rewind in left column)
+        const iconPos = this.scene.hudLayout.getSlotPosition('TEMPORAL_REWIND', 'TOP_LEFT');
         this.observerIcon = this.scene.add.image(
-            this.scene.cameras.main.width - 50,
-            100,
+            iconPos.x + 10, // Slight offset
+            iconPos.y + 25, // Below temporal rewind bar
             'observerEye'
         );
         this.observerIcon.setScrollFactor(0);
@@ -175,10 +177,11 @@ export default class ObserverEffectSystem {
         this.observerIcon.setAlpha(0.3);
         this.observerIcon.setScale(0.5);
         
-        // Analysis text (subtle, poetic)
+        // Analysis text - positioned via HUDLayoutManager at bottom-left (less crowded)
+        const pos = this.scene.hudLayout.getSlotPosition('PATTERN', 'TOP_LEFT'); // Reuse pattern slot area
         this.analysisText = this.scene.add.text(
-            this.scene.cameras.main.width - 120,
-            130,
+            pos.x,
+            pos.y + 20, // Below pattern counter
             'OBSERVING...',
             {
                 fontFamily: 'monospace',

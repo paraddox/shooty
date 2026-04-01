@@ -249,8 +249,10 @@ export default class DissolutionProtocolSystem {
     }
     
     createEssenceDisplay() {
-        const x = this.scene.cameras.main.width - 150;
-        const y = this.scene.cameras.main.height - 100;
+        // Position below Debt Display in TOP_RIGHT area
+        const pos = this.scene.hudLayout.getSlotPosition('DEBT_DISPLAY', 'TOP_RIGHT');
+        const x = pos.x;
+        const y = pos.y + 60; // Below debt display
         
         this.essenceContainer = this.scene.add.container(x, y);
         this.essenceContainer.setScrollFactor(0);
