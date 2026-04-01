@@ -119,9 +119,19 @@ export default class KeyboardShortcutsLegend {
         
         this.renderShortcuts();
         
-        // Update panel height if needed
-        // Note: HUDPanelManager would need to support height changes
-        // For now, the panel height is fixed after initial render
+        // Update panel height in HUDPanelManager
+        this.updatePanelHeight();
+    }
+    
+    /**
+     * Update the panel height in HUDPanelManager when content changes
+     */
+    updatePanelHeight() {
+        const newHeight = this.getPanelHeight();
+        
+        if (this.scene.hudPanels?.updateSlotHeight) {
+            this.scene.hudPanels.updateSlotHeight('KEYBOARD_SHORTCUTS', newHeight);
+        }
     }
     
     /**
