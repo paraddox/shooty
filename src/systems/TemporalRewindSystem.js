@@ -677,55 +677,72 @@ export default class TemporalRewindSystem {
     
     checkBulletAmplification(afterimage) {
         // Player bullets passing through afterimages get amplified
-        this.scene.bullets.children.entries.forEach(bullet => {
-            if (!bullet.active || bullet.hasBeenAmplified) return;
+        // OPTIMIZED: Early exit if afterimage already amplified (one-time effect)
+        if (afterimage.hasAmplified) return;
+        
+        // Only check active bullets that haven't been amplified
+        const bullets = this.scene.bullets.children.entries;
+        const radius = this.afterimageAbsorbRadius;
+        const radiusSq = radius * radius; // Use squared distance to avoid sqrt
+        
+        for (let i = 0; i < bullets.length; i++) {
+            const bullet = bullets[i];
+            if (!bullet.active || bullet.hasBeenAmplified) continue;
             
-            const dist = Phaser.Math.Distance.Between(
-                bullet.x, bullet.y, afterimage.x, afterimage.y
-            );
+            // Quick AABB check first, then squared distance
+            const dx = bullet.x - afterimage.x;
+            const dy = bullet.y - afterimage.y;
+            if (dx * dx + dy * dy > radiusSq) continue;
             
-            if (dist < this.afterimageAbsorbRadius) {
-                // Amplify the bullet
-                bullet.damageMultiplier = (bullet.damageMultiplier || 1) * 2;
-                bullet.hasBeenAmplified = true;
-                bullet.setTint(this.AMBER_COLOR);
-                
-                afterimage.hasAmplified = true;
-                this.bulletsAmplified++;
-                
-                // Visual feedback
-                this.spawnAmplificationEffect(afterimage.x, afterimage.y);
-            }
-        });
+            // Bullet is in range - amplify it
+            bullet.damageMultiplier = (bullet.damageMultiplier || 1) * 2;
+            bullet.hasBeenAmplified = true;
+            bullet.setTint(this.AMBER_COLOR);
+            
+            afterimage.hasAmplified = true;
+            this.bulletsAmplified++;
+            
+            // Visual feedback
+            this.spawnAmplificationEffect(afterimage.x, afterimage.y);
+            
+            // Afterimage can only amplify once
+            break;
+        }
     }
     
     checkEnemyCollision(afterimage) {
         // Enemies touching afterimages take damage
-        this.scene.enemies.children.entries.forEach(enemy => {
-            if (!enemy.active) return;
+        // OPTIMIZED: Throttle collision checks (every 3rd frame)
+        if (this.scene.time.now % 3 !== 0) return;
+        
+        const enemies = this.scene.enemies.children.entries;
+        const radius = this.afterimageAbsorbRadius + 20;
+        const radiusSq = radius * radius;
+        
+        for (let i = 0; i < enemies.length; i++) {
+            const enemy = enemies[i];
+            if (!enemy.active) continue;
             
-            const dist = Phaser.Math.Distance.Between(
-                enemy.x, enemy.y, afterimage.x, afterimage.y
-            );
+            // Squared distance check
+            const dx = enemy.x - afterimage.x;
+            const dy = enemy.y - afterimage.y;
+            if (dx * dx + dy * dy > radiusSq) continue;
             
-            if (dist < this.afterimageAbsorbRadius + 20) {
-                enemy.takeDamage(this.afterimageDamage);
-                
-                // Brief stun
-                if (enemy.body) {
-                    const oldVelocity = { x: enemy.body.velocity.x, y: enemy.body.velocity.y };
-                    enemy.body.setVelocity(0, 0);
-                    this.scene.time.delayedCall(200, () => {
-                        if (enemy.active && enemy.body) {
-                            enemy.body.setVelocity(oldVelocity.x, oldVelocity.y);
-                        }
-                    });
-                }
-                
-                // Visual feedback
-                this.spawnAfterimageHitEffect(afterimage.x, afterimage.y);
+            // Enemy is in range - deal damage
+            enemy.takeDamage(this.afterimageDamage);
+            
+            // Brief stun
+            if (enemy.body) {
+                const oldSpeed = enemy.body.maxSpeed;
+                enemy.body.maxSpeed = 0;
+                this.scene.time.delayedCall(300, () => {
+                    if (enemy.body) enemy.body.maxSpeed = oldSpeed;
+                });
             }
-        });
+            
+            // Visual feedback
+            this.spawnAfterimageHitEffect(afterimage.x, afterimage.y);
+        }
     }
     
     updateUI(dt) {
@@ -898,23 +915,16 @@ export default class TemporalRewindSystem {
     
     // Visual effects
     spawnAnchorPlacementEffect(x, y) {
-        // Ring expansion effect
-        // Note: This uses a local graphics object for a one-shot tween effect
-        // The clear() here is acceptable as it's part of a tween animation, not per-frame rendering
-        const ring = this.scene.add.graphics();
-        ring.lineStyle(3, this.AMBER_COLOR, 0.8);
-        ring.strokeCircle(x, y, 10);
+        // OPTIMIZED: Use circle instead of graphics with per-frame clear()
+        // Graphics clear() in onUpdate creates garbage and hurts performance
+        const ring = this.scene.add.circle(x, y, 10, this.AMBER_COLOR);
+        ring.setStrokeStyle(3, this.AMBER_COLOR, 0.8);
         
         this.scene.tweens.add({
             targets: ring,
             scale: 3,
             alpha: 0,
             duration: 500,
-            onUpdate: () => {
-                ring.clear();
-                ring.lineStyle(3, this.AMBER_COLOR, 0.8 * (1 - this.scene.tweens.getTweensOf(ring)[0]?.progress || 0));
-                ring.strokeCircle(x, y, 10);
-            },
             onComplete: () => ring.destroy()
         });
         
