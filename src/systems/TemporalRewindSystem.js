@@ -749,6 +749,11 @@ export default class TemporalRewindSystem {
     }
     
     updateUI(dt) {
+        // Guard: panel elements may not be initialized yet
+        if (!this.instabilityBar || !this.instabilityBar.fill || !this.instabilityText) {
+            return;
+        }
+        
         // Update instability bar
         const width = 120;
         const fillWidth = (this.instability / this.maxInstability) * (width - 2);
