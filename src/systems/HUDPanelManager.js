@@ -86,6 +86,16 @@ export default class HUDPanelManager {
                     { id: 'INSCRIPTION', label: 'INSCRIPTION', type: 'compact', minHeight: 20 },
                     { id: 'HARMONIC', label: 'HARMONIC', type: 'compact', minHeight: 20 },
                 ]
+            },
+            BOTTOM_LEFT: {
+                x: this.margin, // Left-aligned
+                y: null, // Bottom-relative
+                width: 150,
+                title: 'CONTROLS',
+                color: 0x00f0ff, // Cyan accent
+                slots: [
+                    { id: 'KEYBOARD_SHORTCUTS', label: 'KEYS', type: 'compact', minHeight: 120 },
+                ]
             }
         };
         

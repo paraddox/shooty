@@ -29,62 +29,39 @@ export default class KeyboardShortcutsLegend {
     }
     
     createLegendPanel() {
-        // Register with HUDPanelManager in BOTTOM_LEFT slot
+        // Register with HUDPanelManager in BOTTOM_LEFT panel's KEYBOARD_SHORTCUTS slot
         this.scene.hudPanels.registerSlot('KEYBOARD_SHORTCUTS', (container, width, layout) => {
             this.container = container;
             this.container.setDepth(100);
             
             // Calculate dimensions based on content
             const rowHeight = 14;
-            const titleHeight = 18;
             const padding = 6;
-            const panelHeight = titleHeight + (this.shortcuts.length * rowHeight) + padding;
+            const panelHeight = (this.shortcuts.length * rowHeight) + padding;
             
-            // Background - semi-transparent dark
-            const bg = this.scene.add.rectangle(
-                0, 0, 
-                width, 
-                panelHeight, 
-                0x0a0a0f, 
-                0.9
-            );
-            bg.setStrokeStyle(1, 0x333333);
-            bg.setOrigin(0, 0); // Top-left origin
-            this.container.add(bg);
-            
-            // Title
-            const title = this.scene.add.text(5, 4, 'CONTROLS', {
-                fontFamily: 'monospace',
-                fontSize: '11px',
-                fill: '#ffb700'
-            }).setOrigin(0, 0);
-            this.container.add(title);
-            
-            // Horizontal line under title
-            const line = this.scene.add.rectangle(5, 16, width - 10, 1, 0x333333, 1);
-            line.setOrigin(0, 0);
-            this.container.add(line);
-            
-            // Shortcuts list
-            let y = 20;
+            // Shortcuts list (panel title handled by HUDPanelManager)
+            let y = 6;
             this.shortcuts.forEach((shortcut) => {
                 // Key binding in cyan
-                const keyText = this.scene.add.text(8, y, shortcut.key, {
+                const keyText = this.scene.add.text(6, y, shortcut.key, {
                     fontFamily: 'monospace',
-                    fontSize: '10px',
+                    fontSize: '9px',
                     fill: '#00f0ff'
                 }).setOrigin(0, 0);
                 
                 // Action description in white
-                const actionText = this.scene.add.text(65, y, shortcut.action, {
+                const actionText = this.scene.add.text(55, y, shortcut.action, {
                     fontFamily: 'monospace',
-                    fontSize: '10px',
+                    fontSize: '9px',
                     fill: '#ffffff'
                 }).setOrigin(0, 0);
                 
                 this.container.add([keyText, actionText]);
                 y += rowHeight;
             });
+            
+            // Return the actual height used
+            return { height: panelHeight };
             
         }, 'BOTTOM_LEFT');
     }
