@@ -253,6 +253,67 @@ export default class HUDPanelManager {
     }
     
     /**
+     * Update a panel's width dynamically
+     * Used when content requires more/less space than the default config width
+     * @param {string} region - Panel region to update
+     * @param {number} newWidth - New width in pixels
+     */
+    updatePanelWidth(region, newWidth) {
+        const panel = this.panels.get(region);
+        if (!panel) {
+            console.warn(`[HUDPanelManager] Cannot update width for unknown panel: ${region}`);
+            return;
+        }
+        
+        // Only update if new width is greater than current
+        if (newWidth <= panel.config.width) {
+            return;
+        }
+        
+        const oldWidth = panel.config.width;
+        panel.config.width = newWidth;
+        
+        // Recreate background with new width
+        const oldBg = panel.container.list[0];
+        if (oldBg) {
+            oldBg.destroy();
+        }
+        const newBg = this.createPanelBackground(newWidth, panel.actualHeight || this.calculatePanelHeight(panel.config), panel.config.color);
+        panel.container.addAt(newBg, 0);
+        
+        // Update title bar width
+        const titleBg = panel.container.list[1];
+        if (titleBg) {
+            titleBg.destroy();
+            const newTitleBg = this.scene.add.rectangle(
+                newWidth / 2, 
+                this.panelPadding + 8, 
+                newWidth - 4, 
+                18, 
+                panel.config.color, 
+                0.15
+            );
+            newTitleBg.setStrokeStyle(1, panel.config.color, 0.3);
+            panel.container.addAt(newTitleBg, 1);
+        }
+        
+        // Reposition title text
+        const titleText = panel.container.list[2];
+        if (titleText) {
+            titleText.setX(newWidth / 2);
+        }
+        
+        // Reposition panel if right-aligned
+        if (panel.config.x !== null && region.includes('RIGHT')) {
+            const screenW = this.scene.scale.width;
+            const newX = screenW - this.margin - newWidth;
+            panel.container.setX(newX);
+        }
+        
+        console.log(`[HUDPanelManager] ${region} panel width updated: ${oldWidth}px → ${newWidth}px`);
+    }
+    
+    /**
      * Register a HUD element in a panel slot
      * @param {string} slotId - The slot identifier
      * @param {Function} createFn - Function that creates and returns the element(s)

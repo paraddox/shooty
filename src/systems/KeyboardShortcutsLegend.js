@@ -50,7 +50,32 @@ export default class KeyboardShortcutsLegend {
         return [...this.staticShortcuts, ...sortedDynamic];
     }
     
+    /**
+     * Calculate the required panel width based on content
+     */
+    calculatePanelWidth() {
+        const shortcuts = this.getShortcuts();
+        const actionColumnX = 55;
+        const padding = 12; // 6px on each side
+        
+        let maxActionWidth = 0;
+        
+        shortcuts.forEach(shortcut => {
+            // Action text width (9px monospace ≈ 5.4px per char)
+            const actionWidth = shortcut.action.length * 5.4;
+            maxActionWidth = Math.max(maxActionWidth, actionWidth);
+        });
+        
+        // Total width = action column start + max action width + padding
+        const totalWidth = actionColumnX + maxActionWidth + padding;
+        
+        return Math.ceil(Math.max(totalWidth, 150)); // Minimum 150px
+    }
+    
     createLegendPanel() {
+        // Calculate required width before registration
+        const requiredWidth = this.calculatePanelWidth();
+        
         // Register with HUDPanelManager in BOTTOM_LEFT panel's KEYBOARD_SHORTCUTS slot
         this.scene.hudPanels.registerSlot('KEYBOARD_SHORTCUTS', (container, width, layout) => {
             this.container = container;
@@ -59,10 +84,27 @@ export default class KeyboardShortcutsLegend {
             // Render shortcuts
             this.renderShortcuts();
             
-            // Return the actual height used
-            return { height: this.getPanelHeight() };
+            // Return the actual height and preferred width
+            return { 
+                height: this.getPanelHeight(),
+                preferredWidth: requiredWidth
+            };
             
         }, 'BOTTOM_LEFT');
+        
+        // Update panel width if needed (after registration)
+        this.scene.time.delayedCall(0, () => {
+            this.updatePanelWidth(requiredWidth);
+        });
+    }
+    
+    /**
+     * Update the panel width if content requires more space
+     */
+    updatePanelWidth(requiredWidth) {
+        if (this.scene.hudPanels?.updatePanelWidth) {
+            this.scene.hudPanels.updatePanelWidth('BOTTOM_LEFT', requiredWidth);
+        }
     }
     
     /**
