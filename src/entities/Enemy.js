@@ -214,18 +214,20 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
             duration: 1000,
             ease: 'Power2',
             onComplete: () => {
-                // Emit escape event for Rival Protocol
-                this.scene.events.emit('enemyEscaped', {
-                    id: this.rivalId || this.scene.generateEnemyId(),
-                    enemyType: this.type,
-                    health: this.health,
-                    maxHealth: this.maxHealth,
-                    healthPercent: this.health / this.maxHealth,
-                    x: this.x,
-                    y: this.y,
-                    traumaType: this.lastDamageType || 'generic',
-                    hitLocation: { x: this.lastHitX, y: this.lastHitY }
-                });
+                // Emit escape event for Rival Protocol (only if scene still exists)
+                if (this.scene?.events) {
+                    this.scene.events.emit('enemyEscaped', {
+                        id: this.rivalId || this.scene.generateEnemyId?.() || 'unknown',
+                        enemyType: this.type,
+                        health: this.health,
+                        maxHealth: this.maxHealth,
+                        healthPercent: this.health / this.maxHealth,
+                        x: this.x,
+                        y: this.y,
+                        traumaType: this.lastDamageType || 'generic',
+                        hitLocation: { x: this.lastHitX, y: this.lastHitY }
+                    });
+                }
                 this.destroy();
             }
         });
