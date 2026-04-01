@@ -292,16 +292,21 @@ export default class DissolutionProtocolSystem {
                 container.add([label, bar, value]);
             });
             
-            // Hide initially, show when essence gained
-            this.essenceContainer.setVisible(
-                Object.values(this.essence).some(v => v > 0)
-            );
+            // Set initial visibility based on essence
+            const hasEssence = Object.values(this.essence).some(v => v > 0);
+            if (this.scene.hudPanels) {
+                this.scene.hudPanels.updateSlot('DISSOLUTION', 'TOP_RIGHT', { contentVisible: hasEssence });
+            }
         }, 'TOP_RIGHT');
     }
     
     updateEssenceDisplay() {
         const hasEssence = Object.values(this.essence).some(v => v > 0);
-        this.essenceContainer.setVisible(hasEssence);
+        
+        // Use panel manager to show/hide inactive state
+        if (this.scene.hudPanels) {
+            this.scene.hudPanels.updateSlot('DISSOLUTION', 'TOP_RIGHT', { contentVisible: hasEssence });
+        }
         
         if (!hasEssence) return;
         

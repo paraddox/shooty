@@ -319,9 +319,29 @@ export default class AxiomNexusSystem {
         this.illuminationText.setVisible(false);
         
         // Synthesis discovery panel - registered with panel-based HUD system
-        this.scene.hudPanels.registerSlot('AXIOM_NEXUS', (container, width) => {
+        this.scene.hudPanels.registerSlot('AXIOM_NEXUS', (container, width, layout) => {
             this.synthesisPanel = container;
             this.synthesisPanel.setDepth(95);
+            
+            // Discovery count display
+            this.synthesisCountText = this.scene.add.text(0, 0, '0 discovered', {
+                fontFamily: 'monospace',
+                fontSize: '10px',
+                fill: '#ffd700'
+            });
+            this.synthesisCountText.setOrigin(0, 0);
+            container.add(this.synthesisCountText);
+            
+            // Last synthesis name
+            this.lastSynthesisText = this.scene.add.text(0, 14, '', {
+                fontFamily: 'monospace',
+                fontSize: '9px',
+                fill: '#9d4edd'
+            });
+            this.lastSynthesisText.setOrigin(0, 0);
+            container.add(this.lastSynthesisText);
+            
+            // Hide initially until first discovery
             this.synthesisPanel.setVisible(false);
         }, 'TOP_RIGHT');
     }
@@ -484,6 +504,21 @@ export default class AxiomNexusSystem {
         
         // Update layer
         this.updateLayer();
+        
+        // Update panel display
+        if (this.synthesisPanel) {
+            this.synthesisPanel.setVisible(true);
+            if (this.synthesisCountText) {
+                this.synthesisCountText.setText(`${this.discoveryCount} discovered`);
+            }
+            if (this.lastSynthesisText) {
+                this.lastSynthesisText.setText(synth.name);
+            }
+            // Notify panel manager of content visibility change
+            if (this.scene.hudPanels) {
+                this.scene.hudPanels.updateSlot('AXIOM_NEXUS', 'TOP_RIGHT', { contentVisible: true });
+            }
+        }
         
         // Show illumination
         this.showIllumination(synth);

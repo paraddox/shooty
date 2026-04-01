@@ -640,11 +640,17 @@ export default class ResonanceOrbSystem {
         const orbCount = this.playerOrbs.size;
         
         if (orbCount === 0) {
-            this.hudContainer.setVisible(false);
+            // Use panel manager to show inactive state
+            if (this.scene.hudPanels) {
+                this.scene.hudPanels.updateSlot('RESONANCE_ORB', 'TOP_RIGHT', { contentVisible: false });
+            }
             return;
         }
         
-        this.hudContainer.setVisible(true);
+        // Show active content
+        if (this.scene.hudPanels) {
+            this.scene.hudPanels.updateSlot('RESONANCE_ORB', 'TOP_RIGHT', { contentVisible: true });
+        }
         
         // Clear old indicators
         for (const indicator of this.orbIndicators) {

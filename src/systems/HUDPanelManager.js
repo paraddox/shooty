@@ -286,6 +286,16 @@ export default class HUDPanelManager {
             const contentContainer = this.scene.add.container(0, contentY);
             slotContainer.add(contentContainer);
             
+            // Add inactive indicator (shown when content is hidden)
+            const inactiveIndicator = this.scene.add.text(0, contentY, '—', {
+                fontFamily: 'monospace',
+                fontSize: '10px',
+                fill: '#444444'
+            });
+            inactiveIndicator.setOrigin(0, 0);
+            inactiveIndicator.setVisible(false); // Hidden by default
+            slotContainer.add(inactiveIndicator);
+            
             // Provide layout helpers to the create function
             const availableWidth = panel.config.width - this.panelPadding * 2;
             const layoutHelpers = {
@@ -480,13 +490,15 @@ export default class HUDPanelManager {
     }
     
     /**
-     * Update slot content
+     * Update slot content visibility and show inactive indicator when hidden
      * @param {string} slotId - Slot identifier
      * @param {string} region - Panel region
-     * @param {string} label - New label (optional)
-     * @param {boolean} visible - Visibility (optional)
+     * @param {Object} options - Update options
+     * @param {string} options.label - New label (optional)
+     * @param {boolean} options.visible - Container visibility (optional)
+     * @param {boolean} options.contentVisible - Content area visibility (optional)
      */
-    updateSlot(slotId, region, { label, visible } = {}) {
+    updateSlot(slotId, region, { label, visible, contentVisible } = {}) {
         const panel = this.panels.get(region);
         if (!panel) return;
         
@@ -503,6 +515,47 @@ export default class HUDPanelManager {
         if (visible !== undefined) {
             slot.container.setVisible(visible);
         }
+        
+        // Handle content visibility - show inactive indicator when content hidden
+        if (contentVisible !== undefined) {
+            const contentContainer = slot.content;
+            const inactiveIndicator = slot.container.list[2]; // Index 2 is inactive indicator
+            
+            if (contentContainer) {
+                contentContainer.setVisible(contentVisible);
+            }
+            if (inactiveIndicator) {
+                inactiveIndicator.setVisible(!contentVisible);
+            }
+            
+            // Dim the label when inactive
+            const labelText = slot.container.list[0];
+            if (labelText && labelText.setColor) {
+                labelText.setColor(contentVisible ? '#666677' : '#333344');
+            }
+        }
+    }
+    
+    /**
+     * Check if slot content is visible (has visible elements)
+     * @param {string} slotId - Slot identifier  
+     * @param {string} region - Panel region
+     * @returns {boolean} true if any content element is visible
+     */
+    isSlotContentVisible(slotId, region) {
+        const panel = this.panels.get(region);
+        if (!panel) return false;
+        
+        const slot = panel.slotMap.get(slotId);
+        if (!slot || !slot.content) return false;
+        
+        // Check if any content element is visible
+        for (const child of slot.content.list) {
+            if (child.visible !== false) {
+                return true;
+            }
+        }
+        return false;
     }
     
     /**
