@@ -215,13 +215,12 @@ export default class SymbioticPredictionSystem {
     }
     
     createSymbiosisIndicator() {
-        // Top-center indicator showing harmony/chaos balance
-        this.symbiosisContainer = this.scene.add.container(
-            this.scene.cameras.main.width / 2,
-            40
-        );
+        // Top-center indicator showing harmony/chaos balance - registered with HUDLayoutManager
+        const pos = this.scene.hudLayout.getSlotPosition('SYMBIOSIS', 'TOP_CENTER');
+        this.symbiosisContainer = this.scene.add.container(pos.x, pos.y);
         this.symbiosisContainer.setScrollFactor(0);
         this.symbiosisContainer.setDepth(100);
+        this.scene.hudLayout.registerSlot('SYMBIOSIS', this.symbiosisContainer, 'TOP_CENTER');
         
         // Background bar
         const barBg = this.scene.add.rectangle(0, 0, 200, 6, 0x22222a);

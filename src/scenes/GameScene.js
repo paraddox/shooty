@@ -60,6 +60,7 @@ import ExogenesisProtocolSystem from '../systems/ExogenesisProtocolSystem.js';
 import ProteusProtocolSystem from '../systems/ProteusProtocolSystem.js';
 import UnifiedGraphicsManager from '../systems/UnifiedGraphicsManager.js';
 import PauseSystem from '../systems/PauseSystem.js';
+import HUDLayoutManager from '../systems/HUDLayoutManager.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -263,6 +264,9 @@ export default class GameScene extends Phaser.Scene {
         // Initialize Pause System FIRST (needed by other systems)
         this.pauseSystem = new PauseSystem(this);
         
+        // Initialize HUD Layout Manager for centralized HUD positioning
+        this.hudLayout = new HUDLayoutManager(this);
+        
         // World bounds (game arena)
         const worldWidth = 1920;
         const worldHeight = 1440;
@@ -424,7 +428,7 @@ export default class GameScene extends Phaser.Scene {
         // Fix HUD elements to screen (ignore camera scroll/zoom)
         [this.healthBarBg, this.healthBar, this.scoreText, this.waveText, 
          this.enemyText, this.nearMissText, this.syntropyText, this.convergenceText, 
-         this.synthesisText, this.patternText, this.waveTimerBg, this.waveTimerBar, this.audioIndicator].forEach(el => {
+         this.synthesisText, this.patternText, this.waveTimerBg, this.waveTimerBar].forEach(el => {
             if (el) el.setScrollFactor(0);
         });
 
@@ -2864,39 +2868,45 @@ export default class GameScene extends Phaser.Scene {
     }
 
     createHUD() {
-        const margin = 30;
+        // Use HUDLayoutManager for centralized positioning
+        const layout = this.hudLayout;
         
-        // Health bar - minimal horizontal bar
-        this.healthBarBg = this.add.rectangle(margin, margin, 200, 6, 0x22222a);
-        this.healthBar = this.add.rectangle(margin, margin, 200, 6, 0x00f0ff);
+        // Health bar - TOP_LEFT region
+        const healthPos = layout.getSlotPosition('HEALTH_BAR', 'TOP_LEFT');
+        this.healthBarBg = this.add.rectangle(healthPos.x, healthPos.y, 200, 6, 0x22222a);
+        this.healthBar = this.add.rectangle(healthPos.x, healthPos.y, 200, 6, 0x00f0ff);
         this.healthBar.setOrigin(0, 0.5);
         this.healthBarBg.setOrigin(0, 0.5);
         
-        // Score - minimal
-        this.scoreText = this.add.text(margin, margin + 20, '0', {
+        // Score - TOP_LEFT region
+        const scorePos = layout.getSlotPosition('SCORE', 'TOP_LEFT');
+        this.scoreText = this.add.text(scorePos.x, scorePos.y, '0', {
             fontFamily: 'monospace',
             fontSize: '24px',
             fill: '#ffffff'
         });
         
-        // Wave indicator
-        this.waveText = this.add.text(margin, margin + 50, 'WAVE 1', {
+        // Wave indicator - TOP_LEFT region
+        const wavePos = layout.getSlotPosition('WAVE', 'TOP_LEFT');
+        this.waveText = this.add.text(wavePos.x, wavePos.y, 'WAVE 1', {
             fontFamily: 'monospace',
             fontSize: '14px',
             letterSpacing: 2,
             fill: '#666677'
         });
 
-        // Enemy count
-        this.enemyText = this.add.text(margin, margin + 70, '0 ENEMIES', {
+        // Enemy count - TOP_LEFT region
+        const enemyPos = layout.getSlotPosition('ENEMY_COUNT', 'TOP_LEFT');
+        this.enemyText = this.add.text(enemyPos.x, enemyPos.y, '0 ENEMIES', {
             fontFamily: 'monospace',
             fontSize: '12px',
             letterSpacing: 1,
             fill: '#ff3366'
         });
 
-        // Near-miss streak indicator (hidden by default)
-        this.nearMissText = this.add.text(margin, margin + 88, '', {
+        // Near-miss streak indicator (hidden by default) - TOP_LEFT region
+        const nearMissPos = layout.getSlotPosition('NEAR_MISS', 'TOP_LEFT');
+        this.nearMissText = this.add.text(nearMissPos.x, nearMissPos.y, '', {
             fontFamily: 'monospace',
             fontSize: '12px',
             letterSpacing: 1,
@@ -2904,58 +2914,55 @@ export default class GameScene extends Phaser.Scene {
             fill: '#ffd700'
         });
         
-        // Syntropy display (cyan-to-gold gradient representation)
-        this.syntropyText = this.add.text(margin, margin + 105, '◈ 0', {
+        // Syntropy display - TOP_LEFT region
+        const syntropyPos = layout.getSlotPosition('SYNTROPY', 'TOP_LEFT');
+        this.syntropyText = this.add.text(syntropyPos.x, syntropyPos.y, '◈ 0', {
             fontFamily: 'monospace',
             fontSize: '12px',
             letterSpacing: 1,
             fill: '#00ffff'
         });
         
-        // Convergence indicator (appears when systems fuse)
-        this.convergenceText = this.add.text(margin, margin + 122, '', {
+        // Convergence indicator - TOP_LEFT region
+        const convergencePos = layout.getSlotPosition('CONVERGENCE', 'TOP_LEFT');
+        this.convergenceText = this.add.text(convergencePos.x, convergencePos.y, '', {
             fontFamily: 'monospace',
             fontSize: '11px',
             letterSpacing: 1,
             fill: '#ffffff'
         });
         
-        // Axiom Nexus - synthesis discovery counter
-        this.synthesisText = this.add.text(margin, margin + 139, '◇ 0/50', {
+        // Axiom Nexus - synthesis discovery counter - TOP_LEFT region
+        const synthesisPos = layout.getSlotPosition('SYNTHESIS', 'TOP_LEFT');
+        this.synthesisText = this.add.text(synthesisPos.x, synthesisPos.y, '◇ 0/50', {
             fontFamily: 'monospace',
             fontSize: '11px',
             letterSpacing: 1,
             fill: '#ffeebb'
         });
         
-        // Apophenia Protocol - pattern discovery counter (53rd dimension)
-        this.patternText = this.add.text(margin, margin + 156, '◈ 0 patterns', {
+        // Apophenia Protocol - pattern discovery counter - TOP_LEFT region
+        const patternPos = layout.getSlotPosition('PATTERN', 'TOP_LEFT');
+        this.patternText = this.add.text(patternPos.x, patternPos.y, '◈ 0 patterns', {
             fontFamily: 'monospace',
             fontSize: '11px',
             letterSpacing: 1,
             fill: '#f0f0f0'
         });
 
-        // Wave timer bar - top right
-        const screenWidth = this.scale.width;
-        
-        // Synaesthesia Protocol indicator — the 42nd dimension
-        this.audioIndicator = this.add.text(screenWidth - margin, margin + 20, '♫ ON', {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            letterSpacing: 1,
-            fill: '#c0c0c0'
-        }).setOrigin(1, 0.5);
-        this.waveTimerBg = this.add.rectangle(screenWidth - margin, margin, 100, 3, 0x22222a);
-        this.waveTimerBar = this.add.rectangle(screenWidth - margin, margin, 100, 3, 0xffff00);
+        // Wave timer bar - TOP_RIGHT region
+        const waveTimerPos = layout.getSlotPosition('WAVE_TIMER', 'TOP_RIGHT');
+        this.waveTimerBg = this.add.rectangle(waveTimerPos.x, waveTimerPos.y, 100, 3, 0x22222a);
+        this.waveTimerBar = this.add.rectangle(waveTimerPos.x, waveTimerPos.y, 100, 3, 0xffff00);
         this.waveTimerBg.setOrigin(1, 0.5);
         this.waveTimerBar.setOrigin(1, 0.5);
 
         // Set high depth so UI renders on top
         [this.healthBarBg, this.healthBar, this.scoreText, this.waveText, 
          this.enemyText, this.nearMissText, this.syntropyText, this.convergenceText, 
-         this.synthesisText, this.patternText, this.waveTimerBg, this.waveTimerBar, this.audioIndicator].forEach(el => {
+         this.synthesisText, this.patternText, this.waveTimerBg, this.waveTimerBar].forEach(el => {
             el.setDepth(100);
+            el.setScrollFactor(0);
         });
 
         this.score = 0;
@@ -2973,11 +2980,6 @@ export default class GameScene extends Phaser.Scene {
         // Update wave timer bar position (top right of screen)
         this.waveTimerBg.x = this.scale.width - margin;
         this.waveTimerBar.x = this.scale.width - margin;
-        
-        // Update audio indicator position
-        if (this.audioIndicator) {
-            this.audioIndicator.x = this.scale.width - margin;
-        }
         
         // Camera always at zoom=1 - just update bounds and viewport
         this.cameras.main.setZoom(1.0);

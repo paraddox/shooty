@@ -160,10 +160,11 @@ export default class ResonanceOrbSystem {
     
     createOrbHUD() {
         // HUD container at top-right, below other UI
-        this.hudContainer = this.scene.add.container(
-            this.scene.cameras.main.width - 20, 
-            140
-        ).setScrollFactor(0).setDepth(1000);
+        const pos = this.scene.hudLayout.getSlotPosition('RESONANCE_ORB', 'TOP_RIGHT');
+        this.hudContainer = this.scene.add.container(pos.x, pos.y)
+            .setScrollFactor(0)
+            .setDepth(1000);
+        this.scene.hudLayout.registerSlot('RESONANCE_ORB', this.hudContainer, 'TOP_RIGHT');
         
         this.orbIndicators = [];
         

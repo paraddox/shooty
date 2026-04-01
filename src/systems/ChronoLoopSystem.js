@@ -76,10 +76,12 @@ export default class ChronoLoopSystem {
     createLoopIndicator() {
         const margin = 30;
         
-        // Container for loop indicators
-        this.loopIndicator = this.scene.add.container(margin + 100, margin + 105);
+        // Container for loop indicators - registered with HUDLayoutManager
+        const pos = this.scene.hudLayout.getSlotPosition('CHRONO_LOOP', 'TOP_LEFT');
+        this.loopIndicator = this.scene.add.container(pos.x, pos.y);
         this.loopIndicator.setScrollFactor(0);
         this.loopIndicator.setDepth(100);
+        this.scene.hudLayout.registerSlot('CHRONO_LOOP', this.loopIndicator, 'TOP_LEFT');
         
         // Background bar
         const bg = this.scene.add.rectangle(0, 0, 60, 8, 0x22222a);

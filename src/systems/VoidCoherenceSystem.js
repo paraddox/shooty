@@ -150,11 +150,12 @@ export default class VoidCoherenceSystem {
         this.structureContainer = this.scene.add.container(0, 0);
         this.structureContainer.setDepth(6);
         
-        // Coherence bar (top-left, below health)
-        const margin = 30;
-        this.coherenceContainer = this.scene.add.container(margin, margin + 105);
+        // Coherence bar (top-left) - registered with HUDLayoutManager
+        const pos = this.scene.hudLayout.getSlotPosition('VOID_COHERENCE', 'TOP_LEFT');
+        this.coherenceContainer = this.scene.add.container(pos.x, pos.y);
         this.coherenceContainer.setScrollFactor(0);
         this.coherenceContainer.setDepth(100);
+        this.scene.hudLayout.registerSlot('VOID_COHERENCE', this.coherenceContainer, 'TOP_LEFT');
         
         // Background
         const bg = this.scene.add.rectangle(0, 0, 200, 4, 0x1a1a25);

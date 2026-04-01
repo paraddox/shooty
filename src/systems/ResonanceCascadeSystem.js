@@ -57,11 +57,13 @@ export default class ResonanceCascadeSystem {
     }
     
     createVisuals() {
-        // Chain sequence display (center-top of screen)
-        this.chainContainer = this.scene.add.container(this.scene.scale.width / 2, 80);
+        // Chain sequence display (center-top) - registered with HUDLayoutManager
+        const pos = this.scene.hudLayout.getSlotPosition('RESONANCE_CASCADE', 'TOP_CENTER');
+        this.chainContainer = this.scene.add.container(pos.x, pos.y);
         this.chainContainer.setScrollFactor(0);
         this.chainContainer.setDepth(100);
         this.chainContainer.setVisible(false);
+        this.scene.hudLayout.registerSlot('RESONANCE_CASCADE', this.chainContainer, 'TOP_CENTER');
         
         // Multiplier text (large, central)
         this.multiplierText = this.scene.add.text(0, 0, '', {

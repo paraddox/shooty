@@ -154,10 +154,11 @@ export default class CausalEntanglementSystem {
     }
     
     createHUDIndicator() {
-        const margin = 30;
-        this.hudContainer = this.scene.add.container(margin + 140, margin + 125);
+        const pos = this.scene.hudLayout.getSlotPosition('CAUSAL_LINK', 'TOP_LEFT');
+        this.hudContainer = this.scene.add.container(pos.x, pos.y);
         this.hudContainer.setScrollFactor(0);
         this.hudContainer.setDepth(100);
+        this.scene.hudLayout.registerSlot('CAUSAL_LINK', this.hudContainer, 'TOP_LEFT');
         
         // Background
         const bg = this.scene.add.rectangle(0, 0, 60, 8, 0x22222a);

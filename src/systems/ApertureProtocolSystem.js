@@ -391,8 +391,10 @@ export default class ApertureProtocolSystem {
         const screenH = this.scene.cameras.main.height;
         
         // Blink cooldown indicator
-        this.blinkIndicator = this.scene.add.container(screenW - 100, screenH - 80);
+        const pos = this.scene.hudLayout.getSlotPosition('APERTURE', 'BOTTOM_RIGHT');
+        this.blinkIndicator = this.scene.add.container(pos.x, pos.y);
         this.blinkIndicator.setScrollFactor(0);
+        this.scene.hudLayout.registerSlot('APERTURE', this.blinkIndicator, 'BOTTOM_RIGHT');
         this.blinkIndicator.setDepth(100);
         
         // Background

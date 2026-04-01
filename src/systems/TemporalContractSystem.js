@@ -286,13 +286,11 @@ export default class TemporalContractSystem {
     }
     
     createDebtIndicator() {
-        const margin = 20;
-        const x = this.scene.scale.width - margin - 100;
-        const y = margin + 140;
-        
-        this.debtDisplay = this.scene.add.container(x, y);
+        const pos = this.scene.hudLayout.getSlotPosition('DEBT_DISPLAY', 'TOP_RIGHT');
+        this.debtDisplay = this.scene.add.container(pos.x, pos.y);
         this.debtDisplay.setScrollFactor(0);
         this.debtDisplay.setDepth(1000);
+        this.scene.hudLayout.registerSlot('DEBT_DISPLAY', this.debtDisplay, 'TOP_RIGHT');
         
         // Background
         const bg = this.scene.add.rectangle(0, 0, 120, 40, 0x1a1a25, 0.9);

@@ -110,12 +110,13 @@ export default class OmniWeaponSystem {
     }
     
     createUI() {
-        const margin = 30;
+        // Register with HUDLayoutManager at OMNI_WEAPON slot
+        const pos = this.scene.hudLayout.getSlotPosition('OMNI_WEAPON', 'TOP_LEFT');
         
-        // Small container above health bar
-        this.uiContainer = this.scene.add.container(margin, 12);
+        this.uiContainer = this.scene.add.container(pos.x, pos.y);
         this.uiContainer.setScrollFactor(0);
         this.uiContainer.setDepth(100);
+        this.scene.hudLayout.registerSlot('OMNI_WEAPON', this.uiContainer, 'TOP_LEFT');
         
         // Background
         const bg = this.scene.add.rectangle(0, 0, 200, 14, 0x1a1a25, 0.8);

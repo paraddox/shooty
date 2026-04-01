@@ -110,11 +110,12 @@ export default class QuantumImmortalitySystem {
     createVisuals() {
         // Rendering via UnifiedGraphicsManager
         
-        // Entropy bar (top-right of screen)
-        const screenWidth = this.scene.scale.width;
-        this.entropyContainer = this.scene.add.container(screenWidth - 120, 60);
+        // Entropy bar (top-right) - registered with HUDLayoutManager
+        const pos = this.scene.hudLayout.getSlotPosition('QUANTUM_IMMORTALITY', 'TOP_RIGHT');
+        this.entropyContainer = this.scene.add.container(pos.x, pos.y);
         this.entropyContainer.setScrollFactor(0);
         this.entropyContainer.setDepth(100);
+        this.scene.hudLayout.registerSlot('QUANTUM_IMMORTALITY', this.entropyContainer, 'TOP_RIGHT');
         
         // Background
         const bg = this.scene.add.rectangle(0, 0, 100, 12, 0x1a1a25, 0.9);

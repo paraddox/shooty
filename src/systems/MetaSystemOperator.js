@@ -145,13 +145,12 @@ export default class MetaSystemOperator {
     }
     
     createPatchHUD() {
-        // Small indicator in corner showing active patches
-        this.patchHUD = this.scene.add.container(
-            this.scene.scale.width - 120,
-            this.scene.scale.height - 80
-        );
+        // Small indicator in corner showing active patches - registered with HUDLayoutManager
+        const pos = this.scene.hudLayout.getSlotPosition('META_SYSTEM', 'BOTTOM_RIGHT');
+        this.patchHUD = this.scene.add.container(pos.x, pos.y);
         this.patchHUD.setDepth(100);
         this.patchHUD.setScrollFactor(0);
+        this.scene.hudLayout.registerSlot('META_SYSTEM', this.patchHUD, 'BOTTOM_RIGHT');
         
         // Background
         const bg = this.scene.add.rectangle(0, 0, 100, 60, 0x0a0a0f, 0.8);

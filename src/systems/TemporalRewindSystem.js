@@ -147,9 +147,9 @@ export default class TemporalRewindSystem {
     }
     
     createInstabilityBar() {
-        const margin = 30;
-        const x = margin;
-        const y = margin + 140; // Below other bars
+        const pos = this.scene.hudLayout.getSlotPosition('TEMPORAL_REWIND', 'TOP_LEFT');
+        const x = pos.x;
+        const y = pos.y;
         const width = 120;
         const height = 6;
         
