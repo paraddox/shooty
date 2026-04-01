@@ -1676,7 +1676,10 @@ export default class GameScene extends Phaser.Scene {
     update(time, delta) {
         if (!this.player.active) return;
 
-        const dt = delta / 1000; // Convert to seconds
+        // Clamp delta to prevent spiral of death when FPS drops
+        // Max 50ms (20fps) - if slower, game slows down rather than skipping
+        const clampedDelta = Math.min(delta, 50);
+        const dt = clampedDelta / 1000; // Convert to seconds
         
         // Handle Architect System discovery key (ENTER)
         const enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
