@@ -515,7 +515,9 @@ export default class ResonanceCascadeSystem {
             this.chainContainer.add(text);
         });
         
-        // Update multiplier text
+        // Update multiplier text (if still active)
+        if (!this.multiplierText?.active) return;
+        
         const state = this.resonanceStates[this.resonanceState];
         const color = state ? '#' + state.color.toString(16).padStart(6, '0') : '#ffffff';
         
@@ -628,6 +630,8 @@ export default class ResonanceCascadeSystem {
     }
     
     showCascadeBreakVisuals(chainLength, breakPower) {
+        if (!this.cascadeText?.active) return;
+        
         const player = this.scene.player;
         const state = this.resonanceStates[this.resonanceState];
         const color = state ? state.color : 0x00f0ff;
