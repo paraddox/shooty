@@ -171,9 +171,10 @@ export default class ResonanceOrbSystem {
             
             this.orbIndicators = [];
             
-            // Background panel for active orbs - positioned at y=0 with top-left origin
-            const bgHeight = 40;
-            const bg = this.scene.add.rectangle(0, 0, width, bgHeight, 0x000000, 0.5);
+            // Background panel for active orbs - size to fit slot width (136 = 160 - 2*12 padding)
+            const slotWidth = 136;
+            const bgHeight = 32;
+            const bg = this.scene.add.rectangle(0, 0, slotWidth, bgHeight, 0x000000, 0.5);
             bg.setOrigin(0, 0); // Top-left origin
             bg.setStrokeStyle(1, 0x444444);
             container.add(bg);
@@ -658,29 +659,36 @@ export default class ResonanceOrbSystem {
         }
         this.orbIndicators = [];
         
-        // Resize background
-        this.hudBg.setSize(Math.max(160, orbCount * 35 + 20), 40);
+        // Get available width from panel (160 - 2*12 padding = 136)
+        const slotWidth = 136;
+        const orbRadius = 14;
+        const orbSpacing = Math.min(32, (slotWidth - orbRadius * 2) / Math.max(1, orbCount - 1));
+        const totalWidth = orbCount * orbRadius * 2 + (orbCount - 1) * (orbSpacing - orbRadius * 2);
+        const startX = (slotWidth - totalWidth) / 2 + orbRadius; // Start with padding, center of first orb
         
-        // Create indicators for each active orb
+        // Resize background to fit within slot
+        this.hudBg.setSize(slotWidth, 32);
+        
+        // Create indicators for each active orb - positioned from left with proper spacing
         let index = 0;
         for (const [type, data] of this.playerOrbs) {
             const config = this.ORB_TYPES[type];
             const remaining = Math.max(0, data.endTime - time);
             const pct = remaining / data.duration;
             
-            // Container for this indicator
-            const x = (index - (orbCount - 1) / 2) * 35;
-            const y = 0;
+            // Position from left edge with even spacing
+            const x = startX + index * orbSpacing;
+            const y = 16; // Center vertically in 32px height
             
             // Background circle
-            const bg = this.scene.add.circle(x, y, 14, 0x222222, 0.8);
+            const bg = this.scene.add.circle(x, y, orbRadius, 0x222222, 0.8);
             bg.setStrokeStyle(2, config.color);
             this.hudContainer.add(bg);
             
             // Progress ring (simplified as alpha)
             bg.setAlpha(0.3 + 0.7 * pct);
             
-            // Icon (first letter)
+            // Icon (first letter) - centered on circle
             const icon = this.scene.add.text(x, y, config.name[0], {
                 fontFamily: 'Courier New',
                 fontSize: '14px',
