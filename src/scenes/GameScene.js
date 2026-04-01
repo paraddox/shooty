@@ -2565,8 +2565,8 @@ export default class GameScene extends Phaser.Scene {
     }
     
     playerHitByBullet(player, bullet) {
-        // FIX: Ignore collisions while exchange is open (game is paused)
-        if (this.isExchangePaused) {
+        // FIX: Ignore collisions while dialogs are open (game is paused)
+        if (this.isExchangePaused || this.isContractPaused) {
             return;
         }
         
@@ -3188,8 +3188,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     hitEnemy(bullet, enemy) {
-        // FIX: Ignore collisions while exchange is open (game is paused)
-        if (this.isExchangePaused) {
+        // FIX: Ignore collisions while dialogs are open (game is paused)
+        if (this.isExchangePaused || this.isContractPaused) {
             return;
         }
         
@@ -3398,8 +3398,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     playerHit(player, enemy) {
-        // FIX: Ignore collisions while exchange is open (game is paused)
-        if (this.isExchangePaused) {
+        // FIX: Ignore collisions while dialogs are open (game is paused)
+        if (this.isExchangePaused || this.isContractPaused) {
             return;
         }
         

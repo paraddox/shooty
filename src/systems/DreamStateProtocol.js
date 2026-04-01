@@ -384,9 +384,9 @@ export default class DreamStateProtocol {
     startDeathDream(deathData) {
         if (this.dreamState.isDreaming) return;
         
-        // FIX: Don't enter dream state if exchange is open (game is paused)
-        if (this.scene.isExchangePaused) {
-            console.log('[DreamState] Death occurred while exchange open - deferring dream');
+        // FIX: Don't enter dream state if dialogs are open (game is paused)
+        if (this.scene.isExchangePaused || this.scene.isContractPaused) {
+            console.log('[DreamState] Death occurred while dialog open - deferring dream');
             return;
         }
         

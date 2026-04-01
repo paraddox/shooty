@@ -337,7 +337,102 @@ export default class TemporalContractSystem {
             this.hideContractMenu();
         } else {
             this.showContractMenu();
+            this.pauseGameForContract();
         }
+    }
+    
+    pauseGameForContract() {
+        // PAUSE the game while contract menu is open
+        this.scene.physics.world.pause();
+        this.scene.physics.world.timeScale = 0;
+        
+        // SET SCENE-WIDE PAUSE FLAG
+        this.scene.isContractPaused = true;
+        
+        // Pause all tweens
+        this.scene.tweens.pauseAll();
+        
+        // Pause all enemy movement
+        this.scene.enemies.children.entries.forEach(enemy => {
+            if (enemy.body) {
+                enemy._pausedVelocity = { x: enemy.body.velocity.x, y: enemy.body.velocity.y };
+                enemy.body.setVelocity(0, 0);
+            }
+            enemy._contractPaused = true;
+        });
+        
+        // Pause enemy bullets
+        this.scene.enemyBullets.children.entries.forEach(bullet => {
+            if (bullet.body) {
+                bullet._pausedVelocity = { x: bullet.body.velocity.x, y: bullet.body.velocity.y };
+                bullet.body.setVelocity(0, 0);
+            }
+        });
+        
+        // Pause player bullets
+        this.scene.bullets.children.entries.forEach(bullet => {
+            if (bullet.body) {
+                bullet._pausedVelocity = { x: bullet.body.velocity.x, y: bullet.body.velocity.y };
+                bullet.body.setVelocity(0, 0);
+            }
+        });
+        
+        // Disable player controls and make invulnerable
+        if (this.scene.player) {
+            this.scene.player._contractPaused = true;
+            this.scene.player._wasInvulnerable = this.scene.player.isInvulnerable;
+            this.scene.player.isInvulnerable = true;
+        }
+        
+        console.log('[Chronos Covenant] Game paused for contract menu');
+    }
+    
+    resumeGameFromContract() {
+        // RESUME the game
+        this.scene.physics.world.resume();
+        this.scene.physics.world.timeScale = 1;
+        
+        // CLEAR SCENE-WIDE PAUSE FLAG
+        this.scene.isContractPaused = false;
+        
+        // Resume all tweens
+        this.scene.tweens.resumeAll();
+        
+        // Resume enemy movement
+        this.scene.enemies.children.entries.forEach(enemy => {
+            if (enemy.body && enemy._pausedVelocity) {
+                enemy.body.setVelocity(enemy._pausedVelocity.x, enemy._pausedVelocity.y);
+                delete enemy._pausedVelocity;
+            }
+            delete enemy._contractPaused;
+        });
+        
+        // Resume enemy bullets
+        this.scene.enemyBullets.children.entries.forEach(bullet => {
+            if (bullet.body && bullet._pausedVelocity) {
+                bullet.body.setVelocity(bullet._pausedVelocity.x, bullet._pausedVelocity.y);
+                delete bullet._pausedVelocity;
+            }
+        });
+        
+        // Resume player bullets
+        this.scene.bullets.children.entries.forEach(bullet => {
+            if (bullet.body && bullet._pausedVelocity) {
+                bullet.body.setVelocity(bullet._pausedVelocity.x, bullet._pausedVelocity.y);
+                delete bullet._pausedVelocity;
+            }
+        });
+        
+        // Re-enable player controls and restore invulnerability
+        if (this.scene.player) {
+            this.scene.player._contractPaused = false;
+            if (!this.scene.player._wasInvulnerable) {
+                this.scene.player.isInvulnerable = false;
+            }
+            delete this.scene.player._wasInvulnerable;
+        }
+        
+        console.log('[Chronos Covenant] Game resumed from contract menu');
     }
     
     showContractMenu() {
@@ -633,6 +728,9 @@ export default class TemporalContractSystem {
     }
     
     hideContractMenu() {
+        // Resume game before destroying UI
+        this.resumeGameFromContract();
+        
         if (this.contractUI) {
             this.contractUI.destroy();
             this.contractUI = null;
