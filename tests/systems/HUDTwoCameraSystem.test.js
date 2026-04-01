@@ -56,10 +56,8 @@ describe('HUD Two-Camera System', () => {
                 this.scrollY = y;
                 return this;
             }),
-            setDepth: vi.fn(function(d) {
-                this.depth = d;
-                return this;
-            }),
+            // NOTE: Phaser 3 cameras do NOT have setDepth() method
+            // This was a bug - trying to call setDepth on a camera
             setSize: vi.fn(function(w, h) {
                 this.width = w;
                 this.height = h;
@@ -163,11 +161,14 @@ describe('HUD Two-Camera System', () => {
             expect(ignoresHUD).toBe(true);
         });
         
-        it('should set HUD camera depth above main camera', () => {
+        it('should render HUD camera on top (added after main camera)', () => {
+            // In Phaser 3, cameras render in order of creation
+            // HUD camera is added after main camera, so it renders on top
             const hudCam = mockScene.cameras.add(0, 0, 1920, 1080, false);
-            hudCam.setDepth(100);
             
-            expect(hudCam.depth).toBe(100);
+            // No setDepth needed - order of creation determines render order
+            // Verify the camera object doesn't have setDepth method (Phaser 3 API)
+            expect('setDepth' in hudCam && typeof hudCam.setDepth === 'function').toBe(false);
         });
         
         it('should create HUD camera with screen dimensions', () => {

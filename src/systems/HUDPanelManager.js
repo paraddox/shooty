@@ -202,8 +202,9 @@ export default class HUDPanelManager {
         hudCamera.setZoom(1);
         hudCamera.setScroll(0, 0); // Fixed position
         
-        // Set depth so HUD renders on top
-        hudCamera.setDepth(100);
+        // NOTE: Phaser 3 cameras don't have setDepth()
+        // Cameras render in order of creation - this HUD camera (added second)
+        // naturally renders on top of the main camera
         
         // Store reference
         this.hudCamera = hudCamera;
