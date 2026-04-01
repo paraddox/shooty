@@ -866,10 +866,7 @@ export default class BootstrapProtocolSystem {
         this.futureEchoes = [];
         
         // Note: echoGraphics removed - now rendered via UnifiedGraphicsManager
-        // Cleanup UnifiedGraphicsManager layers
-        if (this.scene.graphicsManager) {
-            this.scene.graphicsManager.clearLayer('bootstrap_momentum');
-        }
+        // UnifiedGraphicsManager clears layers automatically each frame
         
         // Cleanup UI
         if (this.bootstrapIndicator && this.bootstrapIndicator.active) {

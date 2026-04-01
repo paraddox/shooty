@@ -700,11 +700,7 @@ export default class ParadoxEngineSystem {
         this.committedPath = [];
         this.projectionCooldown = this.projectionCooldownMax;
 
-        // Clear visuals using UnifiedGraphicsManager
-        if (this.scene.graphicsManager) {
-            this.scene.graphicsManager.clearLayer('effects');
-            this.scene.graphicsManager.clearLayer('echoes');
-        }
+        // UnifiedGraphicsManager clears layers automatically each frame
         
         this.paradoxOverlay.setVisible(false);
         this.paradoxOverlay.setAlpha(0);
@@ -714,9 +710,7 @@ export default class ParadoxEngineSystem {
         const manager = this.scene.graphicsManager;
         if (!manager) return;
 
-        // Clear graphics layers at the start of each frame
-        manager.clearLayer('effects');
-        manager.clearLayer('echoes');
+        // UnifiedGraphicsManager clears layers automatically each frame
 
         if (this.isProjecting && this.futureEcho.active) {
             this.renderFutureEcho(manager);
@@ -726,21 +720,21 @@ export default class ParadoxEngineSystem {
     }
     
     renderFutureEcho(manager) {
-        // Draw future echo silhouette on 'echoes' layer
+        // Draw future echo silhouette on 'effects' layer
         const lastPoint = this.futureEcho.path[this.futureEcho.path.length - 1];
         if (!lastPoint) return;
 
         // Draw translucent echo at end of path
-        manager.drawCircle('echoes', lastPoint.x, lastPoint.y, 15, this.ECHO_COLOR, 0.3);
+        manager.drawCircle('effects', lastPoint.x, lastPoint.y, 15, this.ECHO_COLOR, 0.3);
 
         // Draw echo outline (stroke circle)
-        manager.drawCircle('echoes', lastPoint.x, lastPoint.y, 15, this.ECHO_COLOR, 0.6, 2, true);
+        manager.drawCircle('effects', lastPoint.x, lastPoint.y, 15, this.ECHO_COLOR, 0.6, 2, true);
 
         // Draw path line
         for (let i = 1; i < this.futureEcho.path.length; i++) {
             const p1 = this.futureEcho.path[i - 1];
             const p2 = this.futureEcho.path[i];
-            manager.drawLine('echoes', p1.x, p1.y, p2.x, p2.y, this.ECHO_COLOR, 0.4, 2);
+            manager.drawLine('effects', p1.x, p1.y, p2.x, p2.y, this.ECHO_COLOR, 0.4, 2);
         }
 
         // Draw velocity indicator
@@ -754,17 +748,17 @@ export default class ParadoxEngineSystem {
             const endX = lastPoint.x + Math.cos(angle) * arrowLen;
             const endY = lastPoint.y + Math.sin(angle) * arrowLen;
 
-            manager.drawLine('echoes', lastPoint.x, lastPoint.y, endX, endY, this.ECHO_COLOR, 0.8, 2);
+            manager.drawLine('effects', lastPoint.x, lastPoint.y, endX, endY, this.ECHO_COLOR, 0.8, 2);
 
             // Arrowhead (two lines)
             const headSize = 8;
-            manager.drawLine('echoes',
+            manager.drawLine('effects',
                 endX, endY,
                 endX - Math.cos(angle - 0.5) * headSize,
                 endY - Math.sin(angle - 0.5) * headSize,
                 this.ECHO_COLOR, 0.8, 2
             );
-            manager.drawLine('echoes',
+            manager.drawLine('effects',
                 endX, endY,
                 endX - Math.cos(angle + 0.5) * headSize,
                 endY - Math.sin(angle + 0.5) * headSize,
@@ -897,11 +891,7 @@ export default class ParadoxEngineSystem {
      * Clean up resources when the system is destroyed
      */
     destroy() {
-        // Clean up unified graphics layers
-        if (this.scene.graphicsManager) {
-            this.scene.graphicsManager.clearLayer('effects');
-            this.scene.graphicsManager.clearLayer('echoes');
-        }
+        // UnifiedGraphicsManager clears layers automatically each frame
         
         // Clean up paradox overlay
         if (this.paradoxOverlay) {

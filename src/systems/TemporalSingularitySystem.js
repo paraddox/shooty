@@ -387,10 +387,6 @@ export default class TemporalSingularitySystem {
             onComplete: () => collapseText.destroy()
         });
         
-        // Clear effects layer
-        if (this.scene.graphicsManager) {
-            this.scene.graphicsManager.clearLayer('effects');
-        }
     }
     
     showDetonateBonus(bonus, count) {
