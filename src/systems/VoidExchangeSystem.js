@@ -156,33 +156,33 @@ export default class VoidExchangeSystem {
         this.ui.container.setDepth(100);
         this.ui.container.setVisible(false);
         
-        // Background panel
-        const bg = this.scene.add.rectangle(0, 0, 600, 450, 0x0a0a0f, 0.95);
+        // Background panel - larger to fit all content
+        const bg = this.scene.add.rectangle(0, 0, 650, 520, 0x0a0a0f, 0.95);
         bg.setStrokeStyle(2, this.MARKET_COLOR);
         this.ui.container.add(bg);
         
-        // Title
-        const title = this.scene.add.text(0, -200, '◈ VOID EXCHANGE ◈', {
+        // Title - moved down slightly
+        const title = this.scene.add.text(0, -235, '◈ VOID EXCHANGE ◈', {
             fontFamily: 'monospace',
-            fontSize: '24px',
+            fontSize: '26px',
             fontStyle: 'bold',
             fill: '#ffd700'
         }).setOrigin(0.5);
         this.ui.container.add(title);
         
         // Subtitle
-        const subtitle = this.scene.add.text(0, -175, 'TEMPORAL FUTURES MARKET', {
+        const subtitle = this.scene.add.text(0, -205, 'TEMPORAL FUTURES MARKET', {
             fontFamily: 'monospace',
             fontSize: '12px',
             fill: '#888888'
         }).setOrigin(0.5);
         this.ui.container.add(subtitle);
         
-        // Price display headers
-        const headers = ['COMMODITY', 'PRICE', 'HELD', 'SHORT'];
+        // Price display headers - better aligned
+        const headers = ['COMMODITY', 'PRICE', 'HELD', 'SHORT', ''];
+        const headerX = [-220, -70, 50, 140, 250];
         headers.forEach((h, i) => {
-            const x = -250 + i * 130;
-            const text = this.scene.add.text(x, -140, h, {
+            const text = this.scene.add.text(headerX[i], -165, h, {
                 fontFamily: 'monospace',
                 fontSize: '11px',
                 fill: '#666666'
@@ -190,21 +190,36 @@ export default class VoidExchangeSystem {
             this.ui.container.add(text);
         });
         
-        // Commodity rows
+        // Commodity rows - better spacing
         const commodities = ['SCORE', 'SURVIVAL', 'ABILITY', 'WAVE'];
+        const rowX = [-220, -70, 50, 140, 235, 285];
         commodities.forEach((commodity, index) => {
-            const y = -110 + index * 45;
+            const y = -130 + index * 50;
             
             // Name
-            const name = this.scene.add.text(-250, y, this.commodities[commodity].name, {
+            const name = this.scene.add.text(rowX[0], y, this.commodities[commodity].name, {
                 fontFamily: 'monospace',
                 fontSize: '14px',
                 fill: '#00f0ff'
             }).setOrigin(0, 0.5);
             this.ui.container.add(name);
             
+            // Multiplier label (for some commodities)
+            let multiplier = '';
+            if (commodity === 'SCORE') multiplier = ' 9x';
+            if (commodity === 'ABILITY') multiplier = ' 3x';
+            if (commodity === 'WAVE') multiplier = ' 2x';
+            if (multiplier) {
+                const multLabel = this.scene.add.text(rowX[0] + 100, y, multiplier, {
+                    fontFamily: 'monospace',
+                    fontSize: '12px',
+                    fill: '#ff4444'
+                }).setOrigin(0, 0.5);
+                this.ui.container.add(multLabel);
+            }
+            
             // Price (updated dynamically)
-            const price = this.scene.add.text(-120, y, '1.00x', {
+            const price = this.scene.add.text(rowX[1], y, '1.00x', {
                 fontFamily: 'monospace',
                 fontSize: '14px',
                 fill: '#ffd700'
@@ -213,7 +228,7 @@ export default class VoidExchangeSystem {
             this.ui.container.add(price);
             
             // Held position
-            const held = this.scene.add.text(10, y, '0', {
+            const held = this.scene.add.text(rowX[2], y, '0', {
                 fontFamily: 'monospace',
                 fontSize: '14px',
                 fill: '#00ff00'
@@ -221,7 +236,7 @@ export default class VoidExchangeSystem {
             this.ui.container.add(held);
             
             // Short position
-            const short = this.scene.add.text(140, y, '0', {
+            const short = this.scene.add.text(rowX[3], y, '0', {
                 fontFamily: 'monospace',
                 fontSize: '14px',
                 fill: '#ff4444'
@@ -229,7 +244,7 @@ export default class VoidExchangeSystem {
             this.ui.container.add(short);
             
             // Trade buttons
-            const buyBtn = this.scene.add.text(240, y, '[BUY]', {
+            const buyBtn = this.scene.add.text(rowX[4], y, '[BUY]', {
                 fontFamily: 'monospace',
                 fontSize: '12px',
                 fill: '#00ff00'
@@ -239,7 +254,7 @@ export default class VoidExchangeSystem {
             buyBtn.on('pointerout', () => buyBtn.setFill('#00ff00'));
             this.ui.container.add(buyBtn);
             
-            const sellBtn = this.scene.add.text(290, y, '[SELL]', {
+            const sellBtn = this.scene.add.text(rowX[5], y, '[SELL]', {
                 fontFamily: 'monospace',
                 fontSize: '12px',
                 fill: '#ff4444'
@@ -250,19 +265,19 @@ export default class VoidExchangeSystem {
             this.ui.container.add(sellBtn);
         });
         
-        // Portfolio section
-        const portY = 60;
-        const portBg = this.scene.add.rectangle(0, portY + 20, 560, 80, 0x1a1a25, 0.8);
+        // Portfolio section - better positioned
+        const portY = 70;
+        const portBg = this.scene.add.rectangle(0, portY + 15, 600, 70, 0x1a1a25, 0.8);
         this.ui.container.add(portBg);
         
-        const portTitle = this.scene.add.text(-250, portY, 'PORTFOLIO', {
+        const portTitle = this.scene.add.text(-270, portY - 15, 'PORTFOLIO', {
             fontFamily: 'monospace',
             fontSize: '12px',
             fill: '#666666'
         }).setOrigin(0, 0.5);
         this.ui.container.add(portTitle);
         
-        this.ui.portfolioDisplay = this.scene.add.text(0, portY + 20, 
+        this.ui.portfolioDisplay = this.scene.add.text(0, portY + 15, 
             `Capital: 0 | Debt: 0 | Risk: 0% | Reputation: 1.00x`, {
             fontFamily: 'monospace',
             fontSize: '14px',
@@ -270,9 +285,9 @@ export default class VoidExchangeSystem {
         }).setOrigin(0.5);
         this.ui.container.add(this.ui.portfolioDisplay);
         
-        // Market inventory
-        const invY = 140;
-        const invTitle = this.scene.add.text(-250, invY, 'EXCHANGE SHOP', {
+        // Market inventory - better positioned
+        const invY = 145;
+        const invTitle = this.scene.add.text(-270, invY - 10, 'EXCHANGE SHOP', {
             fontFamily: 'monospace',
             fontSize: '12px',
             fill: '#666666'
@@ -281,19 +296,19 @@ export default class VoidExchangeSystem {
         
         this.updateMarketInventoryDisplay(invY);
         
-        // Instructions
-        const instr = this.scene.add.text(0, 210, 
-            'BUY = Promise future potential now | SELL = Borrow power, pay later', {
+        // Instructions - moved down
+        const instr = this.scene.add.text(0, 245, 
+            'BUY = Promise future potential now | SELL = Borrow power, pay later | Press X to close', {
             fontFamily: 'monospace',
             fontSize: '10px',
             fill: '#888888'
         }).setOrigin(0.5);
         this.ui.container.add(instr);
         
-        // Close button
-        const closeBtn = this.scene.add.text(260, -200, '[X]', {
+        // Close button - positioned in top-right of panel
+        const closeBtn = this.scene.add.text(280, -235, '[X]', {
             fontFamily: 'monospace',
-            fontSize: '16px',
+            fontSize: '18px',
             fill: '#ff4444'
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
         closeBtn.on('pointerdown', () => this.toggleExchange());
@@ -342,13 +357,80 @@ export default class VoidExchangeSystem {
         this.ui.container.setVisible(isVisible);
         
         if (isVisible) {
-            // Pause game slightly while trading
-            this.scene.physics.world.timeScale = 0.1;
+            // PROPERLY PAUSE the game while trading
+            this.scene.physics.world.pause();
+            this.scene.physics.world.timeScale = 0;
+            
+            // Pause all enemy movement and updates
+            this.scene.enemies.children.entries.forEach(enemy => {
+                if (enemy.body) {
+                    enemy._pausedVelocity = { x: enemy.body.velocity.x, y: enemy.body.velocity.y };
+                    enemy.body.setVelocity(0, 0);
+                }
+            });
+            
+            // Pause enemy bullets
+            this.scene.enemyBullets.children.entries.forEach(bullet => {
+                if (bullet.body) {
+                    bullet._pausedVelocity = { x: bullet.body.velocity.x, y: bullet.body.velocity.y };
+                    bullet.body.setVelocity(0, 0);
+                }
+            });
+            
+            // Pause player bullets too
+            this.scene.bullets.children.entries.forEach(bullet => {
+                if (bullet.body) {
+                    bullet._pausedVelocity = { x: bullet.body.velocity.x, y: bullet.body.velocity.y };
+                    bullet.body.setVelocity(0, 0);
+                }
+            });
+            
+            // Disable player controls while exchange is open
+            if (this.scene.player) {
+                this.scene.player._exchangePaused = true;
+            }
+            
             this.tradingParticles.start();
             this.showMarketAnnouncement('EXCHANGE OPENED');
+            
+            // Pause all systems updates
+            this._exchangePaused = true;
         } else {
+            // RESUME the game
+            this.scene.physics.world.resume();
             this.scene.physics.world.timeScale = 1;
+            
+            // Resume enemy movement
+            this.scene.enemies.children.entries.forEach(enemy => {
+                if (enemy.body && enemy._pausedVelocity) {
+                    enemy.body.setVelocity(enemy._pausedVelocity.x, enemy._pausedVelocity.y);
+                    delete enemy._pausedVelocity;
+                }
+            });
+            
+            // Resume enemy bullets
+            this.scene.enemyBullets.children.entries.forEach(bullet => {
+                if (bullet.body && bullet._pausedVelocity) {
+                    bullet.body.setVelocity(bullet._pausedVelocity.x, bullet._pausedVelocity.y);
+                    delete bullet._pausedVelocity;
+                }
+            });
+            
+            // Resume player bullets
+            this.scene.bullets.children.entries.forEach(bullet => {
+                if (bullet.body && bullet._pausedVelocity) {
+                    bullet.body.setVelocity(bullet._pausedVelocity.x, bullet._pausedVelocity.y);
+                    delete bullet._pausedVelocity;
+                }
+            });
+            
+            // Re-enable player controls
+            if (this.scene.player) {
+                this.scene.player._exchangePaused = false;
+            }
+            
             this.tradingParticles.stop();
+            this._exchangePaused = false;
         }
     }
     
