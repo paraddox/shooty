@@ -177,11 +177,14 @@ export default class QuantumImmortalitySystem {
     }
     
     setupInput() {
-        // Q key for timeline merge
-        this.scene.input.keyboard.on('keydown-Q', () => {
+        // Q key for timeline merge - registered with ControlsManager
+        this.scene.controls.register('Q', 'Timeline Merge', () => {
             if (this.mergeReady && !this.mergeActive && this.mergeCooldown <= 0) {
                 this.activateTimelineMerge();
             }
+        }, {
+            system: 'QuantumImmortalitySystem',
+            description: 'Merge parallel timelines to restore health'
         });
     }
     

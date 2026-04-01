@@ -350,9 +350,12 @@ export default class VoidExchangeSystem {
     }
     
     setupInput() {
-        // X key toggles exchange
-        this.scene.input.keyboard.on('keydown-X', () => {
+        // X key toggles exchange - registered with ControlsManager
+        this.scene.controls.register('X', 'Void Exchange', () => {
             this.toggleExchange();
+        }, {
+            system: 'VoidExchangeSystem',
+            description: 'Toggle void exchange trading'
         });
     }
     

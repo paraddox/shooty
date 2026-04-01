@@ -112,15 +112,21 @@ export default class CinematicArchiveSystem {
     }
     
     setupInputHandlers() {
-        // Manual capture with F12 (screenshot key convention)
-        this.scene.input.keyboard.on('keydown-F12', (event) => {
+        // Manual capture with F12 (screenshot key convention) - registered with ControlsManager
+        this.scene.controls.register('F12', 'Screenshot', (event) => {
             event.preventDefault();
             this.manualCapture();
+        }, {
+            system: 'CinematicArchiveSystem',
+            description: 'Manual screenshot capture'
         });
         
-        // C key for cinematic mode toggle
-        this.scene.input.keyboard.on('keydown-C', () => {
+        // C key for cinematic mode toggle - registered with ControlsManager
+        this.scene.controls.register('C', 'Cinematic Mode', () => {
             this.toggleCinematicMode();
+        }, {
+            system: 'CinematicArchiveSystem',
+            description: 'Toggle cinematic mode'
         });
     }
     

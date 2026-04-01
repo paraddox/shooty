@@ -187,8 +187,8 @@ export default class MnemosyneWeaveSystem {
     }
     
     setupInput() {
-        // M key to enter/exit trance
-        this.scene.input.keyboard.on('keydown-M', () => {
+        // M key to enter/exit trance - registered with ControlsManager
+        this.scene.controls.register('M', 'Memory Trance', () => {
             if (this.activeIncursion) {
                 this.exitIncursion();
             } else if (this.inTrance) {
@@ -196,6 +196,9 @@ export default class MnemosyneWeaveSystem {
             } else {
                 this.enterTrance();
             }
+        }, {
+            system: 'MnemosyneWeaveSystem',
+            description: 'Enter or exit Mnemosyne memory trance'
         });
         
         // Click to select portal (only in trance)

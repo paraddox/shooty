@@ -266,11 +266,14 @@ export default class VoidCoherenceSystem {
     }
     
     setupInput() {
-        // V key for void resonance
-        this.scene.input.keyboard.on('keydown-V', () => {
+        // V key for void resonance - registered with ControlsManager
+        this.scene.controls.register('V', 'Void Resonance', () => {
             if (this.resonanceReady && !this.resonanceActive && this.resonanceCooldown <= 0) {
                 this.activateResonance();
             }
+        }, {
+            system: 'VoidCoherenceSystem',
+            description: 'Activate void resonance field'
         });
     }
     

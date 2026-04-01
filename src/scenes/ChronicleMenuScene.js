@@ -58,8 +58,15 @@ export default class ChronicleMenuScene extends Phaser.Scene {
         // Detail panel (hidden initially)
         this.createDetailPanel();
         
-        // Input
-        this.input.keyboard.on('keydown-ESC', () => this.returnToMenu());
+        // Input - register with ControlsManager (fallback to direct if no controls)
+        if (this.controls) {
+            this.controls.register('ESC', 'Return to Menu', () => this.returnToMenu(), {
+                system: 'ChronicleMenuScene',
+                description: 'Return to main menu'
+            });
+        } else {
+            this.input.keyboard.on('keydown-ESC', () => this.returnToMenu());
+        }
     }
     
     createConstellationBackground() {

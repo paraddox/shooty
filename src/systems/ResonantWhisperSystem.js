@@ -386,30 +386,52 @@ export default class ResonantWhisperSystem {
     }
     
     setupInput() {
-        // F key to interact with whispers
-        this.scene.input.keyboard.on('keydown-F', () => {
+        // F key to interact with whispers - try ControlsManager first, fallback to direct
+        const fRegistered = this.scene.controls.register('F', 'Interact', () => {
             if (this.nearbyWhisper) {
                 this.interactWithWhisper(this.nearbyWhisper);
             }
+        }, {
+            system: 'ResonantWhisperSystem',
+            description: 'Interact with nearby whispers'
         });
         
-        // Numbers 1-3 for fragment responses
-        this.scene.input.keyboard.on('keydown-ONE', () => {
+        // Fallback to direct binding if F rejected
+        if (!fRegistered) {
+            console.log('[ResonantWhisperSystem] F key already bound, using direct keyboard binding');
+            this.scene.input.keyboard.on('keydown-F', () => {
+                if (this.nearbyWhisper) {
+                    this.interactWithWhisper(this.nearbyWhisper);
+                }
+            });
+        }
+        
+        // Numbers 1-3 for fragment responses - registered with ControlsManager
+        this.scene.controls.register('ONE', 'Response Yes', () => {
             if (this.activeFragment) {
                 this.respondToFragment(this.activeFragment, 'yes');
             }
+        }, {
+            system: 'ResonantWhisperSystem',
+            description: 'Respond "yes" to fragment'
         });
         
-        this.scene.input.keyboard.on('keydown-TWO', () => {
+        this.scene.controls.register('TWO', 'Response No', () => {
             if (this.activeFragment) {
                 this.respondToFragment(this.activeFragment, 'no');
             }
+        }, {
+            system: 'ResonantWhisperSystem',
+            description: 'Respond "no" to fragment'
         });
         
-        this.scene.input.keyboard.on('keydown-THREE', () => {
+        this.scene.controls.register('THREE', 'Response Perhaps', () => {
             if (this.activeFragment) {
                 this.respondToFragment(this.activeFragment, 'perhaps');
             }
+        }, {
+            system: 'ResonantWhisperSystem',
+            description: 'Respond "perhaps" to fragment'
         });
     }
     

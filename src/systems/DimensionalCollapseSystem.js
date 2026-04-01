@@ -208,9 +208,12 @@ export default class DimensionalCollapseSystem {
     }
     
     setupInput() {
-        // F key to activate dimensional collapse
-        this.scene.input.keyboard.on('keydown-F', () => {
+        // F key to activate dimensional collapse - registered with ControlsManager
+        this.scene.controls.register('F', 'Dimensional Collapse', () => {
             this.attemptActivation();
+        }, {
+            system: 'DimensionalCollapseSystem',
+            description: 'Activate dimensional collapse'
         });
     }
     

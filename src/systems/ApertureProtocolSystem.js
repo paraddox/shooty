@@ -278,9 +278,12 @@ export default class ApertureProtocolSystem {
             }
         });
         
-        // Blink mechanic - spacebar
-        this.scene.input.keyboard.on('keydown-SPACE', () => {
+        // Blink mechanic - spacebar - registered with ControlsManager
+        this.scene.controls.register('SPACE', 'Blink', () => {
             this.attemptBlink();
+        }, {
+            system: 'ApertureProtocolSystem',
+            description: 'Blink teleport short distance'
         });
     }
     

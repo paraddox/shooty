@@ -220,26 +220,33 @@ export default class DissolutionProtocolSystem {
     }
     
     initInput() {
-        // DELETE key enters dissolution mode
-        this.scene.input.keyboard.on('keydown-DELETE', () => {
+        // DELETE key enters dissolution mode - registered with ControlsManager
+        this.scene.controls.register('DELETE', 'Dissolution Mode', () => {
             this.toggleDissolutionMode();
+        }, {
+            system: 'DissolutionProtocolSystem',
+            description: 'Toggle dissolution mode'
         });
         
-        // SHIFT+DELETE enters reservoir
+        // SHIFT+DELETE enters reservoir - kept as direct binding for combo handling
+        // This is a complex chord that ControlsManager doesn't support well
         this.scene.input.keyboard.on('keydown-SHIFT', (event) => {
             if (this.scene.input.keyboard.checkDown(this.scene.input.keyboard.addKey('DELETE'), 100)) {
                 this.enterReservoir();
             }
         });
         
-        // ESC exits dissolution mode
-        this.scene.input.keyboard.on('keydown-ESC', () => {
+        // ESC exits dissolution mode - registered with ControlsManager
+        this.scene.controls.register('ESC', 'Exit Dissolution', () => {
             if (this.dissolutionMode) {
                 this.exitDissolutionMode();
             }
             if (this.inReservoir) {
                 this.exitReservoir();
             }
+        }, {
+            system: 'DissolutionProtocolSystem',
+            description: 'Exit dissolution mode or reservoir'
         });
     }
     

@@ -124,8 +124,21 @@ export default class GameOverScene extends Phaser.Scene {
         restart.on('pointerover', () => restart.setFill('#ffffff'));
         restart.on('pointerout', () => restart.setFill('#00f0ff'));
 
-        this.input.keyboard.on('keydown-SPACE', () => this.restart());
-        this.input.keyboard.on('keydown-ENTER', () => this.restart());
+        // Register with ControlsManager (fallback to direct if scene doesn't have controls)
+        if (this.controls) {
+            this.controls.register('SPACE', 'Restart', () => this.restart(), {
+                system: 'GameOverScene',
+                description: 'Restart game from game over'
+            });
+            this.controls.register('ENTER', 'Restart', () => this.restart(), {
+                system: 'GameOverScene',
+                description: 'Restart game from game over'
+            });
+        } else {
+            // Fallback to direct binding
+            this.input.keyboard.on('keydown-SPACE', () => this.restart());
+            this.input.keyboard.on('keydown-ENTER', () => this.restart());
+        }
     }
 
     createGridEffect() {

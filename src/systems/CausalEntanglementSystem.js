@@ -213,10 +213,27 @@ export default class CausalEntanglementSystem {
         this.eKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
         this.eKey.on('down', () => this.toggleEntanglementMode());
         
-        // Number keys to change entanglement type
-        this.scene.input.keyboard.on('keydown-ONE', () => this.setEntanglementType('HARMONIC'));
-        this.scene.input.keyboard.on('keydown-TWO', () => this.setEntanglementType('PHASE'));
-        this.scene.input.keyboard.on('keydown-THREE', () => this.setEntanglementType('CASCADE'));
+        // Number keys to change entanglement type - registered with ControlsManager
+        this.scene.controls.register('ONE', 'Harmonic Entanglement', () => {
+            this.setEntanglementType('HARMONIC');
+        }, {
+            system: 'CausalEntanglementSystem',
+            description: 'Set harmonic entanglement type'
+        });
+        
+        this.scene.controls.register('TWO', 'Phase Entanglement', () => {
+            this.setEntanglementType('PHASE');
+        }, {
+            system: 'CausalEntanglementSystem',
+            description: 'Set phase entanglement type'
+        });
+        
+        this.scene.controls.register('THREE', 'Cascade Entanglement', () => {
+            this.setEntanglementType('CASCADE');
+        }, {
+            system: 'CausalEntanglementSystem',
+            description: 'Set cascade entanglement type'
+        });
         
         // Mouse click to select targets (only in entanglement mode)
         this.scene.input.on('pointerdown', (pointer) => {

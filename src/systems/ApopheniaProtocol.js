@@ -219,10 +219,21 @@ export default class ApopheniaProtocol {
     }
     
     setupInput() {
-        // F key toggles focus mode
-        this.scene.input.keyboard.on('keydown-F', () => {
+        // F key toggles focus mode - try ControlsManager first, fallback to direct
+        const registered = this.scene.controls.register('F', 'Focus Mode', () => {
             this.toggleFocusMode();
+        }, {
+            system: 'ApopheniaProtocol',
+            description: 'Toggle apophenic focus mode'
         });
+        
+        // Fallback to direct binding if ControlsManager rejected (F already bound)
+        if (!registered) {
+            console.log('[ApopheniaProtocol] F key already bound, using direct keyboard binding');
+            this.scene.input.keyboard.on('keydown-F', () => {
+                this.toggleFocusMode();
+            });
+        }
         
         // Prophecy fulfilled events
         this.scene.events.on('prophecyFulfilled', (prophecy) => {
