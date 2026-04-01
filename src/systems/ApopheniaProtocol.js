@@ -344,9 +344,9 @@ export default class ApopheniaProtocol {
     // ===== PATTERN DETECTION =====
     
     startDetectionLoop() {
-        // Run detection every 500ms
+        // Run detection every 1000ms (was 500ms) - reduce CPU load
         this.scene.time.addEvent({
-            delay: 500,
+            delay: 1000,
             callback: () => this.detectPatterns(),
             loop: true
         });
@@ -355,6 +355,13 @@ export default class ApopheniaProtocol {
     detectPatterns() {
         const allPoints = this.getWeightedPoints();
         if (allPoints.length < this.config.minPointsForPattern) return;
+        
+        // OPTIMIZATION: Limit points to prevent O(n³) explosion
+        // Sort by weight (heaviest first) and take max 20 points
+        if (allPoints.length > 20) {
+            allPoints.sort((a, b) => (b.weight || 1) - (a.weight || 1));
+            allPoints.length = 20;
+        }
         
         const newPatterns = [];
         
@@ -403,21 +410,42 @@ export default class ApopheniaProtocol {
     // GEOMETRIC DETECTION ALGORITHMS
     
     detectTriangle(points) {
-        // Find 3 points forming roughly equilateral triangle
-        for (let i = 0; i < points.length - 2; i++) {
-            for (let j = i + 1; j < points.length - 1; j++) {
-                for (let k = j + 1; k < points.length; k++) {
-                    const p1 = points[i], p2 = points[j], p3 = points[k];
+        // OPTIMIZED: Find 3 points forming roughly equilateral triangle
+        // Limit iterations to prevent FPS drops
+        const maxIterations = 1000;
+        let iterations = 0;
+        const minDistSq = 50 * 50; // squared min distance
+        const maxDistSq = this.config.detectionRadius * this.config.detectionRadius;
+        
+        for (let i = 0; i < points.length - 2 && iterations < maxIterations; i++) {
+            for (let j = i + 1; j < points.length - 1 && iterations < maxIterations; j++) {
+                // Quick bounding box check before third loop
+                const p1 = points[i], p2 = points[j];
+                const dx1 = p1.x - p2.x, dy1 = p1.y - p2.y;
+                const d1Sq = dx1 * dx1 + dy1 * dy1;
+                if (d1Sq < minDistSq || d1Sq > maxDistSq) continue;
+                
+                for (let k = j + 1; k < points.length && iterations < maxIterations; k++, iterations++) {
+                    const p3 = points[k];
                     
-                    const d1 = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y);
-                    const d2 = Phaser.Math.Distance.Between(p2.x, p2.y, p3.x, p3.y);
-                    const d3 = Phaser.Math.Distance.Between(p3.x, p3.y, p1.x, p1.y);
+                    // Squared distance (avoid expensive sqrt)
+                    const dx2 = p2.x - p3.x, dy2 = p2.y - p3.y;
+                    const dx3 = p3.x - p1.x, dy3 = p3.y - p1.y;
+                    const d2Sq = dx2 * dx2 + dy2 * dy2;
+                    const d3Sq = dx3 * dx3 + dy3 * dy3;
                     
-                    // Check for equilateral-ish (within 30% tolerance)
+                    // Check distances are in valid range
+                    if (d2Sq < minDistSq || d2Sq > maxDistSq) continue;
+                    if (d3Sq < minDistSq || d3Sq > maxDistSq) continue;
+                    
+                    // Compare squared distances for equilateral check (avoid sqrt)
+                    const d1 = Math.sqrt(d1Sq); // Only one sqrt needed
+                    const d2 = Math.sqrt(d2Sq);
+                    const d3 = Math.sqrt(d3Sq);
                     const avg = (d1 + d2 + d3) / 3;
                     const variance = Math.max(Math.abs(d1 - avg), Math.abs(d2 - avg), Math.abs(d3 - avg)) / avg;
                     
-                    if (variance < 0.3 && d1 > 50 && d1 < this.config.detectionRadius) {
+                    if (variance < 0.3) {
                         return this.createPattern('triangle', [p1, p2, p3], 1 - variance);
                     }
                 }
@@ -427,14 +455,18 @@ export default class ApopheniaProtocol {
     }
     
     detectSquare(points) {
-        // Find 4 points forming roughly square
+        // OPTIMIZED: Find 4 points forming roughly square
+        // O(n⁴) is too expensive - limit iterations aggressively
         if (points.length < 4) return null;
         
+        const maxIterations = 500; // Hard limit to prevent FPS drops
+        let iterations = 0;
+        
         // Look for right-angle relationships
-        for (let i = 0; i < points.length - 3; i++) {
-            for (let j = i + 1; j < points.length - 2; j++) {
-                for (let k = j + 1; k < points.length - 1; k++) {
-                    for (let l = k + 1; l < points.length; l++) {
+        for (let i = 0; i < points.length - 3 && iterations < maxIterations; i++) {
+            for (let j = i + 1; j < points.length - 2 && iterations < maxIterations; j++) {
+                for (let k = j + 1; k < points.length - 1 && iterations < maxIterations; k++) {
+                    for (let l = k + 1; l < points.length && iterations < maxIterations; l++, iterations++) {
                         const quad = [points[i], points[j], points[k], points[l]];
                         if (this.isSquareLike(quad)) {
                             return this.createPattern('square', quad, 0.9);
@@ -447,28 +479,34 @@ export default class ApopheniaProtocol {
     }
     
     isSquareLike(quad) {
-        // Check if 4 points form roughly square
+        // OPTIMIZED: Check if 4 points form roughly square using squared distances
         const [p1, p2, p3, p4] = quad;
-        const dists = [
-            Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y),
-            Phaser.Math.Distance.Between(p2.x, p2.y, p3.x, p3.y),
-            Phaser.Math.Distance.Between(p3.x, p3.y, p4.x, p4.y),
-            Phaser.Math.Distance.Between(p4.x, p4.y, p1.x, p1.y),
-            Phaser.Math.Distance.Between(p1.x, p1.y, p3.x, p3.y), // diagonal
-            Phaser.Math.Distance.Between(p2.x, p2.y, p4.x, p4.y)  // diagonal
+        
+        // Calculate squared distances (avoid sqrt for comparisons)
+        const distSq = [
+            (p1.x-p2.x)**2 + (p1.y-p2.y)**2,
+            (p2.x-p3.x)**2 + (p2.y-p3.y)**2,
+            (p3.x-p4.x)**2 + (p3.y-p4.y)**2,
+            (p4.x-p1.x)**2 + (p4.y-p1.y)**2,
+            (p1.x-p3.x)**2 + (p1.y-p3.y)**2, // diagonal
+            (p2.x-p4.x)**2 + (p2.y-p4.y)**2  // diagonal
         ];
         
-        const sides = dists.slice(0, 4);
-        const diagonals = dists.slice(4);
+        const sides = distSq.slice(0, 4);
+        const diagonals = distSq.slice(4);
         
-        const avgSide = sides.reduce((a, b) => a + b) / 4;
-        const sideVariance = Math.max(...sides.map(d => Math.abs(d - avgSide))) / avgSide;
+        // Check sides are roughly equal (squared comparison)
+        const avgSideSq = sides.reduce((a, b) => a + b) / 4;
+        const sideVariance = Math.max(...sides.map(d => Math.abs(d - avgSideSq))) / avgSideSq;
         
+        // Check diagonals are roughly equal
         const diagonalRatio = Math.abs(diagonals[0] - diagonals[1]) / diagonals[0];
-        const expectedDiagonal = avgSide * Math.sqrt(2);
-        const diagonalError = Math.abs(diagonals[0] - expectedDiagonal) / expectedDiagonal;
         
-        return sideVariance < 0.25 && diagonalRatio < 0.2 && diagonalError < 0.25;
+        // For square, diagonal² ≈ 2 * side²
+        const expectedDiagonalSq = avgSideSq * 2;
+        const diagonalError = Math.abs(diagonals[0] - expectedDiagonalSq) / expectedDiagonalSq;
+        
+        return sideVariance < 0.3 && diagonalRatio < 0.25 && diagonalError < 0.3;
     }
     
     detectCircle(points) {
