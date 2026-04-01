@@ -818,6 +818,9 @@ export default class VoidExchangeSystem {
     }
     
     showMarketAnnouncement(text) {
+        // Don't show announcements while paused
+        if (this.scene.pauseSystem?.paused) return;
+        
         const centerX = this.scene.scale.width / 2;
         const centerY = this.scene.scale.height / 2;
         

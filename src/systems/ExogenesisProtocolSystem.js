@@ -941,6 +941,9 @@ export default class ExogenesisProtocolSystem {
     }
     
     showFloatingText(text, x, y, color) {
+        // Don't show text while paused
+        if (this.scene.pauseSystem?.paused) return;
+        
         const ft = this.scene.add.text(x, y, text, {
             fontFamily: 'monospace',
             fontSize: '12px',

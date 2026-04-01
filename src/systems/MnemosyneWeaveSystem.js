@@ -1083,6 +1083,9 @@ export default class MnemosyneWeaveSystem {
     }
     
     showFloatingText(x, y, text, color) {
+        // Don't show text while paused
+        if (this.scene.pauseSystem?.paused) return;
+        
         const hexColor = '#' + color.toString(16).padStart(6, '0');
         const txt = this.scene.add.text(x, y, text, {
             fontFamily: 'monospace',

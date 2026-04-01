@@ -2314,6 +2314,9 @@ export default class GameScene extends Phaser.Scene {
     }
     
     showNearMissText(streakLevel) {
+        // Don't show text while paused
+        if (this.pauseSystem?.paused) return;
+        
         const texts = ['DODGE', 'CLOSE!', 'NEAR MISS!', 'BULLET TIME!'];
         const text = streakLevel > 2 ? texts[3] : texts[Math.min(streakLevel, 2)];
         const colors = ['#ffd700', '#ffaa00', '#ff6600', '#ff0066'];

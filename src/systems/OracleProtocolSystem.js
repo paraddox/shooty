@@ -1027,6 +1027,9 @@ export default class OracleProtocolSystem {
     }
     
     showFloatingText(x, y, text, color) {
+        // Don't show text while paused
+        if (this.scene.pauseSystem?.paused) return;
+        
         const label = this.scene.add.text(x, y, text, {
             fontFamily: 'monospace',
             fontSize: '14px',
