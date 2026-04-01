@@ -219,6 +219,11 @@ export default class ResonanceCascadeSystem {
     }
     
     onChainStart() {
+        if (!this.chainContainer || !this.multiplierText) {
+            console.warn('[ResonanceCascade] Chain visuals not initialized yet');
+            return;
+        }
+        
         this.chainContainer.setVisible(true);
         this.multiplierText.setVisible(true);
         
@@ -477,6 +482,8 @@ export default class ResonanceCascadeSystem {
             'RHYTHM_BASS_DROP': '#ff00ff'
         };
         
+        if (!this.chainContainer || !this.multiplierText) return;
+        
         // Clear and rebuild display
         this.chainContainer.removeAll(true);
         
@@ -576,7 +583,9 @@ export default class ResonanceCascadeSystem {
         }
         
         // Update multiplier position (follow screen center)
-        this.multiplierText.setPosition(this.scene.scale.width / 2, 140);
+        if (this.multiplierText) {
+            this.multiplierText.setPosition(this.scene.scale.width / 2, 140);
+        }
     }
     
     triggerCascadeBreak() {
@@ -774,9 +783,13 @@ export default class ResonanceCascadeSystem {
         this.pendingDamageBonus = 1.0;
         
         // Hide displays
-        this.chainContainer.setVisible(false);
-        this.chainContainer.removeAll(true);
-        this.multiplierText.setVisible(false);
+        if (this.chainContainer) {
+            this.chainContainer.setVisible(false);
+            this.chainContainer.removeAll(true);
+        }
+        if (this.multiplierText) {
+            this.multiplierText.setVisible(false);
+        }
     }
     
     /**
