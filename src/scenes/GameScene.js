@@ -2876,13 +2876,11 @@ export default class GameScene extends Phaser.Scene {
         
         // Register TOP_LEFT panel slots
         
-        // Health bar slot
-        panels.registerSlot('HEALTH_BAR', (container, width) => {
-            this.healthBarBg = this.add.rectangle(0, 0, width, 6, 0x22222a);
-            this.healthBar = this.add.rectangle(0, 0, width, 6, 0x00f0ff);
-            this.healthBar.setOrigin(0, 0.5);
-            this.healthBarBg.setOrigin(0, 0.5);
-            container.add([this.healthBarBg, this.healthBar]);
+        // Health bar slot - uses layoutHelpers for clean bar positioning
+        panels.registerSlot('HEALTH_BAR', (container, width, layout) => {
+            const bars = layout.addBar(6, 0x00f0ff);
+            this.healthBarBg = bars.bg;
+            this.healthBar = bars.bar;
         }, 'TOP_LEFT');
         
         // Score slot

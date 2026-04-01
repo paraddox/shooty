@@ -230,8 +230,8 @@ export default class HUDPanelManager {
             const slotContainer = this.scene.add.container(0, panel.nextY);
             slotContainer.setDepth(100);
             
-            // Add slot label
-            const label = this.scene.add.text(0, 0, slotConfig.label, {
+            // Add slot label (positioned at top of slot)
+            const label = this.scene.add.text(0, 2, slotConfig.label, {
                 fontFamily: 'monospace',
                 fontSize: '9px',
                 letterSpacing: 1,
@@ -239,13 +239,43 @@ export default class HUDPanelManager {
             });
             slotContainer.add(label);
             
-            // Create content area below label
-            const contentY = 12;
+            // Create content area below label with proper spacing
+            // Label is ~10px tall, so content starts at y=14 to give 2px gap
+            const contentY = 14;
             const contentContainer = this.scene.add.container(0, contentY);
             slotContainer.add(contentContainer);
             
+            // Provide layout helpers to the create function
+            const layoutHelpers = {
+                // Available width for content
+                width: panel.config.width - this.panelPadding * 2,
+                // Center X position within content area
+                centerX: (panel.config.width - this.panelPadding * 2) / 2,
+                // Helpers for common layout patterns
+                addBar: (height = 6, color = 0x00f0ff) => {
+                    const bg = this.scene.add.rectangle(0, height/2, panel.config.width - this.panelPadding * 2, height, 0x22222a);
+                    const bar = this.scene.add.rectangle(0, height/2, panel.config.width - this.panelPadding * 2, height, color);
+                    bar.setOrigin(0, 0.5);
+                    bg.setOrigin(0, 0.5);
+                    contentContainer.add([bg, bar]);
+                    return { bg, bar };
+                },
+                addText: (text, options = {}) => {
+                    const config = {
+                        fontFamily: 'monospace',
+                        fontSize: options.size || '12px',
+                        fill: options.color || '#ffffff',
+                        ...options.style
+                    };
+                    const txt = this.scene.add.text(options.x || 0, options.y || 0, text, config);
+                    if (options.origin) txt.setOrigin(options.origin);
+                    contentContainer.add(txt);
+                    return txt;
+                }
+            };
+            
             // Let the system create its elements in the content container
-            const userElements = createFn(contentContainer, panel.config.width - this.panelPadding * 2);
+            const userElements = createFn(contentContainer, layoutHelpers.width, layoutHelpers);
             
             // Add to panel
             panel.content.add(slotContainer);
@@ -398,6 +428,83 @@ export default class HUDPanelManager {
                 panel.content.add(debugRect);
             });
         });
+    }
+    
+    /**
+     * Register a display element - manager handles all positioning
+     * @param {string} slotId - Slot identifier
+     * @param {Object} display - Display configuration
+     * @param {string} region - Panel region
+     * @returns {Object} References to created elements
+     */
+    registerDisplay(slotId, display, region = 'TOP_LEFT') {
+        const panel = this.panels.get(region);
+        if (!panel) {
+            console.warn(`[HUDPanelManager] Unknown panel: ${region}`);
+            return null;
+        }
+        
+        const slotConfig = panel.config.slots.find(s => s.id === slotId);
+        if (!slotConfig) {
+            console.warn(`[HUDPanelManager] Unknown slot: ${slotId} in ${region}`);
+            return null;
+        }
+        
+        // Create using registerSlot with automatic positioning
+        return this.registerSlot(slotId, (container, width, layout) => {
+            const elements = {};
+            
+            switch (display.type) {
+                case 'bar':
+                    // Progress bar with label value
+                    const bars = layout.addBar(display.height || 6, display.color || 0x00f0ff);
+                    elements.bg = bars.bg;
+                    elements.bar = bars.bar;
+                    if (display.value !== undefined) {
+                        elements.value = layout.addText(display.value.toString(), {
+                            size: display.valueSize || '10px',
+                            color: display.valueColor || '#ffffff',
+                            x: width - 5,
+                            y: (display.height || 6) / 2,
+                            origin: { x: 1, y: 0.5 }
+                        });
+                    }
+                    break;
+                    
+                case 'text':
+                    // Simple text value
+                    elements.text = layout.addText(display.text || '', {
+                        size: display.size || '12px',
+                        color: display.color || '#ffffff'
+                    });
+                    break;
+                    
+                case 'value':
+                    // Label + value pair
+                    elements.text = layout.addText(`${display.prefix || ''}${display.value || 0}${display.suffix || ''}`, {
+                        size: display.size || '14px',
+                        color: display.color || '#ffffff'
+                    });
+                    break;
+                    
+                case 'icon':
+                    // Icon + text pair
+                    const iconText = `${display.icon || '◆'} ${display.text || ''}`;
+                    elements.text = layout.addText(iconText, {
+                        size: display.size || '12px',
+                        color: display.color || '#ffffff'
+                    });
+                    break;
+                    
+                default:
+                    // Custom - let the display provide its own renderer
+                    if (display.render) {
+                        display.render(container, width, layout, elements);
+                    }
+            }
+            
+            return elements;
+        }, region);
     }
     
     colorToHex(color) {
