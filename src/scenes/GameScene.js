@@ -2719,9 +2719,14 @@ export default class GameScene extends Phaser.Scene {
         // Create death branch - spawn quantum echo and respawn player
         const deathX = player.x;
         const deathY = player.y;
+        
+        // Safely get velocity (player might not have physics body in some states)
+        const velocityX = player.body?.velocity?.x || 0;
+        const velocityY = player.body?.velocity?.y || 0;
+        
         const respawnPos = this.quantumImmortality.onPlayerDeath(
             deathX, deathY,
-            player.body.velocity.x, player.body.velocity.y
+            velocityX, velocityY
         );
         
         // Void coherence: quantum echo spawns create void structures
