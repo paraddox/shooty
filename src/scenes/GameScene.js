@@ -2023,28 +2023,41 @@ export default class GameScene extends Phaser.Scene {
         this.player.update();
         
         // Camera follow player (zoom handled immediately in wheel event)
-        const camera = this.cameras.main;
-        const worldWidth = 1920;
-        const worldHeight = 1440;
-        const viewWidth = camera.width / camera.zoom;
-        const viewHeight = camera.height / camera.zoom;
-        
-        // Only follow player if view is smaller than world in that dimension
-        let targetScrollX = camera.scrollX;
-        let targetScrollY = camera.scrollY;
-        
-        if (viewWidth < worldWidth) {
-            targetScrollX = this.player.x - viewWidth / 2;
-            targetScrollX = Phaser.Math.Clamp(targetScrollX, 0, worldWidth - viewWidth);
+        try {
+            const camera = this.cameras.main;
+            
+            // Safety check - camera must exist and have valid properties
+            if (!camera || typeof camera.width !== 'number' || typeof camera.zoom !== 'number') {
+                console.error('[GameScene.update] Invalid camera state');
+                return;
+            }
+            
+            const worldWidth = 1920;
+            const worldHeight = 1440;
+            const viewWidth = camera.width / camera.zoom;
+            const viewHeight = camera.height / camera.zoom;
+            
+            // Only follow player if view is smaller than world in that dimension
+            let targetScrollX = camera.scrollX;
+            let targetScrollY = camera.scrollY;
+            
+            if (viewWidth < worldWidth) {
+                targetScrollX = this.player.x - viewWidth / 2;
+                targetScrollX = Phaser.Math.Clamp(targetScrollX, 0, worldWidth - viewWidth);
+            }
+            
+            if (viewHeight < worldHeight) {
+                targetScrollY = this.player.y - viewHeight / 2;
+                targetScrollY = Phaser.Math.Clamp(targetScrollY, 0, worldHeight - viewHeight);
+            }
+            
+            // Smooth camera follow (lerp 8% toward target each frame)
+            camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
+            camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
+            
+        } catch (error) {
+            console.error('[GameScene.update] Error in camera follow:', error);
         }
-        
-        if (viewHeight < worldHeight) {
-            targetScrollY = this.player.y - viewHeight / 2;
-            targetScrollY = Phaser.Math.Clamp(targetScrollY, 0, worldHeight - viewHeight);
-        }
-        
-        camera.scrollX += (targetScrollX - camera.scrollX) * 0.08;
-        camera.scrollY += (targetScrollY - camera.scrollY) * 0.08;
 
         // Bullet cleanup and trails (player bullets)
         this.bullets.children.entries.forEach(bullet => {
