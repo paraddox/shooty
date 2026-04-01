@@ -1134,6 +1134,9 @@ export default class MetaSystemOperator {
     }
     
     updatePatchHUD() {
+        // Guard: panel elements may not be initialized yet
+        if (!this.patchCountText || !this.energyBar) return;
+        
         this.patchCountText.setText(`PATCHES: ${this.activePatches.size}/${this.maxPatches}`);
         
         const barWidth = (this.patchEnergy / 100) * 80;
