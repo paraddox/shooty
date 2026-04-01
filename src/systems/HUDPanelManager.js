@@ -10,7 +10,6 @@
 
 export default class HUDPanelManager {
     constructor(scene) {
-        console.log('[HUDPanelManager] CONSTRUCTOR CALLED');
         this.scene = scene;
         this.margin = 20;
         this.panelPadding = 12;
@@ -92,10 +91,7 @@ export default class HUDPanelManager {
         const screenW = this.scene.scale.width;
         const screenH = this.scene.scale.height;
         
-        console.log(`[HUDPanelManager] Creating panels...`);
-        
         Object.entries(this.PANELS).forEach(([region, config]) => {
-            console.log(`[HUDPanelManager] Creating panel: ${region}`);
             let x = config.x;
             let y = config.y;
             
@@ -159,10 +155,7 @@ export default class HUDPanelManager {
             });
             
             this.containers.set(region, contentContainer);
-            console.log(`[HUDPanelManager] Panel ${region} created and stored. Total panels: ${this.panels.size}`);
         });
-        
-        console.log(`[HUDPanelManager] All panels created. Available: ${Array.from(this.panels.keys()).join(', ')}`);
     }
     
     createPanelBackground(width, height, accentColor) {
@@ -204,9 +197,7 @@ export default class HUDPanelManager {
      * @returns {Phaser.GameObjects.Container} The created element
      */
     registerSlot(slotId, createFn, region = 'TOP_LEFT') {
-        console.log(`[HUDPanelManager] ========================== registerSlot START: ${slotId}`);
         try {
-            console.log(`[HUDPanelManager] Inside try block for ${slotId}`);
             const panel = this.panels.get(region);
             if (!panel) {
                 console.warn(`[HUDPanelManager] Unknown panel: ${region}`);
@@ -227,8 +218,6 @@ export default class HUDPanelManager {
                 if (existing) existing.destroy();
             }
             
-            console.log(`[HUDPanelManager] Creating slot: ${slotId} at y=${panel.nextY}`);
-            
             // Create slot container at the allocated position
             const slotContainer = this.scene.add.container(0, panel.nextY);
             slotContainer.setDepth(100);
@@ -248,9 +237,7 @@ export default class HUDPanelManager {
             slotContainer.add(contentContainer);
             
             // Let the system create its elements in the content container
-            console.log(`[HUDPanelManager] Calling createFn for ${slotId}...`);
             const userElements = createFn(contentContainer, panel.config.width - this.panelPadding * 2);
-            console.log(`[HUDPanelManager] createFn returned for ${slotId}`);
             
             // Add to panel
             panel.content.add(slotContainer);
@@ -266,7 +253,6 @@ export default class HUDPanelManager {
             // Advance nextY for following slots
             panel.nextY += slotConfig.height + 3;
             
-            console.log(`[HUDPanelManager] Successfully registered ${slotId} in ${region}`);
             return contentContainer;
         } catch (err) {
             console.error(`[HUDPanelManager] Error registering slot ${slotId}:`, err);
@@ -464,7 +450,7 @@ export default class HUDPanelManager {
      * @param {string} region - Panel region
      * @deprecated Use registerSlot() with callback for new code
      */
-    registerSlot(slotId, element, region = 'TOP_LEFT') {
+    registerExternalElement(slotId, element, region = 'TOP_LEFT') {
         const pos = this.getSlotPositionInternal(slotId, region);
         if (pos && element && element.setPosition) {
             element.setPosition(pos.x, pos.y);

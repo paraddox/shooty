@@ -115,40 +115,28 @@ export default class QuantumImmortalitySystem {
             console.warn('[QuantumImmortalitySystem] hudPanels not available, skipping UI registration');
             return;
         }
-        console.log('[QuantumImmortalitySystem] Registering QUANTUM_IMMORTALITY slot...');
-        console.log('[QuantumImmortalitySystem] hudPanels object:', this.scene.hudPanels);
-        console.log('[QuantumImmortalitySystem] hudPanels type:', typeof this.scene.hudPanels);
-        console.log('[QuantumImmortalitySystem] registerSlot type:', typeof this.scene.hudPanels?.registerSlot);
-        console.log('[QuantumImmortalitySystem] panels Map:', this.scene.hudPanels?.panels);
-        let result;
-        try {
-            result = this.scene.hudPanels.registerSlot('QUANTUM_IMMORTALITY', (container, width) => {
-                console.log('[QuantumImmortalitySystem] CALLBACK EXECUTING!');
-                this.entropyContainer = container;
-                this.entropyContainer.setDepth(100);
-                
-                // Background
-                const bg = this.scene.add.rectangle(0, 0, Math.min(100, width), 12, 0x1a1a25, 0.9);
-                container.add(bg);
-                
-                // Entropy fill (white→gold gradient effect)
-                this.entropyFill = this.scene.add.rectangle(-Math.min(50, width/2), 0, 0, 10, this.ECHO_COLOR);
-                this.entropyFill.setOrigin(0, 0.5);
-                container.add(this.entropyFill);
-                
-                // Echo count indicator
-                this.echoIndicator = this.scene.add.text(0, 12, '◉ 0', {
-                    fontFamily: 'monospace',
-                    fontSize: '12px',
-                    letterSpacing: 2,
-                    fill: '#ffffff'
-                }).setOrigin(0.5);
-                container.add(this.echoIndicator);
-            }, 'TOP_RIGHT');
-            console.log('[QuantumImmortalitySystem] registerSlot returned:', result);
-        } catch (err) {
-            console.error('[QuantumImmortalitySystem] registerSlot THREW:', err);
-        }
+        this.scene.hudPanels.registerSlot('QUANTUM_IMMORTALITY', (container, width) => {
+            this.entropyContainer = container;
+            this.entropyContainer.setDepth(100);
+            
+            // Background
+            const bg = this.scene.add.rectangle(0, 0, Math.min(100, width), 12, 0x1a1a25, 0.9);
+            container.add(bg);
+            
+            // Entropy fill (white→gold gradient effect)
+            this.entropyFill = this.scene.add.rectangle(-Math.min(50, width/2), 0, 0, 10, this.ECHO_COLOR);
+            this.entropyFill.setOrigin(0, 0.5);
+            container.add(this.entropyFill);
+            
+            // Echo count indicator
+            this.echoIndicator = this.scene.add.text(0, 12, '◉ 0', {
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                letterSpacing: 2,
+                fill: '#ffffff'
+            }).setOrigin(0.5);
+            container.add(this.echoIndicator);
+        }, 'TOP_RIGHT');
         
         // Merge prompt (appears when ready) - NOT in panel, screen-centered
         this.mergePrompt = this.scene.add.text(this.scene.scale.width / 2, 120, '[Q] MERGE TIMELINES', {
