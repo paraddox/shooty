@@ -344,9 +344,9 @@ export default class ApopheniaProtocol {
     // ===== PATTERN DETECTION =====
     
     startDetectionLoop() {
-        // Run detection every 1000ms (was 500ms) - reduce CPU load
+        // TUNED: 750ms balance between responsiveness and performance
         this.scene.time.addEvent({
-            delay: 1000,
+            delay: 750,
             callback: () => this.detectPatterns(),
             loop: true
         });
@@ -356,11 +356,11 @@ export default class ApopheniaProtocol {
         const allPoints = this.getWeightedPoints();
         if (allPoints.length < this.config.minPointsForPattern) return;
         
-        // OPTIMIZATION: Limit points to prevent O(n³) explosion
-        // Sort by weight (heaviest first) and take max 20 points
-        if (allPoints.length > 20) {
+        // TUNED: Limit points to prevent O(n³) explosion but allow more patterns
+        // Sort by weight (heaviest first) and take max 30 points (was 20)
+        if (allPoints.length > 30) {
             allPoints.sort((a, b) => (b.weight || 1) - (a.weight || 1));
-            allPoints.length = 20;
+            allPoints.length = 30;
         }
         
         const newPatterns = [];
@@ -410,9 +410,9 @@ export default class ApopheniaProtocol {
     // GEOMETRIC DETECTION ALGORITHMS
     
     detectTriangle(points) {
-        // OPTIMIZED: Find 3 points forming roughly equilateral triangle
-        // Limit iterations to prevent FPS drops
-        const maxIterations = 1000;
+        // TUNED: Find 3 points forming roughly equilateral triangle
+        // Increased iterations (2000) for better detection while keeping FPS stable
+        const maxIterations = 2000;
         let iterations = 0;
         const minDistSq = 50 * 50; // squared min distance
         const maxDistSq = this.config.detectionRadius * this.config.detectionRadius;
@@ -455,11 +455,11 @@ export default class ApopheniaProtocol {
     }
     
     detectSquare(points) {
-        // OPTIMIZED: Find 4 points forming roughly square
-        // O(n⁴) is too expensive - limit iterations aggressively
+        // TUNED: Find 4 points forming roughly square
+        // O(n⁴) is expensive - limit iterations but allow more thorough search
         if (points.length < 4) return null;
         
-        const maxIterations = 500; // Hard limit to prevent FPS drops
+        const maxIterations = 1000; // Tuned for better square detection
         let iterations = 0;
         
         // Look for right-angle relationships
