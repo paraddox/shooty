@@ -217,7 +217,7 @@ export default class HUDPanelManager {
             if (existing) existing.destroy();
         }
         
-        console.log(`[HUDPanelManager] Registering slot: ${slotId} in ${region} at y=${panel.nextY}`);
+        console.log(`[HUDPanelManager] Registering slot: ${slotId} in ${region} at y=${panel.nextY}, panel exists=${!!panel}, slotConfig exists=${!!slotConfig}`);
         
         // Create slot container at the allocated position
         const slotContainer = this.scene.add.container(0, panel.nextY);
