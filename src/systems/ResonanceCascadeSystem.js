@@ -58,13 +58,16 @@ export default class ResonanceCascadeSystem {
     
     createVisuals() {
         // Chain sequence display (center-top) - registered with HUDPanelManager
-        this.scene.hudPanels.registerSlot('RESONANCE_CASCADE', (container, width) => {
+        this.scene.hudPanels.registerSlot('RESONANCE_CASCADE', (container, width, layout) => {
             this.chainContainer = container;
             this.chainContainer.setDepth(100);
             this.chainContainer.setVisible(false);
             
-            // Multiplier text (large, central)
-            this.multiplierText = this.scene.add.text(0, 0, '', {
+            // Position elements to stay within positive bounds
+            const centerY = 20; // Center point for elements
+            
+            // Multiplier text (large, central) - centered at centerY
+            this.multiplierText = this.scene.add.text(0, centerY, '', {
                 fontFamily: 'monospace',
                 fontSize: '36px',
                 fontStyle: 'bold',
@@ -75,9 +78,9 @@ export default class ResonanceCascadeSystem {
             this.multiplierText.setVisible(false);
             container.add(this.multiplierText);
             
-            // Sequence dot pool
+            // Sequence dot pool - positioned around center
             for (let i = 0; i < 6; i++) {
-                const dot = this.scene.add.circle(0, 0, 8, 0xffffff);
+                const dot = this.scene.add.circle(0, centerY, 8, 0xffffff);
                 dot.setAlpha(0);
                 dot.setDepth(102);
                 this.sequenceDots.push({
@@ -88,8 +91,8 @@ export default class ResonanceCascadeSystem {
                 container.add(dot);
             }
             
-            // Cascade break text
-            this.cascadeText = this.scene.add.text(0, 0, '', {
+            // Cascade break text - centered at centerY
+            this.cascadeText = this.scene.add.text(0, centerY, '', {
                 fontFamily: 'monospace',
                 fontSize: '48px',
                 fontStyle: 'bold',

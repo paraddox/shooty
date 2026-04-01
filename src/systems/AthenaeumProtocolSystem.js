@@ -93,39 +93,42 @@ export default class AthenaeumProtocolSystem {
     
     createUI() {
         // Region indicator - registered with panel-based HUD system
-        this.scene.hudPanels.registerSlot('ATHENAEUM', (container, width) => {
+        this.scene.hudPanels.registerSlot('ATHENAEUM', (container, width, layout) => {
             this.regionIndicator = container;
             this.regionIndicator.setDepth(1000);
             
-            // Symbol
-            this.regionSymbol = this.scene.add.text(-width/2 + 20, 0, '◊', {
+            // Position elements to stay within positive bounds
+            const barWidth = Math.min(80, width - 20);
+            
+            // Symbol - at left edge
+            this.regionSymbol = this.scene.add.text(0, 12, '◊', {
                 fontFamily: 'monospace',
                 fontSize: '24px',
                 fill: '#00f0ff'
-            }).setOrigin(0.5);
+            }).setOrigin(0, 0.5); // Left-center origin
             container.add(this.regionSymbol);
             
-            // Name
-            this.regionName = this.scene.add.text(0, -10, 'PRISTINE VOID', {
+            // Name - at top, to the right of symbol
+            this.regionName = this.scene.add.text(28, 0, 'PRISTINE VOID', {
                 fontFamily: 'monospace',
                 fontSize: '11px',
                 fontStyle: 'bold',
                 fill: '#ffffff'
-            }).setOrigin(0.5);
+            }).setOrigin(0, 0); // Top-left origin
             container.add(this.regionName);
             
-            // Effect description
-            this.regionEffect = this.scene.add.text(0, 8, 'No terrain effects', {
+            // Effect description - below the name
+            this.regionEffect = this.scene.add.text(28, 14, 'No terrain effects', {
                 fontFamily: 'monospace',
                 fontSize: '9px',
                 fill: '#888888'
-            }).setOrigin(0.5);
+            }).setOrigin(0, 0); // Top-left origin
             container.add(this.regionEffect);
             
-            // Intensity bar
-            const barWidth = Math.min(80, width - 20);
-            this.intensityBar = this.scene.add.rectangle(0, 20, barWidth, 3, 0x00f0ff, 0.8);
-            this.intensityBar.setOrigin(0.5);
+            // Intensity bar - below the text, full width
+            const barY = 28;
+            this.intensityBar = this.scene.add.rectangle(0, barY, barWidth, 3, 0x00f0ff, 0.8);
+            this.intensityBar.setOrigin(0, 0); // Top-left origin
             this.intensityBar.scaleX = 0;
             container.add(this.intensityBar);
         }, 'BOTTOM_RIGHT');

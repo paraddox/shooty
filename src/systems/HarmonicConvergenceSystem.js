@@ -134,18 +134,21 @@ export default class HarmonicConvergenceSystem {
         }
         
         // Spectrum analyzer bars - registered with panel-based HUD system
-        this.scene.hudPanels.registerSlot('HARMONIC', (container, width) => {
+        this.scene.hudPanels.registerSlot('HARMONIC', (container, width, layout) => {
             const barCount = Math.min(16, Math.floor(width / 10));
             const barWidth = Math.min(8, (width - (barCount - 1) * 2) / barCount);
-            const startX = -width / 2 + barWidth / 2;
+            const gap = 2;
             
+            // Position bars starting from left edge (x=0)
             for (let i = 0; i < barCount; i++) {
+                const x = i * (barWidth + gap);
                 const bar = this.scene.add.rectangle(
-                    startX + i * (barWidth + 2),
-                    0,
+                    x,
+                    0, // y=0 with top-left origin
                     barWidth, 2,
                     0x00f0ff, 0.5
                 );
+                bar.setOrigin(0, 0); // Top-left origin so bar extends downward
                 bar.setDepth(95);
                 container.add(bar);
                 this.spectrumBars.push(bar);

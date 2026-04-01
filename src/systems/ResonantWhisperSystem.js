@@ -369,7 +369,8 @@ export default class ResonantWhisperSystem {
         this.responseContainer.setVisible(false);
         
         // Karma display - registered with panel-based HUD system
-        this.scene.hudPanels.registerSlot('KARMA', (container, width) => {
+        this.scene.hudPanels.registerSlot('KARMA', (container, width, layout) => {
+            // Position at top of content area
             this.karmaDisplay = this.scene.add.text(
                 0, 0,
                 '',
@@ -378,7 +379,7 @@ export default class ResonantWhisperSystem {
                     fontSize: '11px',
                     fill: '#ffd700'
                 }
-            ).setOrigin(0.5);
+            ).setOrigin(0, 0); // Top-left origin
             container.add(this.karmaDisplay);
             this.updateKarmaDisplay();
         }, 'BOTTOM_RIGHT');

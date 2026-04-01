@@ -146,21 +146,28 @@ export default class MetaSystemOperator {
     
     createPatchHUD() {
         // Small indicator in corner showing active patches - registered with HUDPanelManager
-        this.scene.hudPanels.registerSlot('META_SYSTEM', (container, width) => {
+        this.scene.hudPanels.registerSlot('META_SYSTEM', (container, width, layout) => {
             this.patchHUD = container;
             this.patchHUD.setDepth(100);
             
-            // Patch count
-            this.patchCountText = this.scene.add.text(0, -5, 'PATCHES: 0/3', {
+            // Position elements to stay within positive bounds
+            const barWidth = Math.min(80, width - 10);
+            const barHeight = 6;
+            
+            // Patch count - at top
+            this.patchCountText = this.scene.add.text(0, 0, 'PATCHES: 0/3', {
                 fontFamily: 'monospace',
                 fontSize: '11px',
                 fill: '#00f0ff'
-            }).setOrigin(0.5);
+            }).setOrigin(0, 0); // Top-left origin
             container.add(this.patchCountText);
             
-            // Energy bar
-            this.energyBarBg = this.scene.add.rectangle(0, 12, Math.min(80, width-10), 6, 0x222222);
-            this.energyBar = this.scene.add.rectangle(0, 12, Math.min(80, width-10), 6, this.META_COLOR);
+            // Energy bar - below the text
+            const barY = 14;
+            this.energyBarBg = this.scene.add.rectangle(0, barY, barWidth, barHeight, 0x222222);
+            this.energyBarBg.setOrigin(0, 0); // Top-left origin
+            this.energyBar = this.scene.add.rectangle(0, barY, barWidth, barHeight, this.META_COLOR);
+            this.energyBar.setOrigin(0, 0); // Top-left origin
             container.add([this.energyBarBg, this.energyBar]);
             
             // Initially hidden until discovered

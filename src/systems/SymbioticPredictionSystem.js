@@ -216,45 +216,49 @@ export default class SymbioticPredictionSystem {
     
     createSymbiosisIndicator() {
         // Top-center indicator showing harmony/chaos balance - registered with HUDPanelManager
-        this.scene.hudPanels.registerSlot('SYMBIOSIS_HARMONY', (container, width) => {
+        this.scene.hudPanels.registerSlot('SYMBIOSIS_HARMONY', (container, width, layout) => {
             this.symbiosisContainer = container;
             this.symbiosisContainer.setDepth(100);
             
             const barWidth = Math.min(200, width);
+            const barHeight = 6;
+            const barY = 0; // Top of content area
             
-            // Background bar
-            const barBg = this.scene.add.rectangle(0, 0, barWidth, 6, 0x22222a);
+            // Background bar - full width with top-left origin
+            const barBg = this.scene.add.rectangle(0, barY, barWidth, barHeight, 0x22222a);
+            barBg.setOrigin(0, 0); // Top-left origin
             container.add(barBg);
             
-            // Harmony side (left, cyan)
-            this.harmonyBar = this.scene.add.rectangle(-barWidth/4, 0, barWidth/2, 4, this.HARMONY_COLOR, 0.3);
-            this.harmonyBar.setOrigin(0, 0.5);
+            // Harmony side (left half, cyan) - positioned from left
+            this.harmonyBar = this.scene.add.rectangle(0, barY + 1, barWidth/2, barHeight - 2, this.HARMONY_COLOR, 0.3);
+            this.harmonyBar.setOrigin(0, 0); // Top-left origin
             container.add(this.harmonyBar);
             
-            // Chaos side (right, magenta)
-            this.chaosBar = this.scene.add.rectangle(barWidth/4, 0, barWidth/2, 4, this.CHAOS_COLOR, 0.3);
-            this.chaosBar.setOrigin(1, 0.5);
+            // Chaos side (right half, magenta) - positioned from center-right
+            this.chaosBar = this.scene.add.rectangle(barWidth/2, barY + 1, barWidth/2, barHeight - 2, this.CHAOS_COLOR, 0.3);
+            this.chaosBar.setOrigin(0, 0); // Top-left origin
             container.add(this.chaosBar);
             
-            // Center marker
-            this.centerMarker = this.scene.add.rectangle(0, 0, 2, 8, 0xffffff, 0.5);
+            // Center marker - vertical line at center
+            this.centerMarker = this.scene.add.rectangle(barWidth/2, barY, 2, barHeight, 0xffffff, 0.5);
+            this.centerMarker.setOrigin(0.5, 0); // Top-center origin
             container.add(this.centerMarker);
             
-            // Status text (HARMONY / CHAOS / BALANCED)
-            this.statusText = this.scene.add.text(0, 12, 'BALANCED', {
+            // Status text (HARMONY / CHAOS / BALANCED) - below the bar
+            this.statusText = this.scene.add.text(barWidth/2, barY + barHeight + 4, 'BALANCED', {
                 fontFamily: 'monospace',
                 fontSize: '12px',
                 letterSpacing: 1,
                 fill: '#9d4edd'
-            }).setOrigin(0.5);
+            }).setOrigin(0.5, 0); // Top-center origin
             container.add(this.statusText);
             
-            // Symbiosis depth percentage
-            this.depthText = this.scene.add.text(barWidth/2 - 10, 0, '0%', {
+            // Symbiosis depth percentage - to the right of bar
+            this.depthText = this.scene.add.text(barWidth + 5, barY + barHeight/2, '0%', {
                 fontFamily: 'monospace',
                 fontSize: '10px',
                 fill: '#00f0ff'
-            }).setOrigin(0, 0.5);
+            }).setOrigin(0, 0.5); // Left-center origin
             container.add(this.depthText);
         }, 'TOP_CENTER');
     }

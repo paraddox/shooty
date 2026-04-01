@@ -463,33 +463,35 @@ export default class TemporalPedagogySystem {
     
     createSystemIndicators() {
         // Create all system indicators in a grid - registered with panel-based HUD system
-        this.scene.hudPanels.registerSlot('PEDAGOGY', (container, width) => {
+        this.scene.hudPanels.registerSlot('PEDAGOGY', (container, width, layout) => {
             this.pedagogyContainer = container;
             this.pedagogyContainer.setDepth(90);
             this.pedagogyContainer.setAlpha(0.3);
             
             const cols = Math.floor(width / 22);
+            const spacing = 22;
             
+            // Position indicators starting from top-left (0, 0)
             Object.keys(this.systemMastery).forEach((systemName, index) => {
-                const x = -width/2 + 15 + (index % cols) * 22;
-                const y = -30 + Math.floor(index / cols) * 22;
+                const x = (index % cols) * spacing;
+                const y = Math.floor(index / cols) * spacing;
                 
                 const indicator = this.scene.add.container(x, y);
                 
-                // Background circle
-                const bg = this.scene.add.circle(0, 0, 9, 0x22222a, 0.5);
+                // Background circle - centered in the grid cell
+                const bg = this.scene.add.circle(spacing/2, spacing/2, 9, 0x22222a, 0.5);
                 indicator.add(bg);
                 
-                // System letter
-                const letter = this.scene.add.text(0, 0, systemName[0], {
+                // System letter - centered in the grid cell
+                const letter = this.scene.add.text(spacing/2, spacing/2, systemName[0], {
                     fontFamily: 'monospace',
                     fontSize: '9px',
                     fill: '#444444'
                 }).setOrigin(0.5);
                 indicator.add(letter);
                 
-                // Glow (hidden initially)
-                const glow = this.scene.add.circle(0, 0, 11, this.pedagogyColor, 0);
+                // Glow (hidden initially) - centered in the grid cell
+                const glow = this.scene.add.circle(spacing/2, spacing/2, 11, this.pedagogyColor, 0);
                 indicator.add(glow);
                 
                 container.add(indicator);
