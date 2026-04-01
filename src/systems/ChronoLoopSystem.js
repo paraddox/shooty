@@ -79,19 +79,21 @@ export default class ChronoLoopSystem {
             this.loopIndicator = container;
             this.loopIndicator.setDepth(100);
             
-            // Use top-left origin so elements stay within content bounds (y >= 0)
+            // Use top-left origin so elements stay within content bounds (x >= 0, y >= 0)
             const barHeight = 8;
+            const segmentWidth = 18;
+            const segmentGap = 3;
             
             // Background bar - positioned at top of content area
             const bg = this.scene.add.rectangle(0, 0, 60, barHeight, 0x22222a);
             bg.setOrigin(0, 0); // Top-left origin
             container.add(bg);
             
-            // Teal segments for each possible echo - positioned within the bar
+            // Teal segments for each possible echo - positioned within the bar starting from left
             this.loopSegments = [];
             for (let i = 0; i < this.maxEchoes; i++) {
                 const segment = this.scene.add.rectangle(
-                    -25 + i * 21, 1, 18, 6, this.TEAL_COLOR, 0.3
+                    2 + i * (segmentWidth + segmentGap), 1, segmentWidth, 6, this.TEAL_COLOR, 0.3
                 );
                 segment.setOrigin(0, 0); // Top-left origin
                 this.loopSegments.push(segment);
@@ -99,7 +101,7 @@ export default class ChronoLoopSystem {
             }
             
             // Recording progress bar (hidden by default) - within the bar
-            this.recordProgressBar = this.scene.add.rectangle(0, 2, 0, 4, this.TEAL_GLOW);
+            this.recordProgressBar = this.scene.add.rectangle(2, 2, 0, 4, this.TEAL_GLOW);
             this.recordProgressBar.setOrigin(0, 0); // Top-left origin
             this.recordProgressBar.setVisible(false);
             container.add(this.recordProgressBar);

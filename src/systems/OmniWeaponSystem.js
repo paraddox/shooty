@@ -111,17 +111,20 @@ export default class OmniWeaponSystem {
     
     createUI() {
         // Register with HUDPanelManager at OMNI_WEAPON slot
-        this.scene.hudPanels.registerSlot('OMNI_WEAPON', (container, width) => {
+        this.scene.hudPanels.registerSlot('OMNI_WEAPON', (container, width, layout) => {
             this.uiContainer = container;
             this.uiContainer.setDepth(100);
             
-            // Background
-            const bg = this.scene.add.rectangle(0, 0, width, 14, 0x1a1a25, 0.8);
-            bg.setOrigin(0, 0.5);
+            // Use top-left origin so elements stay within content bounds (x >= 0, y >= 0)
+            const barHeight = 14;
+            const iconY = barHeight / 2; // Center icons vertically within the bar
+            
+            // Background - full width bar
+            const bg = this.scene.add.rectangle(0, 0, width, barHeight, 0x1a1a25, 0.8);
+            bg.setOrigin(0, 0); // Top-left origin
             container.add(bg);
             
             // Mod icons will be positioned across the width
-            const iconY = 0;
             const slots = ['BARREL', 'CHAMBER', 'LENS'];
             const colors = [0xff3366, 0xffd700, 0x00f0ff];
             const spacing = width / 3;
@@ -129,16 +132,16 @@ export default class OmniWeaponSystem {
             slots.forEach((slot, index) => {
                 const x = index * spacing + spacing / 3;
                 
-                // Empty slot indicator
+                // Empty slot indicator (centered at iconY)
                 const empty = this.scene.add.circle(x, iconY, 5, 0x444455, 0.3);
                 container.add(empty);
                 
-                // Active icon (hidden until unlocked)
+                // Active icon (hidden until unlocked) - centered
                 const icon = this.scene.add.text(x, iconY, '?', {
                     fontFamily: 'monospace',
                     fontSize: '10px',
                     fill: '#ffffff'
-                }).setOrigin(0.5);
+                }).setOrigin(0.5); // Keep centered for text
                 icon.setVisible(false);
                 
                 this.modIcons[slot] = { empty, icon, x, color: colors[index] };

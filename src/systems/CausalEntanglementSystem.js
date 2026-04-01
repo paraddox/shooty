@@ -159,27 +159,29 @@ export default class CausalEntanglementSystem {
             this.hudContainer = container;
             this.hudContainer.setDepth(100);
             
-            // Use top-left origin so elements stay within content bounds (y >= 0)
+            // Use top-left origin so elements stay within content bounds (x >= 0, y >= 0)
             const barHeight = 8;
+            const segmentWidth = 6;
+            const segmentGap = 2;
             
             // Background - positioned at top of content area
             const bg = this.scene.add.rectangle(0, 0, 60, barHeight, 0x22222a);
             bg.setOrigin(0, 0); // Top-left origin
             container.add(bg);
             
-            // Segments for available links - positioned within the bar
+            // Segments for available links - positioned within the bar starting from left
             this.linkSegments = [];
             for (let i = 0; i < this.maxEntanglements; i++) {
                 const segment = this.scene.add.rectangle(
-                    -25 + i * 8, 1, 6, 6, this.HARMONIC_COLOR, 0.3
+                    2 + i * (segmentWidth + segmentGap), 1, segmentWidth, 6, this.HARMONIC_COLOR, 0.3
                 );
                 segment.setOrigin(0, 0); // Top-left origin
                 this.linkSegments.push(segment);
                 container.add(segment);
             }
             
-            // Type indicator (replaces label - panel shows it)
-            this.typeIndicator = this.scene.add.text(35, 0, '≈', {
+            // Type indicator (replaces label - panel shows it) - positioned to right of bar
+            this.typeIndicator = this.scene.add.text(62, 0, '≈', {
                 fontFamily: 'monospace',
                 fontSize: '14px',
                 fill: '#00f0ff'
