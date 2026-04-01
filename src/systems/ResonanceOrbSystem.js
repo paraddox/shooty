@@ -165,24 +165,26 @@ export default class ResonanceOrbSystem {
             return;
         }
         console.log('[ResonanceOrbSystem] Registering RESONANCE_ORB slot...');
-        this.scene.hudPanels.registerSlot('RESONANCE_ORB', (container, width) => {
+        this.scene.hudPanels.registerSlot('RESONANCE_ORB', (container, width, layout) => {
             this.hudContainer = container;
             this.hudContainer.setDepth(1000);
             
             this.orbIndicators = [];
             
-            // Background panel for active orbs
-            const bg = this.scene.add.rectangle(width / 2, 0, width, 40, 0x000000, 0.5);
+            // Background panel for active orbs - positioned at y=0 with top-left origin
+            const bgHeight = 40;
+            const bg = this.scene.add.rectangle(0, 0, width, bgHeight, 0x000000, 0.5);
+            bg.setOrigin(0, 0); // Top-left origin
             bg.setStrokeStyle(1, 0x444444);
             container.add(bg);
             this.hudBg = bg;
             
-            // Superposition text
-            this.superpositionText = this.scene.add.text(width / 2, -35, '', {
+            // Superposition text - positioned above the panel
+            this.superpositionText = this.scene.add.text(width / 2, 0, '', {
                 fontFamily: 'Courier New',
                 fontSize: '11px',
                 color: '#ff00ff'
-            }).setOrigin(0.5);
+            }).setOrigin(0.5, 1); // Bottom-center origin so text extends upward from y=0
             container.add(this.superpositionText);
             
             // Hide initially

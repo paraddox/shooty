@@ -167,16 +167,20 @@ export default class ObserverEffectSystem {
         this.scene.textures.addCanvas('observerEye', canvas);
         
         // Observer icon - registered with panel-based HUD system
-        this.scene.hudPanels.registerSlot('OBSERVER', (container, width) => {
-            this.observerIcon = this.scene.add.image(0, 0, 'observerEye');
+        this.scene.hudPanels.registerSlot('OBSERVER', (container, width, layout) => {
+            // Position icon so it doesn't extend into negative Y
+            // Image is ~32px, scaled to 16px, so center at y=8
+            const iconY = 8;
+            
+            this.observerIcon = this.scene.add.image(0, iconY, 'observerEye');
             this.observerIcon.setDepth(100);
             this.observerIcon.setAlpha(0.3);
             this.observerIcon.setScale(0.5);
             container.add(this.observerIcon);
             
-            // Analysis text
+            // Analysis text - below the icon
             this.analysisText = this.scene.add.text(
-                0, 20,
+                0, iconY + 20,
                 'OBSERVING...',
                 {
                     fontFamily: 'monospace',
@@ -185,6 +189,7 @@ export default class ObserverEffectSystem {
                     alpha: 0.3
                 }
             );
+            this.analysisText.setOrigin(0.5);
             this.analysisText.setDepth(100);
             container.add(this.analysisText);
         }, 'BOTTOM_RIGHT');

@@ -115,26 +115,30 @@ export default class QuantumImmortalitySystem {
             console.warn('[QuantumImmortalitySystem] hudPanels not available, skipping UI registration');
             return;
         }
-        this.scene.hudPanels.registerSlot('QUANTUM_IMMORTALITY', (container, width) => {
+        this.scene.hudPanels.registerSlot('QUANTUM_IMMORTALITY', (container, width, layout) => {
             this.entropyContainer = container;
             this.entropyContainer.setDepth(100);
             
-            // Background
-            const bg = this.scene.add.rectangle(0, 0, Math.min(100, width), 12, 0x1a1a25, 0.9);
+            const barWidth = Math.min(100, width);
+            const barHeight = 12;
+            
+            // Background - top-left origin at y=0
+            const bg = this.scene.add.rectangle(0, 0, barWidth, barHeight, 0x1a1a25, 0.9);
+            bg.setOrigin(0, 0); // Top-left origin
             container.add(bg);
             
-            // Entropy fill (white→gold gradient effect)
-            this.entropyFill = this.scene.add.rectangle(-Math.min(50, width/2), 0, 0, 10, this.ECHO_COLOR);
-            this.entropyFill.setOrigin(0, 0.5);
+            // Entropy fill (white→gold gradient effect) - starts at left edge
+            this.entropyFill = this.scene.add.rectangle(1, 1, 0, barHeight - 2, this.ECHO_COLOR);
+            this.entropyFill.setOrigin(0, 0); // Top-left origin
             container.add(this.entropyFill);
             
-            // Echo count indicator
-            this.echoIndicator = this.scene.add.text(0, 12, '◉ 0', {
+            // Echo count indicator - below the bar
+            this.echoIndicator = this.scene.add.text(barWidth / 2, barHeight + 2, '◉ 0', {
                 fontFamily: 'monospace',
                 fontSize: '12px',
                 letterSpacing: 2,
                 fill: '#ffffff'
-            }).setOrigin(0.5);
+            }).setOrigin(0.5, 0); // Top-center origin
             container.add(this.echoIndicator);
         }, 'TOP_RIGHT');
         

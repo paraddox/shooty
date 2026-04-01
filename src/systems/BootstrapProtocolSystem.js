@@ -121,27 +121,31 @@ export default class BootstrapProtocolSystem {
             return;
         }
         console.log('[BootstrapProtocolSystem] Registering BOOTSTRAP slot...');
-        this.scene.hudPanels.registerSlot('BOOTSTRAP', (container, width) => {
+        this.scene.hudPanels.registerSlot('BOOTSTRAP', (container, width, layout) => {
             this.bootstrapIndicator = container;
             this.bootstrapIndicator.setDepth(100);
             
+            // Position circle so it doesn't extend into negative Y
+            // Circle radius 20, so center at y=20 makes it extend from 0 to 40
+            const centerY = 20;
+            
             // Background ring
-            const bgRing = this.scene.add.circle(0, 0, 20, 0x22222a, 0.8);
+            const bgRing = this.scene.add.circle(0, centerY, 20, 0x22222a, 0.8);
             bgRing.setStrokeStyle(2, 0x444455);
             container.add(bgRing);
             
             // Note: momentumArc now rendered via UnifiedGraphicsManager
             
-            // Center icon
-            const icon = this.scene.add.text(0, 0, '⟲', {
+            // Center icon - centered in the ring
+            const icon = this.scene.add.text(0, centerY, '⟲', {
                 fontFamily: 'monospace',
                 fontSize: '16px',
                 fill: '#ffaa00'
             }).setOrigin(0.5);
             container.add(icon);
             
-            // Bootstrap level text
-            this.levelText = this.scene.add.text(0, 28, '0', {
+            // Bootstrap level text - below the ring
+            this.levelText = this.scene.add.text(0, centerY + 28, '0', {
                 fontFamily: 'monospace',
                 fontSize: '10px',
                 fill: '#ffaa00'

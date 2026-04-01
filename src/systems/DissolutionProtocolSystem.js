@@ -250,11 +250,11 @@ export default class DissolutionProtocolSystem {
     
     createEssenceDisplay() {
         // Register with panel-based HUD system
-        this.scene.hudPanels.registerSlot('DISSOLUTION', (container, width) => {
+        this.scene.hudPanels.registerSlot('DISSOLUTION', (container, width, layout) => {
             this.essenceContainer = container;
             this.essenceContainer.setDepth(1000);
             
-            // Essence bars
+            // Essence bars - positioned to stay within positive bounds
             this.essenceBars = {};
             const types = [
                 { key: 'temporal', color: '#ffd700', label: 'T' },
@@ -265,11 +265,14 @@ export default class DissolutionProtocolSystem {
             ];
             
             const barWidth = Math.min(100, width - 30);
+            const labelX = 0; // Start from left edge
+            const barX = 10; // Offset for bar
+            const valueX = barX + barWidth + 5; // Offset for value text
             
             types.forEach((type, i) => {
-                const yPos = -30 + i * 12;
+                const yPos = i * 12; // Start from y=0 and go down
                 
-                const label = this.scene.add.text(-width/2 + 5, yPos, type.label, {
+                const label = this.scene.add.text(labelX, yPos, type.label, {
                     fontFamily: 'monospace',
                     fontSize: '9px',
                     fill: type.color
@@ -277,9 +280,9 @@ export default class DissolutionProtocolSystem {
                 
                 const bar = this.scene.add.graphics();
                 bar.fillStyle(parseInt(type.color.replace('#', '0x')), 0.3);
-                bar.fillRect(-width/2 + 15, yPos + 2, barWidth, 6);
+                bar.fillRect(barX, yPos + 2, barWidth, 6);
                 
-                const value = this.scene.add.text(-width/2 + 15 + barWidth + 5, yPos, '0', {
+                const value = this.scene.add.text(valueX, yPos, '0', {
                     fontFamily: 'monospace',
                     fontSize: '9px',
                     fill: type.color
