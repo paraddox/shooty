@@ -33,8 +33,11 @@ export default class PauseSystem {
 
         // 2. Pause all tweens
         this.scene.tweens.pauseAll();
-
-        // 3. Stop all enemy movement
+        
+        // 3. Pause the Time system (stops delayedCall and addEvent)
+        this.scene.time.paused = true;
+        
+        // 4. Stop all enemy movement
         this.scene.enemies?.children?.entries?.forEach(enemy => {
             if (enemy.body) {
                 this.pausedVelocities.set(enemy, {
@@ -110,8 +113,11 @@ export default class PauseSystem {
 
         // 2. Resume all tweens
         this.scene.tweens.resumeAll();
+        
+        // 3. Resume the Time system (allows delayedCall and addEvent again)
+        this.scene.time.paused = false;
 
-        // 3. Restore enemy velocities
+        // 4. Restore enemy velocities
         this.scene.enemies?.children?.entries?.forEach(enemy => {
             const velocity = this.pausedVelocities.get(enemy);
             if (enemy.body && velocity) {
