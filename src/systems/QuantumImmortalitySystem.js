@@ -105,9 +105,14 @@ export default class QuantumImmortalitySystem {
     }
     
     createVisuals() {
-        // Main graphics for rendering echoes
-        this.graphics = this.scene.add.graphics();
-        this.graphics.setDepth(45); // Below player (50), above enemies
+        // Use UnifiedGraphicsManager if available (new architecture)
+        if (this.scene.graphicsManager) {
+            this.useUnifiedRenderer = true;
+        } else {
+            // Legacy: Main graphics for rendering echoes
+            this.graphics = this.scene.add.graphics();
+            this.graphics.setDepth(45); // Below player (50), above enemies
+        }
         
         // Entropy bar (top-right of screen)
         const screenWidth = this.scene.scale.width;
@@ -942,19 +947,28 @@ export default class QuantumImmortalitySystem {
     }
     
     render() {
-        this.graphics.clear();
+        // Use UnifiedGraphicsManager if available (new architecture)
+        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+            this.renderUnified();
+            return;
+        }
         
-        // Draw each echo
+        // Legacy direct graphics rendering
+        this.graphics.clear();
+        this.renderEchoes(this.graphics);
+    }
+    
+    /**
+     * New unified rendering - registers commands instead of direct drawing
+     */
+    renderUnified() {
+        const manager = this.scene.graphicsManager;
+        
+        // Draw each echo as registered commands
         this.quantumEchoes.forEach(echo => {
             // Trail
             if (echo.trail.length > 1) {
-                this.graphics.lineStyle(2, this.ECHO_COLOR, 0.3);
-                this.graphics.beginPath();
-                this.graphics.moveTo(echo.trail[0].x, echo.trail[0].y);
-                for (let i = 1; i < echo.trail.length; i++) {
-                    this.graphics.lineTo(echo.trail[i].x, echo.trail[i].y);
-                }
-                this.graphics.strokePath();
+                manager.drawPath('effects', echo.trail, this.ECHO_COLOR, 0.3, 2);
             }
             
             // Color based on state
@@ -969,38 +983,111 @@ export default class QuantumImmortalitySystem {
             }
             
             // Glow
-            this.graphics.fillStyle(glowColor, 0.3);
-            this.graphics.fillCircle(echo.x, echo.y, 18);
+            manager.drawCircle('effects', echo.x, echo.y, 18, glowColor, 0.3);
             
             // Core
-            this.graphics.fillStyle(color, 0.9);
-            this.graphics.fillCircle(echo.x, echo.y, 10);
+            manager.drawCircle('effects', echo.x, echo.y, 10, color, 0.9);
+            
+            // Triangle shape (simplified to 3 lines for unified renderer)
+            const angle = echo.rotation;
+            const size = 12;
+            const tipX = echo.x + Math.cos(angle) * size;
+            const tipY = echo.y + Math.sin(angle) * size;
+            const leftX = echo.x + Math.cos(angle + 2.5) * size * 0.6;
+            const leftY = echo.y + Math.sin(angle + 2.5) * size * 0.6;
+            const rightX = echo.x + Math.cos(angle - 2.5) * size * 0.6;
+            const rightY = echo.y + Math.sin(angle - 2.5) * size * 0.6;
+            
+            manager.drawLine('effects', tipX, tipY, leftX, leftY, color, 1, 2);
+            manager.drawLine('effects', leftX, leftY, rightX, rightY, color, 1, 2);
+            manager.drawLine('effects', rightX, rightY, tipX, tipY, color, 1, 2);
+            
+            // Health dots
+            if (echo.health < 3) {
+                for (let i = 0; i < (3 - echo.health); i++) {
+                    manager.drawCircle('effects', echo.x - 8 + i * 8, echo.y - 18, 2, 0xff0000, 0.8);
+                }
+            }
+            
+            // Sentient sparkle (only every few frames to save performance)
+            if (echo.isSentient && !this.mergeActive && this.renderCounter % 3 === 0) {
+                const time = this.scene.time.now / 1000;
+                const sparkleX = echo.x + Math.cos(time * 3) * 15;
+                const sparkleY = echo.y + Math.sin(time * 2.5) * 15;
+                manager.drawCircle('effects', sparkleX, sparkleY, 3, this.SENTIENT_COLOR, 0.8);
+            }
+        });
+        
+        // Merge connection lines
+        if (this.mergeActive && this.quantumEchoes.length >= 2) {
+            const player = this.scene.player;
+            this.quantumEchoes.forEach(echo => {
+                manager.drawLine('effects', player.x, player.y, echo.x, echo.y, this.MERGE_COLOR, 0.4, 2);
+            });
+        }
+    }
+    
+    /**
+     * Legacy echo rendering for direct graphics mode
+     */
+    renderEchoes(graphics) {
+        // Draw each echo
+        this.quantumEchoes.forEach(echo => {
+            // Trail
+            if (echo.trail.length > 1) {
+                graphics.lineStyle(2, this.ECHO_COLOR, 0.3);
+                graphics.beginPath();
+                graphics.moveTo(echo.trail[0].x, echo.trail[0].y);
+                for (let i = 1; i < echo.trail.length; i++) {
+                    graphics.lineTo(echo.trail[i].x, echo.trail[i].y);
+                }
+                graphics.strokePath();
+            }
+            
+            // Color based on state
+            let color = this.ECHO_COLOR;
+            let glowColor = this.ECHO_GLOW;
+            
+            if (this.mergeActive) {
+                color = this.MERGE_COLOR;
+                glowColor = this.MERGE_COLOR;
+            } else if (echo.isSentient) {
+                color = this.SENTIENT_COLOR;
+            }
+            
+            // Glow
+            graphics.fillStyle(glowColor, 0.3);
+            graphics.fillCircle(echo.x, echo.y, 18);
+            
+            // Core
+            graphics.fillStyle(color, 0.9);
+            graphics.fillCircle(echo.x, echo.y, 10);
             
             // Triangle shape pointing in movement direction
             const angle = echo.rotation;
             const size = 12;
-            this.graphics.fillStyle(color, 1);
-            this.graphics.beginPath();
-            this.graphics.moveTo(
+            graphics.fillStyle(color, 1);
+            graphics.beginPath();
+            graphics.moveTo(
                 echo.x + Math.cos(angle) * size,
                 echo.y + Math.sin(angle) * size
             );
-            this.graphics.lineTo(
+            graphics.lineTo(
                 echo.x + Math.cos(angle + 2.5) * size * 0.6,
                 echo.y + Math.sin(angle + 2.5) * size * 0.6
             );
-            this.graphics.lineTo(
+            graphics.lineTo(
                 echo.x + Math.cos(angle - 2.5) * size * 0.6,
                 echo.y + Math.sin(angle - 2.5) * size * 0.6
             );
-            this.graphics.closePath();
-            this.graphics.fillPath();
+            graphics.closePath();
+            graphics.fillPath();
             
             // Health dots
             if (echo.health < 3) {
-                this.graphics.fillStyle(0xff0000, 0.8);
+                graphics.fillStyle(0xff0000, 0.8);
                 for (let i = 0; i < (3 - echo.health); i++) {
-                    this.graphics.fillCircle(echo.x - 8 + i * 8, echo.y - 18, 2);
+                    graphics.fillCircle(echo.x - 8 + i * 8, echo.y - 18, 2);
                 }
             }
             
@@ -1009,18 +1096,17 @@ export default class QuantumImmortalitySystem {
                 const time = this.scene.time.now / 1000;
                 const sparkleX = echo.x + Math.cos(time * 3) * 15;
                 const sparkleY = echo.y + Math.sin(time * 2.5) * 15;
-                this.graphics.fillStyle(this.SENTIENT_COLOR, 0.8);
-                this.graphics.fillCircle(sparkleX, sparkleY, 3);
+                graphics.fillStyle(this.SENTIENT_COLOR, 0.8);
+                graphics.fillCircle(sparkleX, sparkleY, 3);
             }
         });
         
         // Merge connection lines
         if (this.mergeActive && this.quantumEchoes.length >= 2) {
-            this.graphics.lineStyle(2, this.MERGE_COLOR, 0.4);
+            graphics.lineStyle(2, this.MERGE_COLOR, 0.4);
             const player = this.scene.player;
-            
             this.quantumEchoes.forEach(echo => {
-                this.graphics.lineBetween(player.x, player.y, echo.x, echo.y);
+                graphics.lineBetween(player.x, player.y, echo.x, echo.y);
             });
         }
     }

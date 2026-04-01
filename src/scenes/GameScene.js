@@ -58,6 +58,7 @@ import VoidExchangeSystem from '../systems/VoidExchangeSystem.js';
 import HeartfluxProtocolSystem from '../systems/HeartfluxProtocolSystem.js';
 import ExogenesisProtocolSystem from '../systems/ExogenesisProtocolSystem.js';
 import ProteusProtocolSystem from '../systems/ProteusProtocolSystem.js';
+import UnifiedGraphicsManager from '../systems/UnifiedGraphicsManager.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -426,6 +427,9 @@ export default class GameScene extends Phaser.Scene {
 
         // Screen shake effect
         this.shakeIntensity = 0;
+        
+        // Initialize Unified Graphics Manager (must be before systems that use it)
+        this.graphicsManager = new UnifiedGraphicsManager(this);
         
         // Initialize Echo Storm system
         this.echoStorm = new EchoStormSystem(this);
@@ -2050,6 +2054,12 @@ export default class GameScene extends Phaser.Scene {
         // Wave check
         if (this.time.now > this.nextWaveTime) {
             this.nextWave();
+        }
+        
+        // Unified graphics rendering - batches all system graphics commands
+        // This reduces 40+ clear() calls to 5 (one per layer)
+        if (this.graphicsManager) {
+            this.graphicsManager.render();
         }
     }
     
