@@ -160,6 +160,11 @@ export default class ResonanceOrbSystem {
     
     createOrbHUD() {
         // HUD container at top-right - now using panel-based system
+        if (!this.scene.hudPanels) {
+            console.warn('[ResonanceOrbSystem] hudPanels not available, skipping UI registration');
+            return;
+        }
+        console.log('[ResonanceOrbSystem] Registering RESONANCE_ORB slot...');
         this.scene.hudPanels.registerSlot('RESONANCE_ORB', (container, width) => {
             this.hudContainer = container;
             this.hudContainer.setDepth(1000);

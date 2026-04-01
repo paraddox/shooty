@@ -111,6 +111,11 @@ export default class QuantumImmortalitySystem {
         // Rendering via UnifiedGraphicsManager
         
         // Entropy bar (top-right) - registered with HUDPanelManager
+        if (!this.scene.hudPanels) {
+            console.warn('[QuantumImmortalitySystem] hudPanels not available, skipping UI registration');
+            return;
+        }
+        console.log('[QuantumImmortalitySystem] Registering QUANTUM_IMMORTALITY slot...');
         this.scene.hudPanels.registerSlot('QUANTUM_IMMORTALITY', (container, width) => {
             this.entropyContainer = container;
             this.entropyContainer.setDepth(100);

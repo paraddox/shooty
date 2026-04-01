@@ -116,6 +116,11 @@ export default class BootstrapProtocolSystem {
     
     createUI() {
         // Bootstrap indicator - registered with panel-based HUD system
+        if (!this.scene.hudPanels) {
+            console.warn('[BootstrapProtocolSystem] hudPanels not available, skipping UI registration');
+            return;
+        }
+        console.log('[BootstrapProtocolSystem] Registering BOOTSTRAP slot...');
         this.scene.hudPanels.registerSlot('BOOTSTRAP', (container, width) => {
             this.bootstrapIndicator = container;
             this.bootstrapIndicator.setDepth(100);
