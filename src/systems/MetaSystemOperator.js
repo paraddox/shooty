@@ -177,16 +177,23 @@ export default class MetaSystemOperator {
     }
     
     setupInput() {
+        // Register with ControlsManager for centralized key binding
         // P key to enter patch mode
-        this.scene.input.keyboard.on('keydown-P', () => {
+        this.scene.controls.register('P', 'Patch Mode', () => {
             this.togglePatchMode();
+        }, {
+            system: 'MetaSystemOperator',
+            description: 'Enter patch mode to wire systems together'
         });
         
-        // ESC to exit patch mode
-        this.scene.input.keyboard.on('keydown-ESC', () => {
+        // ESC to exit patch mode (UI system)
+        this.scene.controls.register('ESC', 'Close Menu', () => {
             if (this.isPatchMode) {
                 this.exitPatchMode();
             }
+        }, {
+            system: 'UI',
+            description: 'Close current menu or exit patch mode'
         });
     }
     

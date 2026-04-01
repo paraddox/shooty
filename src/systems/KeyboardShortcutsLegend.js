@@ -2,6 +2,7 @@
  * KeyboardShortcutsLegend
  * 
  * HUD panel showing all keyboard shortcuts and their actions.
+ * Reads bindings from ControlsManager for single source of truth.
  * Registered in BOTTOM_LEFT slot.
  */
 
@@ -10,15 +11,10 @@ export default class KeyboardShortcutsLegend {
         this.scene = scene;
         this.container = null;
         
-        // Define all shortcuts with their display names
-        this.shortcuts = [
+        // Static shortcuts not in ControlsManager (movement, mouse)
+        this.staticShortcuts = [
             { key: 'WASD', action: 'Move' },
-            { key: 'MOUSE', action: 'Aim & Shoot' },
-            { key: 'Q', action: 'Near-Miss Dash' },
-            { key: 'E', action: 'Echo Storm' },
-            { key: 'R', action: 'Fracture' },
-            { key: 'P', action: 'Patch Mode' },
-            { key: 'ESC', action: 'Close Menu' }
+            { key: 'MOUSE', action: 'Aim & Shoot' }
         ];
         
         this.init();
@@ -28,20 +24,37 @@ export default class KeyboardShortcutsLegend {
         this.createLegendPanel();
     }
     
+    /**
+     * Get all shortcuts to display - combines static + ControlsManager bindings
+     */
+    getShortcuts() {
+        // Get dynamic bindings from ControlsManager
+        const dynamicBindings = this.scene.controls?.getAllBindings() || [];
+        
+        // Sort dynamic bindings alphabetically by key
+        const sortedDynamic = [...dynamicBindings].sort((a, b) => a.key.localeCompare(b.key));
+        
+        // Combine static + dynamic
+        return [...this.staticShortcuts, ...sortedDynamic];
+    }
+    
     createLegendPanel() {
         // Register with HUDPanelManager in BOTTOM_LEFT panel's KEYBOARD_SHORTCUTS slot
         this.scene.hudPanels.registerSlot('KEYBOARD_SHORTCUTS', (container, width, layout) => {
             this.container = container;
             this.container.setDepth(100);
             
+            // Get all shortcuts (static + from ControlsManager)
+            const shortcuts = this.getShortcuts();
+            
             // Calculate dimensions based on content
             const rowHeight = 14;
             const padding = 6;
-            const panelHeight = (this.shortcuts.length * rowHeight) + padding;
+            const panelHeight = (shortcuts.length * rowHeight) + padding;
             
             // Shortcuts list (panel title handled by HUDPanelManager)
             let y = 6;
-            this.shortcuts.forEach((shortcut) => {
+            shortcuts.forEach((shortcut) => {
                 // Key binding in cyan
                 const keyText = this.scene.add.text(6, y, shortcut.key, {
                     fontFamily: 'monospace',
