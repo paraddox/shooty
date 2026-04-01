@@ -148,25 +148,27 @@ export default class TemporalRewindSystem {
     
     createInstabilityBar() {
         // Register with panel-based HUD system
-        this.scene.hudPanels.registerSlot('TEMPORAL_REWIND', (container, width) => {
+        this.scene.hudPanels.registerSlot('TEMPORAL_REWIND', (container, width, layout) => {
             const barWidth = Math.min(120, width);
             const height = 6;
+            const barY = 4; // Position within content area
             
             // Background
             this.instabilityBar = {
-                bg: this.scene.add.rectangle(0, 0, barWidth, height, 0x1a1a25, 0.8),
-                fill: this.scene.add.rectangle(-barWidth/2 + 1, 0, 0, height - 2, this.AMBER_COLOR, 0.9),
-                glow: this.scene.add.rectangle(0, 0, barWidth, height, this.AMBER_GLOW, 0.3)
+                bg: this.scene.add.rectangle(0, barY, barWidth, height, 0x1a1a25, 0.8),
+                fill: this.scene.add.rectangle(-barWidth/2 + 1, barY, 0, height - 2, this.AMBER_COLOR, 0.9),
+                glow: this.scene.add.rectangle(0, barY, barWidth, height, this.AMBER_GLOW, 0.3)
             };
             
-            // Set depth
+            // Set origins and depth
             Object.values(this.instabilityBar).forEach(el => {
+                el.setOrigin(0.5);
                 el.setDepth(101);
                 container.add(el);
             });
             
             // Warning text
-            this.instabilityText = this.scene.add.text(barWidth/2 + 5, 0, 'UNSTABLE', {
+            this.instabilityText = this.scene.add.text(barWidth/2 + 5, barY, 'UNSTABLE', {
                 fontFamily: 'monospace',
                 fontSize: '10px',
                 fill: '#ffaa00'

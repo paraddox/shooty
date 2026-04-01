@@ -75,19 +75,23 @@ export default class ChronoLoopSystem {
     
     createLoopIndicator() {
         // Register with panel-based HUD system
-        this.scene.hudPanels.registerSlot('CHRONO_LOOP', (container, width) => {
+        this.scene.hudPanels.registerSlot('CHRONO_LOOP', (container, width, layout) => {
             this.loopIndicator = container;
             this.loopIndicator.setDepth(100);
             
+            // Use layout helper for consistent positioning
+            const barY = 4; // Center in content area
+            
             // Background bar
-            const bg = this.scene.add.rectangle(0, 0, 60, 8, 0x22222a);
+            const bg = this.scene.add.rectangle(0, barY, 60, 8, 0x22222a);
+            bg.setOrigin(0, 0.5);
             container.add(bg);
             
             // Teal segments for each possible echo
             this.loopSegments = [];
             for (let i = 0; i < this.maxEchoes; i++) {
                 const segment = this.scene.add.rectangle(
-                    -25 + i * 21, 0, 18, 6, this.TEAL_COLOR, 0.3
+                    -25 + i * 21, barY, 18, 6, this.TEAL_COLOR, 0.3
                 );
                 segment.setOrigin(0, 0.5);
                 this.loopSegments.push(segment);
@@ -95,7 +99,7 @@ export default class ChronoLoopSystem {
             }
             
             // Recording progress bar (hidden by default)
-            this.recordProgressBar = this.scene.add.rectangle(-30, 0, 0, 4, this.TEAL_GLOW);
+            this.recordProgressBar = this.scene.add.rectangle(-30, barY, 0, 4, this.TEAL_GLOW);
             this.recordProgressBar.setOrigin(0, 0.5);
             this.recordProgressBar.setVisible(false);
             container.add(this.recordProgressBar);

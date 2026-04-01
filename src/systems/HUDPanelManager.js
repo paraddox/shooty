@@ -215,12 +215,15 @@ export default class HUDPanelManager {
             panel.actualHeight = actualContentHeight;
             
             // Recreate background with correct size
+            // The background is always the first element (index 0) in the panel container
             const oldBg = panel.container.list[0];
-            if (oldBg && oldBg.type === 'Graphics') {
+            if (oldBg) {
                 oldBg.destroy();
-                const newBg = this.createPanelBackground(panel.config.width, actualContentHeight, panel.config.color);
-                panel.container.addAt(newBg, 0);
             }
+            const newBg = this.createPanelBackground(panel.config.width, actualContentHeight, panel.config.color);
+            panel.container.addAt(newBg, 0);
+            
+            console.log(`[HUDPanelManager] ${region} panel resized to ${actualContentHeight}px for ${panel.slotMap.size} slots`);
             
             // Reposition panel if it's bottom-aligned
             if (panel.config.y === null) {

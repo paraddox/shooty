@@ -155,19 +155,22 @@ export default class CausalEntanglementSystem {
     
     createHUDIndicator() {
         // Register with panel-based HUD system
-        this.scene.hudPanels.registerSlot('CAUSAL_LINK', (container, width) => {
+        this.scene.hudPanels.registerSlot('CAUSAL_LINK', (container, width, layout) => {
             this.hudContainer = container;
             this.hudContainer.setDepth(100);
             
+            const barY = 4; // Position within content area
+            
             // Background
-            const bg = this.scene.add.rectangle(0, 0, 60, 8, 0x22222a);
+            const bg = this.scene.add.rectangle(0, barY, 60, 8, 0x22222a);
+            bg.setOrigin(0, 0.5);
             container.add(bg);
             
             // Segments for available links
             this.linkSegments = [];
             for (let i = 0; i < this.maxEntanglements; i++) {
                 const segment = this.scene.add.rectangle(
-                    -25 + i * 8, 0, 6, 6, this.HARMONIC_COLOR, 0.3
+                    -25 + i * 8, barY, 6, 6, this.HARMONIC_COLOR, 0.3
                 );
                 segment.setOrigin(0, 0.5);
                 this.linkSegments.push(segment);
@@ -175,7 +178,7 @@ export default class CausalEntanglementSystem {
             }
             
             // Type indicator (replaces label - panel shows it)
-            this.typeIndicator = this.scene.add.text(35, 0, '≈', {
+            this.typeIndicator = this.scene.add.text(35, barY, '≈', {
                 fontFamily: 'monospace',
                 fontSize: '14px',
                 fill: '#00f0ff'

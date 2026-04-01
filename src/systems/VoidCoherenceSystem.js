@@ -151,24 +151,25 @@ export default class VoidCoherenceSystem {
         this.structureContainer.setDepth(6);
         
         // Coherence bar (top-left) - registered with HUDPanelManager
-        this.scene.hudPanels.registerSlot('VOID_COHERENCE', (container, width) => {
+        this.scene.hudPanels.registerSlot('VOID_COHERENCE', (container, width, layout) => {
             this.coherenceContainer = container;
             this.coherenceContainer.setDepth(100);
             
             const barWidth = Math.min(200, width);
+            const barY = 2; // Position within content area
             
             // Background
-            const bg = this.scene.add.rectangle(0, 0, barWidth, 4, 0x1a1a25);
+            const bg = this.scene.add.rectangle(0, barY, barWidth, 4, 0x1a1a25);
             bg.setOrigin(0, 0.5);
             container.add(bg);
             
             // Coherence fill (purple→cyan gradient effect)
-            this.coherenceFill = this.scene.add.rectangle(0, 0, 0, 4, 0x6b00ff);
+            this.coherenceFill = this.scene.add.rectangle(0, barY, 0, 4, 0x6b00ff);
             this.coherenceFill.setOrigin(0, 0.5);
             container.add(this.coherenceFill);
             
-            // Structure count indicator
-            this.structureIndicator = this.scene.add.text(barWidth/2, 10, '◈ 0', {
+            // Structure count indicator - below the bar
+            this.structureIndicator = this.scene.add.text(barWidth/2, barY + 8, '◈ 0', {
                 fontFamily: 'monospace',
                 fontSize: '10px',
                 letterSpacing: 1,
