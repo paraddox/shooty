@@ -668,7 +668,6 @@ export default class DimensionalCollapseSystem {
     
     /**
      * Render tesseract via UnifiedGraphicsManager (migrated from direct graphics)
-     * Previously used: this.tesseractGraphics.clear() and this.glowGraphics.clear()
      * Now registers draw commands with UnifiedGraphicsManager on 'effects' layer
      */
     renderTesseractUnified() {

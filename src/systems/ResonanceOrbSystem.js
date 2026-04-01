@@ -130,9 +130,6 @@ export default class ResonanceOrbSystem {
         // Visual group
         this.orbGroup = null;
         
-        // Unified renderer flag (always true - uses UnifiedGraphicsManager)
-        this.useUnifiedRenderer = true;
-        
         // Superposition tracking
         this.superpositionLevel = 0;
         this.superpositionTimer = null;

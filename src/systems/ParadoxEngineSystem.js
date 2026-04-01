@@ -108,11 +108,6 @@ export default class ParadoxEngineSystem {
 
         // Paradox overlay (scanlines)
         this.createParadoxOverlay();
-
-        // Projection charge bar (UI element - stays as direct graphics)
-        this.chargeGraphics = this.scene.add.graphics();
-        this.chargeGraphics.setScrollFactor(0);
-        this.chargeGraphics.setDepth(100);
     }
     
     createParadoxOverlay() {
@@ -309,19 +304,6 @@ export default class ParadoxEngineSystem {
     }
     
     onProjectionStart() {
-        // Flash effect
-        const flash = this.scene.add.graphics();
-        flash.fillStyle(this.ECHO_COLOR, 0.2);
-        flash.fillRect(0, 0, 1920, 1440);
-        flash.setDepth(54);
-        
-        this.scene.tweens.add({
-            targets: flash,
-            alpha: 0,
-            duration: 300,
-            onComplete: () => flash.destroy()
-        });
-        
         // Show projection text
         const player = this.scene.player;
         const text = this.scene.add.text(player.x, player.y - 80, 'FUTURE VISION', {
@@ -743,9 +725,6 @@ export default class ParadoxEngineSystem {
             this.renderBulletPredictions(manager);
             this.renderSafeZones(manager);
         }
-
-        // Render charge bar (UI element, uses direct graphics)
-        this.renderChargeBar();
     }
     
     renderFutureEcho(manager) {
@@ -842,47 +821,6 @@ export default class ParadoxEngineSystem {
         });
     }
     
-    renderChargeBar() {
-        this.chargeGraphics.clear();
-        
-        const margin = 30;
-        const width = 200;
-        const height = 3;
-        const y = 52; // Below other bars
-        
-        // Background
-        this.chargeGraphics.fillStyle(0x22222a, 1);
-        this.chargeGraphics.fillRect(margin, y, width, height);
-        
-        if (this.isProjecting) {
-            // Projection progress
-            const progress = this.projectionDuration / this.maxProjectionTime;
-            this.chargeGraphics.fillStyle(this.ECHO_COLOR, 1);
-            this.chargeGraphics.fillRect(margin, y, width * progress, height);
-            
-            // Glow
-            this.chargeGraphics.lineStyle(1, this.ECHO_COLOR, 0.5);
-            this.chargeGraphics.strokeRect(margin, y, width, height);
-        } else if (this.paradoxActive) {
-            // Paradox progress
-            const now = this.scene.time.now / 1000;
-            const elapsed = now - this.paradoxStartTime;
-            const progress = elapsed / this.paradoxMaxDuration;
-            
-            this.chargeGraphics.fillStyle(this.PARADOX_COLOR, 1);
-            this.chargeGraphics.fillRect(margin, y, width * (1 - progress), height);
-            
-            // Glow
-            this.chargeGraphics.lineStyle(1, this.PARADOX_COLOR, 0.5);
-            this.chargeGraphics.strokeRect(margin, y, width, height);
-        } else if (this.projectionCooldown > 0) {
-            // Cooldown
-            const progress = this.projectionCooldown / this.projectionCooldownMax;
-            this.chargeGraphics.fillStyle(0x555566, 1);
-            this.chargeGraphics.fillRect(margin, y, width * (1 - progress), height);
-        }
-    }
-    
     /**
      * Called when player takes damage during paradox
      * Taking damage doesn't fail paradox, but reduces multiplier
@@ -965,12 +903,6 @@ export default class ParadoxEngineSystem {
         if (this.scene.graphicsManager) {
             this.scene.graphicsManager.clearLayer('effects');
             this.scene.graphicsManager.clearLayer('echoes');
-        }
-        
-        // Clean up charge bar graphics
-        if (this.chargeGraphics) {
-            this.chargeGraphics.destroy();
-            this.chargeGraphics = null;
         }
         
         // Clean up paradox overlay

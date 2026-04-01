@@ -310,10 +310,6 @@ export default class ResonantWhisperSystem {
     }
     
     createVisuals() {
-        // Whisper graphics container
-        this.whisperGraphics = this.scene.add.graphics();
-        this.whisperGraphics.setDepth(35);
-        
         // Interaction prompt text
         this.interactPrompt = this.scene.add.text(0, 0, '', {
             fontFamily: 'monospace',
@@ -502,33 +498,6 @@ export default class ResonantWhisperSystem {
     }
     
     createBloodmarkVisuals(container, whisper) {
-        // Crystal spike formation
-        const spikes = 7;
-        const graphics = this.scene.add.graphics();
-        
-        graphics.fillStyle(this.WHISPER_COLORS.BLOODMARK, 0.6);
-        graphics.lineStyle(2, this.WHISPER_COLORS.BLOODMARK_CORE, 0.8);
-        
-        for (let i = 0; i < spikes; i++) {
-            const angle = (i / spikes) * Math.PI * 2;
-            const length = 30 + Math.random() * 20;
-            const x = Math.cos(angle) * length;
-            const y = Math.sin(angle) * length;
-            const x2 = Math.cos(angle + 0.3) * 8;
-            const y2 = Math.sin(angle + 0.3) * 8;
-            
-            graphics.beginPath();
-            graphics.moveTo(0, 0);
-            graphics.lineTo(x, y);
-            graphics.lineTo(x2, y2);
-            graphics.closePath();
-            graphics.fillPath();
-            graphics.strokePath();
-        }
-        
-        graphics.setBlendMode(Phaser.BlendModes.ADD);
-        container.add(graphics);
-        
         // Core glow
         const core = this.scene.add.circle(0, 0, 12, this.WHISPER_COLORS.BLOODMARK, 0.4);
         core.setBlendMode(Phaser.BlendModes.ADD);
@@ -559,44 +528,13 @@ export default class ResonantWhisperSystem {
     }
     
     createGiftedVisuals(container, whisper) {
-        // Geometric gift shape
-        const graphics = this.scene.add.graphics();
-        
         const color = whisper.color || this.WHISPER_COLORS.GIFTED_ECHO;
         const glowColor = this.WHISPER_COLORS.GIFTED_GLOW;
-        
-        // Rotating geometric shape
-        graphics.lineStyle(3, color, 0.9);
-        graphics.fillStyle(color, 0.3);
-        
-        const size = 25;
-        graphics.beginPath();
-        for (let i = 0; i < 6; i++) {
-            const angle = (i / 6) * Math.PI * 2;
-            const x = Math.cos(angle) * size;
-            const y = Math.sin(angle) * size;
-            if (i === 0) graphics.moveTo(x, y);
-            else graphics.lineTo(x, y);
-        }
-        graphics.closePath();
-        graphics.fillPath();
-        graphics.strokePath();
-        
-        graphics.setBlendMode(Phaser.BlendModes.ADD);
-        container.add(graphics);
         
         // Inner glow
         const glow = this.scene.add.circle(0, 0, 15, glowColor, 0.5);
         glow.setBlendMode(Phaser.BlendModes.ADD);
         container.add(glow);
-        
-        // Rotation animation
-        this.scene.tweens.add({
-            targets: graphics,
-            rotation: Math.PI * 2,
-            duration: 6000,
-            repeat: -1
-        });
         
         // Pulsing glow
         whisper.pulseTween = this.scene.tweens.add({
@@ -623,24 +561,7 @@ export default class ResonantWhisperSystem {
     }
     
     createFragmentVisuals(container, whisper) {
-        // Iridescent monolith
-        const graphics = this.scene.add.graphics();
-        
         const baseColor = whisper.color || this.WHISPER_COLORS.FRAGMENT;
-        
-        // Shifting gradient effect via multiple overlapping shapes
-        for (let i = 0; i < 3; i++) {
-            const offset = i * 0.1;
-            const alpha = 0.3 - i * 0.1;
-            graphics.fillStyle(baseColor, alpha);
-            
-            const w = 40 - i * 5;
-            const h = 60 - i * 8;
-            graphics.fillRect(-w/2, -h/2, w, h);
-        }
-        
-        graphics.setBlendMode(Phaser.BlendModes.ADD);
-        container.add(graphics);
         
         // Outer glow ring
         const ring = this.scene.add.circle(0, 0, 45, baseColor, 0.15);
@@ -659,14 +580,6 @@ export default class ResonantWhisperSystem {
         });
         shimmer.setDepth(34);
         container.add(shimmer);
-        
-        // Slow rotation
-        this.scene.tweens.add({
-            targets: graphics,
-            rotation: Math.PI * 2,
-            duration: 20000,
-            repeat: -1
-        });
         
         // Color shifting ring
         whisper.pulseTween = this.scene.tweens.add({

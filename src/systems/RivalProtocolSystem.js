@@ -158,7 +158,6 @@ export default class RivalProtocolSystem {
                             ' the Scarred', ' Broken', ' Unbound', ' Reborn'];
         
         // ===== VISUAL ELEMENTS =====
-        this.graphics = null;
         this.rivalIndicators = [];
         
         // ===== CONFIGURATION =====
@@ -174,14 +173,8 @@ export default class RivalProtocolSystem {
     }
     
     init() {
-        this.createVisuals();
         this.selectRivalsForRun();
         this.startMonitoring();
-    }
-    
-    createVisuals() {
-        this.graphics = this.scene.add.graphics();
-        this.graphics.setDepth(55); // Above most things
     }
     
     // ===== ROSTER MANAGEMENT =====
@@ -462,26 +455,6 @@ export default class RivalProtocolSystem {
         // Bronze tint
         enemy.setTint(this.BRONZE_COLOR);
         
-        // Add scar graphics
-        const scarGraphics = this.scene.add.graphics();
-        scarGraphics.setDepth(35);
-        
-        // Draw scars based on scar count
-        const scarCount = Math.min(rivalData.scars.length, 5);
-        for (let i = 0; i < scarCount; i++) {
-            const angle = (i / scarCount) * Math.PI * 2;
-            const dist = 8 + Math.random() * 4;
-            scarGraphics.lineStyle(2, this.SCAR_COLOR, 0.8);
-            scarGraphics.lineBetween(
-                enemy.x + Math.cos(angle) * 4,
-                enemy.y + Math.sin(angle) * 4,
-                enemy.x + Math.cos(angle) * dist,
-                enemy.y + Math.sin(angle) * dist
-            );
-        }
-        
-        enemy.scarGraphics = scarGraphics;
-        
         // Name label that appears on hover/proximity
         const nameLabel = this.scene.add.text(enemy.x, enemy.y - 40, rivalData.name, {
             fontFamily: 'monospace',
@@ -494,14 +467,6 @@ export default class RivalProtocolSystem {
         
         nameLabel.setDepth(100);
         enemy.rivalNameLabel = nameLabel;
-        
-        // Bronze glow ring
-        const glow = this.scene.add.graphics();
-        glow.lineStyle(2, this.BRONZE_GLOW, 0.6);
-        glow.strokeCircle(0, 0, 25);
-        glow.setPosition(enemy.x, enemy.y);
-        glow.setDepth(34);
-        enemy.rivalGlow = glow;
     }
     
     setupRivalBehavior(enemy, rivalData) {
@@ -513,13 +478,7 @@ export default class RivalProtocolSystem {
         enemy.update = (time) => {
             originalUpdate(time);
             
-            // Update visual elements
-            if (enemy.scarGraphics) {
-                enemy.scarGraphics.setPosition(enemy.x, enemy.y);
-            }
-            if (enemy.rivalGlow) {
-                enemy.rivalGlow.setPosition(enemy.x, enemy.y);
-            }
+            // Update name label position
             if (enemy.rivalNameLabel) {
                 enemy.rivalNameLabel.setPosition(enemy.x, enemy.y - 40);
                 
@@ -714,9 +673,7 @@ export default class RivalProtocolSystem {
             }
         }
         
-        // Clean up visual elements
-        if (enemy.scarGraphics) enemy.scarGraphics.destroy();
-        if (enemy.rivalGlow) enemy.rivalGlow.destroy();
+        // Clean up name label
         if (enemy.rivalNameLabel) enemy.rivalNameLabel.destroy();
         
         // Remove from active rivals
@@ -936,14 +893,11 @@ export default class RivalProtocolSystem {
     }
     
     destroy() {
-        // Clean up all active rivals
+        // Clean up name labels for all active rivals
         this.activeRivals.forEach(rival => {
-            if (rival.entity.scarGraphics) rival.entity.scarGraphics.destroy();
-            if (rival.entity.rivalGlow) rival.entity.rivalGlow.destroy();
             if (rival.entity.rivalNameLabel) rival.entity.rivalNameLabel.destroy();
         });
         
-        if (this.graphics) this.graphics.destroy();
         this.saveRoster();
     }
 }

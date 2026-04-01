@@ -133,9 +133,6 @@ export default class OracleProtocolSystem {
         this.visionData = null;
         this.visionOverlay = null;
         
-        // ===== VISUALS =====
-        this.echoGraphics = null;
-        
         // ===== UNIFIED RENDERING =====
         this.renderInterval = 2; // Render every 2nd frame for glow
         this.renderCounter = 0;
@@ -164,13 +161,8 @@ export default class OracleProtocolSystem {
     }
     
     createVisuals() {
-        // Main graphics for rendering echoes (one-time static graphics, not cleared per-frame)
-        this.echoGraphics = this.scene.add.graphics();
-        this.echoGraphics.setDepth(45); // Above enemies, below UI
-        
-        // Prophecy compass graphics (one-time use)
-        this.prophecyGraphics = this.scene.add.graphics();
-        this.prophecyGraphics.setDepth(44);
+        // All rendering now uses UnifiedGraphicsManager (effects layer)
+        // Ghost enemies/bullets use direct graphics (one-time spawn, not per-frame)
         
         // Vision overlay (chromatic aberration effect)
         this.createVisionOverlay();
@@ -1147,8 +1139,6 @@ export default class OracleProtocolSystem {
         this.saveOracleProfile();
         
         // Clean up visuals
-        if (this.echoGraphics) this.echoGraphics.destroy();
-        if (this.prophecyGraphics) this.prophecyGraphics.destroy();
         if (this.visionOverlay) this.visionOverlay.destroy();
         
         // Clean up active echoes

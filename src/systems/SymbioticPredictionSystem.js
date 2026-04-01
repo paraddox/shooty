@@ -168,12 +168,8 @@ export default class SymbioticPredictionSystem {
         // Harmony/Chaos indicator (top of screen)
         this.createSymbiosisIndicator();
         
-        // Echo graphics pool (one-time graphics, not cleared per-frame)
-        this.echoGraphics = this.scene.add.graphics();
-        this.echoGraphics.setDepth(35);
-        
         // Note: Connection lines are rendered via UnifiedGraphicsManager on 'effects' layer
-        // No legacy graphics object needed - manager handles batching and clearing
+        // No local graphics objects - all rendering goes through manager
         
         // Bonus text effects
         this.bonusTextContainer = this.scene.add.container(0, 0);
@@ -480,45 +476,12 @@ export default class SymbioticPredictionSystem {
         
         // Echo visual: Geometric shape that pulses
         const size = 30 + prediction.confidence * 20;
-        
-        // Main echo shape (hexagon for predictions)
-        const graphics = this.scene.add.graphics();
         const color = prediction.isCritical ? this.GOLD_COLOR : this.HARMONY_COLOR;
         const alpha = 0.4 + prediction.confidence * 0.4;
         
-        // Draw hexagon
-        graphics.lineStyle(2, color, alpha);
-        graphics.beginPath();
-        for (let i = 0; i < 6; i++) {
-            const angle = (i * Math.PI) / 3;
-            const px = Math.cos(angle) * size;
-            const py = Math.sin(angle) * size;
-            if (i === 0) graphics.moveTo(px, py);
-            else graphics.lineTo(px, py);
-        }
-        graphics.closePath();
-        graphics.strokePath();
-        
-        // Inner fill
-        graphics.fillStyle(color, alpha * 0.3);
-        graphics.fillPath();
-        
-        // Prediction path trail
-        const pathGraphics = this.scene.add.graphics();
-        pathGraphics.lineStyle(1, color, 0.2);
-        
-        if (prediction.path.length > 1) {
-            pathGraphics.beginPath();
-            pathGraphics.moveTo(0, 0);
-            prediction.path.forEach((point, i) => {
-                if (i === 0) return;
-                // Transform to local coordinates
-                const localX = point.x - prediction.targetX;
-                const localY = point.y - prediction.targetY;
-                pathGraphics.lineTo(localX, localY);
-            });
-            pathGraphics.strokePath();
-        }
+        // Main echo shape (circle replacing hexagon - graphics-free)
+        const echoCircle = this.scene.add.circle(0, 0, size, color, alpha * 0.3);
+        echoCircle.setStrokeStyle(2, color, alpha);
         
         // Central indicator
         const center = this.scene.add.circle(0, 0, 4, color, 0.8);
@@ -527,11 +490,11 @@ export default class SymbioticPredictionSystem {
         const ring = this.scene.add.circle(0, 0, size + 5, color, 0);
         ring.setStrokeStyle(1, color, 0.3);
         
-        container.add([graphics, pathGraphics, center, ring]);
+        container.add([echoCircle, center, ring]);
         
         // Pulsing animation
         this.scene.tweens.add({
-            targets: [graphics, ring],
+            targets: [echoCircle, ring],
             scale: 1.1,
             alpha: alpha + 0.1,
             duration: 600,
@@ -553,21 +516,7 @@ export default class SymbioticPredictionSystem {
     
     onPredictionCreated(echo, prediction) {
         // Visual effect at player position
-        const player = this.scene.player;
-        
-        // Connection line from player to prediction
-        const line = this.scene.add.graphics();
-        line.lineStyle(1, prediction.isCritical ? this.GOLD_COLOR : this.HARMONY_COLOR, 0.3);
-        line.lineBetween(player.x, player.y, prediction.targetX, prediction.targetY);
-        line.setDepth(33);
-        
-        // Fade out the line
-        this.scene.tweens.add({
-            targets: line,
-            alpha: 0,
-            duration: 500,
-            onComplete: () => line.destroy()
-        });
+        // Note: Connection line rendering removed - migrated to UnifiedGraphicsManager
         
         // Text hint for critical predictions
         if (prediction.isCritical) {
@@ -685,11 +634,8 @@ export default class SymbioticPredictionSystem {
         const x = prediction.targetX;
         const y = prediction.targetY;
         
-        // Harmony bloom effect
-        const bloom = this.scene.add.graphics();
-        bloom.fillStyle(this.HARMONY_COLOR, 0.5);
-        bloom.fillCircle(0, 0, 20);
-        bloom.setPosition(x, y);
+        // Harmony bloom effect (using circle instead of graphics)
+        const bloom = this.scene.add.circle(x, y, 20, this.HARMONY_COLOR, 0.5);
         bloom.setDepth(40);
         
         this.scene.tweens.add({
@@ -1035,9 +981,8 @@ export default class SymbioticPredictionSystem {
         
         if (this.predictionField) this.predictionField.destroy();
         if (this.symbiosisContainer) this.symbiosisContainer.destroy();
-        if (this.echoGraphics) this.echoGraphics.destroy();
         
         // Note: Connection lines are rendered via UnifiedGraphicsManager
-        // No local graphics object to clean up - manager handles its own lifecycle
+        // No local graphics objects - manager handles its own lifecycle
     }
 }

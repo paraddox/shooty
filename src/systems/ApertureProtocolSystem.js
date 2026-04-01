@@ -168,9 +168,8 @@ export default class ApertureProtocolSystem {
     constructor(scene) {
         this.scene = scene;
         
-        // ===== GRAPHICS MANAGER DETECTION =====
-        this.graphicsManager = scene.graphicsManager || null;
-        this.useUnifiedGraphics = !!this.graphicsManager;
+        // ===== GRAPHICS MANAGER =====
+        this.graphicsManager = scene.graphicsManager;
         
         // ===== ATTENTION ZONES =====
         this.zones = {
