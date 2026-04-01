@@ -234,6 +234,13 @@ export default class HUDPanelManager {
             const newBg = this.createPanelBackground(panel.config.width, actualContentHeight, panel.config.color);
             panel.container.addAt(newBg, 0);
             
+            // Recalculate and update slot positions
+            let nextY = 0;
+            panel.slotMap.forEach((slot) => {
+                slot.container.setY(nextY);
+                nextY += (slot.measuredHeight || slot.config.minHeight || 12) + 4;
+            });
+            
             console.log(`[HUDPanelManager] ${region} panel resized to ${actualContentHeight}px for ${panel.slotMap.size} slots`);
             
             // Reposition panel if it's bottom-aligned
@@ -450,6 +457,36 @@ export default class HUDPanelManager {
             console.error(`[HUDPanelManager] Error registering slot ${slotId}:`, err);
             return null;
         }
+    }
+    
+    /**
+     * Update the height of a slot and recalculate panel layout
+     * Call this when slot content changes size
+     * @param {string} slotId - The slot identifier
+     * @param {number} newHeight - The new height in pixels
+     * @returns {boolean} Whether the update succeeded
+     */
+    updateSlotHeight(slotId, newHeight) {
+        // Find which panel contains this slot
+        for (const [region, panel] of this.panels) {
+            if (panel.slotMap.has(slotId)) {
+                const slot = panel.slotMap.get(slotId);
+                const oldHeight = slot.measuredHeight;
+                
+                // Update the slot's measured height
+                slot.measuredHeight = newHeight;
+                
+                console.log(`[HUDPanelManager] Slot ${slotId} height: ${oldHeight}px → ${newHeight}px`);
+                
+                // Recalculate the entire panel layout
+                this.recalculatePanelHeights();
+                
+                return true;
+            }
+        }
+        
+        console.warn(`[HUDPanelManager] Cannot update height: slot ${slotId} not found`);
+        return false;
     }
     
     /**
