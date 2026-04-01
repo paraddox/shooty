@@ -16,6 +16,7 @@ export default class ControlsManager {
     constructor(scene) {
         this.scene = scene;
         this.bindings = new Map(); // key -> { action, handler, system, description }
+        this._listeners = []; // Callbacks for binding changes
         
         // Special key mappings (Phaser uses different event names)
         this.keyMappings = {
@@ -66,6 +67,9 @@ export default class ControlsManager {
         // Register with Phaser keyboard
         const phaserKey = this.keyMappings[normalizedKey] || normalizedKey;
         this.scene.input.keyboard.on(`keydown-${phaserKey}`, handler);
+        
+        // Notify listeners
+        this._notifyListeners();
         
         console.log(`[ControlsManager] Registered: ${normalizedKey} → ${action} (${options.system || 'unknown'})`);
         return true;
@@ -169,5 +173,32 @@ export default class ControlsManager {
         this.bindings.forEach((binding, key) => {
             this.unregister(key);
         });
+    }
+    
+    /**
+     * Register a callback for binding changes
+     * @param {Function} callback - Called when bindings change
+     */
+    onBindingChange(callback) {
+        this._listeners.push(callback);
+    }
+    
+    /**
+     * Remove a binding change listener
+     * @param {Function} callback - The callback to remove
+     */
+    offBindingChange(callback) {
+        const index = this._listeners.indexOf(callback);
+        if (index !== -1) {
+            this._listeners.splice(index, 1);
+        }
+    }
+    
+    /**
+     * Notify all listeners of binding changes
+     * @private
+     */
+    _notifyListeners() {
+        this._listeners.forEach(cb => cb());
     }
 }

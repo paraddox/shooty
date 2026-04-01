@@ -22,6 +22,18 @@ export default class KeyboardShortcutsLegend {
     
     init() {
         this.createLegendPanel();
+        this.setupAutoRefresh();
+    }
+    
+    /**
+     * Set up automatic refresh when ControlsManager bindings change
+     */
+    setupAutoRefresh() {
+        if (this.scene.controls) {
+            this.scene.controls.onBindingChange(() => {
+                this.refresh();
+            });
+        }
     }
     
     /**
@@ -44,39 +56,72 @@ export default class KeyboardShortcutsLegend {
             this.container = container;
             this.container.setDepth(100);
             
-            // Get all shortcuts (static + from ControlsManager)
-            const shortcuts = this.getShortcuts();
-            
-            // Calculate dimensions based on content
-            const rowHeight = 14;
-            const padding = 6;
-            const panelHeight = (shortcuts.length * rowHeight) + padding;
-            
-            // Shortcuts list (panel title handled by HUDPanelManager)
-            let y = 6;
-            shortcuts.forEach((shortcut) => {
-                // Key binding in cyan
-                const keyText = this.scene.add.text(6, y, shortcut.key, {
-                    fontFamily: 'monospace',
-                    fontSize: '9px',
-                    fill: '#00f0ff'
-                }).setOrigin(0, 0);
-                
-                // Action description in white
-                const actionText = this.scene.add.text(55, y, shortcut.action, {
-                    fontFamily: 'monospace',
-                    fontSize: '9px',
-                    fill: '#ffffff'
-                }).setOrigin(0, 0);
-                
-                this.container.add([keyText, actionText]);
-                y += rowHeight;
-            });
+            // Render shortcuts
+            this.renderShortcuts();
             
             // Return the actual height used
-            return { height: panelHeight };
+            return { height: this.getPanelHeight() };
             
         }, 'BOTTOM_LEFT');
+    }
+    
+    /**
+     * Calculate panel height based on shortcuts
+     */
+    getPanelHeight() {
+        const shortcuts = this.getShortcuts();
+        const rowHeight = 14;
+        const padding = 6;
+        return (shortcuts.length * rowHeight) + padding;
+    }
+    
+    /**
+     * Render shortcuts to the container
+     */
+    renderShortcuts() {
+        if (!this.container) return;
+        
+        // Clear existing text objects
+        this.container.removeAll(true);
+        
+        // Get all shortcuts (static + from ControlsManager)
+        const shortcuts = this.getShortcuts();
+        
+        // Shortcuts list (panel title handled by HUDPanelManager)
+        let y = 6;
+        const rowHeight = 14;
+        
+        shortcuts.forEach((shortcut) => {
+            // Key binding in cyan
+            const keyText = this.scene.add.text(6, y, shortcut.key, {
+                fontFamily: 'monospace',
+                fontSize: '9px',
+                fill: '#00f0ff'
+            }).setOrigin(0, 0);
+            
+            // Action description in white
+            const actionText = this.scene.add.text(55, y, shortcut.action, {
+                fontFamily: 'monospace',
+                fontSize: '9px',
+                fill: '#ffffff'
+            }).setOrigin(0, 0);
+            
+            this.container.add([keyText, actionText]);
+            y += rowHeight;
+        });
+    }
+    
+    /**
+     * Refresh the legend panel (re-render with current bindings)
+     */
+    refresh() {
+        if (!this.container) return;
+        
+        this.renderShortcuts();
+        
+        // Update panel height if needed
+        // Note: HUDPanelManager would need to support height changes
+        // For now, the panel height is fixed after initial render
     }
     
     /**
