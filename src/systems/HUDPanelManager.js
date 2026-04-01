@@ -91,7 +91,10 @@ export default class HUDPanelManager {
         const screenW = this.scene.scale.width;
         const screenH = this.scene.scale.height;
         
+        console.log(`[HUDPanelManager] Creating panels...`);
+        
         Object.entries(this.PANELS).forEach(([region, config]) => {
+            console.log(`[HUDPanelManager] Creating panel: ${region}`);
             let x = config.x;
             let y = config.y;
             
@@ -155,7 +158,10 @@ export default class HUDPanelManager {
             });
             
             this.containers.set(region, contentContainer);
+            console.log(`[HUDPanelManager] Panel ${region} created and stored. Total panels: ${this.panels.size}`);
         });
+        
+        console.log(`[HUDPanelManager] All panels created. Available: ${Array.from(this.panels.keys()).join(', ')}`);
     }
     
     createPanelBackground(width, height, accentColor) {
@@ -257,6 +263,7 @@ export default class HUDPanelManager {
         // Advance nextY for following slots
         panel.nextY += slotConfig.height + 3;
         
+        console.log(`[HUDPanelManager] Successfully registered ${slotId} in ${region}`);
         return contentContainer;
         } catch (err) {
             console.error(`[HUDPanelManager] Error registering slot ${slotId}:`, err);
