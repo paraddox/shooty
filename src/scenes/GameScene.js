@@ -58,6 +58,7 @@ import VoidExchangeSystem from '../systems/VoidExchangeSystem.js';
 import HeartfluxProtocolSystem from '../systems/HeartfluxProtocolSystem.js';
 import ExogenesisProtocolSystem from '../systems/ExogenesisProtocolSystem.js';
 import ProteusProtocolSystem from '../systems/ProteusProtocolSystem.js';
+import KeyboardShortcutsLegend from '../systems/KeyboardShortcutsLegend.js';
 import UnifiedGraphicsManager from '../systems/UnifiedGraphicsManager.js';
 import PauseSystem from '../systems/PauseSystem.js';
 import HUDPanelManager from '../systems/HUDPanelManager.js';
@@ -266,6 +267,9 @@ export default class GameScene extends Phaser.Scene {
         
         // Initialize Panel-based HUD Manager for clean organized HUD
         this.hudPanels = new HUDPanelManager(this);
+        
+        // Initialize Keyboard Shortcuts Legend in bottom left
+        this.keyboardShortcutsLegend = new KeyboardShortcutsLegend(this);
         
         // Backward compatibility: expose as hudLayout for existing systems
         this.hudLayout = this.hudPanels;
