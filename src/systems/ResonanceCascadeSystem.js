@@ -208,6 +208,62 @@ export default class ResonanceCascadeSystem {
         return this.chainWindow + extension;
     }
     
+    /**
+     * Add bonus steps to the resonance chain
+     * Called by BootstrapProtocolSystem when a prophecy/singularity is fulfilled
+     * @param {number} bonusSteps - Number of bonus steps to add
+     * @returns {number} The updated multiplier value
+     */
+    addChainBonus(bonusSteps) {
+        const now = Date.now() / 1000;
+        
+        // Ensure chain is active (start one if needed)
+        if (this.activeChain.length === 0) {
+            this.chainStartTime = now;
+            this.chainTimer = this.chainWindow;
+            this.currentMultiplier = this.baseMultiplier;
+            this.onChainStart();
+        }
+        
+        // Add bonus steps to the chain
+        for (let i = 0; i < bonusSteps; i++) {
+            this.activeChain.push({
+                system: 'BONUS',
+                time: now,
+                data: { source: 'bootstrap_singularity' }
+            });
+            
+            // Increase multiplier for each bonus step
+            this.currentMultiplier += this.multiplierGainPerStep;
+        }
+        
+        // Cap multiplier at 5x
+        this.currentMultiplier = Math.min(this.currentMultiplier, 5.0);
+        
+        // Reset chain timer to extend the window
+        this.chainTimer = this.getCurrentWindow();
+        
+        // Update resonance state based on new chain length
+        this.updateResonanceState();
+        
+        // Update max chain recorded
+        if (this.activeChain.length > this.maxChainRecorded) {
+            this.maxChainRecorded = this.activeChain.length;
+        }
+        
+        // Show activation feedback
+        this.showActivationFeedback('BONUS');
+        
+        // Notify Omni-Weapon of high resonance chain if applicable
+        if (this.scene.omniWeapon && this.activeChain.length >= 3) {
+            this.scene.omniWeapon.onHighResonanceChain(this.activeChain.length);
+        }
+        
+        console.log(`[ResonanceCascade] Added ${bonusSteps} bonus steps. Chain: ${this.activeChain.length}, Multiplier: ${this.currentMultiplier.toFixed(1)}x`);
+        
+        return this.currentMultiplier;
+    }
+    
     updateResonanceState() {
         const chainLength = this.activeChain.length;
         let newState = 'NONE';
