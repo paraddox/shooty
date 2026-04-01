@@ -135,7 +135,10 @@ export default class HUDLayoutManager {
             const screenWidth = this.scene.scale.width;
             const screenHeight = this.scene.scale.height;
             
-            if (region === 'TOP_CENTER' || region === 'TOP_RIGHT') {
+            if (region === 'TOP_CENTER') {
+                x = screenWidth / 2; // Center of screen
+            }
+            if (region === 'TOP_RIGHT') {
                 x = screenWidth - this.margin;
             }
             if (region === 'BOTTOM_RIGHT') {
@@ -177,7 +180,10 @@ export default class HUDLayoutManager {
             const screenWidth = this.scene.scale.width;
             const screenHeight = this.scene.scale.height;
             
-            if (region === 'TOP_CENTER' || region === 'TOP_RIGHT') {
+            if (region === 'TOP_CENTER') {
+                x = screenWidth / 2; // Center of screen
+            }
+            if (region === 'TOP_RIGHT') {
                 x = screenWidth - this.margin;
             }
             if (region === 'BOTTOM_RIGHT') {
