@@ -115,55 +115,52 @@ export default class InscriptionProtocolSystem {
     }
     
     createVisualElements() {
-        // Quill icon that appears when inscribing
-        const graphics = this.scene.add.graphics();
-        graphics.setScrollFactor(0);
-        graphics.setDepth(91);
-        
-        // Draw quill silhouette
-        graphics.fillStyle(this.GOLD_ACCENT, 0.8);
-        
-        // Quill body (curved line approximation)
-        const quillPoints = [
-            {x: 0, y: 0},
-            {x: 5, y: -10},
-            {x: 8, y: -20},
-            {x: 6, y: -30},
-            {x: 0, y: -40},
-            {x: -3, y: -35},
-            {x: -2, y: -25},
-            {x: -4, y: -15},
-            {x: -2, y: -5},
-            {x: 0, y: 0}
-        ];
-        
-        graphics.beginPath();
-        graphics.moveTo(quillPoints[0].x, quillPoints[0].y);
-        for (let i = 1; i < quillPoints.length; i++) {
-            graphics.lineTo(quillPoints[i].x, quillPoints[i].y);
+        // Generate quill texture if not exists
+        if (!this.scene.textures.exists('quillIcon')) {
+            const graphics = this.scene.add.graphics();
+            graphics.fillStyle(this.GOLD_ACCENT, 0.8);
+            
+            // Quill body (curved line approximation)
+            const quillPoints = [
+                {x: 0, y: 0},
+                {x: 5, y: -10},
+                {x: 8, y: -20},
+                {x: 6, y: -30},
+                {x: 0, y: -40},
+                {x: -3, y: -35},
+                {x: -2, y: -25},
+                {x: -4, y: -15},
+                {x: -2, y: -5},
+                {x: 0, y: 0}
+            ];
+            
+            graphics.beginPath();
+            graphics.moveTo(quillPoints[0].x, quillPoints[0].y);
+            for (let i = 1; i < quillPoints.length; i++) {
+                graphics.lineTo(quillPoints[i].x, quillPoints[i].y);
+            }
+            graphics.closePath();
+            graphics.fillPath();
+            
+            // Feather details
+            graphics.lineStyle(1, this.PARCHMENT_COLOR, 0.6);
+            graphics.moveTo(0, -5);
+            graphics.lineTo(3, -25);
+            graphics.moveTo(0, -10);
+            graphics.lineTo(-2, -28);
+            
+            graphics.generateTexture('quillIcon', 20, 50);
+            graphics.destroy();
         }
-        graphics.closePath();
-        graphics.fillPath();
         
-        // Feather details
-        graphics.lineStyle(1, this.PARCHMENT_COLOR, 0.6);
-        graphics.moveTo(0, -5);
-        graphics.lineTo(3, -25);
-        graphics.moveTo(0, -10);
-        graphics.lineTo(-2, -28);
-        
-        graphics.generateTexture('quillIcon', 20, 50);
-        graphics.destroy();
-        
-        this.quillIcon = this.scene.add.image(
-            this.scene.scale.width - 40,
-            this.scene.scale.height - 40,
-            'quillIcon'
-        );
-        this.quillIcon.setScrollFactor(0);
-        this.quillIcon.setDepth(91);
-        this.quillIcon.setAlpha(0);
-        this.quillIcon.setScale(0.8);
+        // Quill icon - registered with panel-based HUD system
+        this.scene.hudPanels.registerSlot('INSCRIPTION', (container, width) => {
+            this.quillIcon = this.scene.add.image(0, 0, 'quillIcon');
+            this.quillIcon.setDepth(91);
+            this.quillIcon.setAlpha(0);
+            this.quillIcon.setScale(0.8);
+            container.add(this.quillIcon);
+        }, 'BOTTOM_RIGHT');
         
         // Ink trail particles
         this.inkTrail = this.scene.add.particles(0, 0, 'particle', {
@@ -609,6 +606,12 @@ S Y N T H E S I S
     }
     
     triggerQuillAnimation() {
+        // Guard: quillIcon may not be initialized yet (panel-based HUD async)
+        if (!this.quillIcon) {
+            console.warn('[InscriptionProtocol] Quill animation skipped - icon not initialized yet');
+            return;
+        }
+        
         // Show quill writing
         this.quillIcon.setAlpha(1);
         
@@ -620,21 +623,25 @@ S Y N T H E S I S
             yoyo: true,
             repeat: 3,
             onComplete: () => {
-                this.scene.tweens.add({
-                    targets: this.quillIcon,
-                    alpha: 0,
-                    duration: 500,
-                    delay: 500
-                });
+                if (this.quillIcon) {
+                    this.scene.tweens.add({
+                        targets: this.quillIcon,
+                        alpha: 0,
+                        duration: 500,
+                        delay: 500
+                    });
+                }
             }
         });
         
-        // Emit ink particles
-        this.inkTrail.emitParticleAt(
-            this.scene.scale.width - 40,
-            this.scene.scale.height - 40,
-            8
-        );
+        // Emit ink particles (safe - particles system is created in constructor)
+        if (this.inkTrail) {
+            this.inkTrail.emitParticleAt(
+                this.scene.scale.width - 40,
+                this.scene.scale.height - 40,
+                8
+            );
+        }
         
         // Glow effect via UnifiedGraphicsManager (migrated from direct graphics)
         // Note: UnifiedGraphicsManager clears once per frame automatically

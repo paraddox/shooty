@@ -286,6 +286,7 @@ export default class TemporalPedagogySystem {
     
     init() {
         this.createVisualElements();
+        this.createSystemIndicators();
         this.startObservation();
     }
     
@@ -418,50 +419,88 @@ export default class TemporalPedagogySystem {
         // Show subtle discovery notification
         this.showHint(`${systemName.replace('_', ' ')} discovered`, 3000, true);
         
-        // Create visual indicator for this system
-        this.createSystemIndicator(systemName);
+        // Update the indicator for this system (created in createSystemIndicators)
+        this.updateSystemIndicatorState(systemName, 'discovered');
+    }
+    
+    updateSystemIndicatorState(systemName, state) {
+        // Update visual state for a specific system indicator
+        const indicator = this.systemIndicators.get(systemName);
+        if (!indicator) return;
+        
+        if (state === 'discovered') {
+            indicator.letter.setFill('#666666');
+            indicator.container.setAlpha(0.6);
+        } else if (state === 'mastered') {
+            indicator.letter.setFill('#20b2aa');
+            indicator.glow.setAlpha(0.3);
+            indicator.container.setAlpha(0.9);
+            
+            // Pulse animation
+            this.scene.tweens.add({
+                targets: indicator.glow,
+                alpha: { from: 0.5, to: 0 },
+                duration: 500,
+                yoyo: true,
+                repeat: 2
+            });
+        }
     }
     
     onSystemMastered(systemName) {
         // Celebration of mastery
         this.showHint(`${systemName.replace('_', ' ')} MASTERED`, 4000, true);
         
-        // Pulse mastery glow
+        // Update indicator state
+        this.updateSystemIndicatorState(systemName, 'mastered');
+        
+        // Pulse mastery glow (player effect)
         this.pulseMasteryGlow();
         
         // Check for new challenge
         this.offerNewChallenge();
     }
     
+    createSystemIndicators() {
+        // Create all system indicators in a grid - registered with panel-based HUD system
+        this.scene.hudPanels.registerSlot('PEDAGOGY', (container, width) => {
+            this.pedagogyContainer = container;
+            this.pedagogyContainer.setDepth(90);
+            this.pedagogyContainer.setAlpha(0.3);
+            
+            const cols = Math.floor(width / 22);
+            
+            Object.keys(this.systemMastery).forEach((systemName, index) => {
+                const x = -width/2 + 15 + (index % cols) * 22;
+                const y = -30 + Math.floor(index / cols) * 22;
+                
+                const indicator = this.scene.add.container(x, y);
+                
+                // Background circle
+                const bg = this.scene.add.circle(0, 0, 9, 0x22222a, 0.5);
+                indicator.add(bg);
+                
+                // System letter
+                const letter = this.scene.add.text(0, 0, systemName[0], {
+                    fontFamily: 'monospace',
+                    fontSize: '9px',
+                    fill: '#444444'
+                }).setOrigin(0.5);
+                indicator.add(letter);
+                
+                // Glow (hidden initially)
+                const glow = this.scene.add.circle(0, 0, 11, this.pedagogyColor, 0);
+                indicator.add(glow);
+                
+                container.add(indicator);
+                this.systemIndicators.set(systemName, { container: indicator, bg, letter, glow });
+            });
+        }, 'BOTTOM_RIGHT');
+    }
+    
     createSystemIndicator(systemName) {
-        // Create subtle HUD indicator for this system
-        const index = Object.keys(this.systemMastery).indexOf(systemName);
-        const x = 20 + (index % 10) * 25;
-        const y = 80 + Math.floor(index / 10) * 25;
-        
-        const indicator = this.scene.add.container(x, y);
-        
-        // Background circle
-        const bg = this.scene.add.circle(0, 0, 10, 0x22222a, 0.5);
-        indicator.add(bg);
-        
-        // System letter
-        const letter = this.scene.add.text(0, 0, systemName[0], {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            fill: '#444444'
-        }).setOrigin(0.5);
-        indicator.add(letter);
-        
-        // Glow (hidden initially)
-        const glow = this.scene.add.circle(0, 0, 12, this.pedagogyColor, 0);
-        indicator.add(glow);
-        
-        indicator.setScrollFactor(0);
-        indicator.setDepth(90);
-        indicator.setAlpha(0.3);
-        
-        this.systemIndicators.set(systemName, { container: indicator, bg, letter, glow });
+        // DEPRECATED: Now handled in createSystemIndicators() via panel system
+        // Kept for compatibility but indicators are created all at once
     }
     
     updateSystemIndicators() {

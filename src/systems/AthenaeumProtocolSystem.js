@@ -92,50 +92,43 @@ export default class AthenaeumProtocolSystem {
     }
     
     createUI() {
-        // Region indicator in corner
-        const margin = 20;
-        this.regionIndicator = this.scene.add.container(
-            this.scene.cameras.main.width - margin - 100,
-            this.scene.cameras.main.height - margin - 60
-        );
-        this.regionIndicator.setScrollFactor(0);
-        this.regionIndicator.setDepth(1000);
-        
-        // Background
-        const bg = this.scene.add.rectangle(0, 0, 200, 60, 0x1a1a25, 0.9);
-        bg.setStrokeStyle(1, 0x444455);
-        this.regionIndicator.add(bg);
-        
-        // Symbol
-        this.regionSymbol = this.scene.add.text(-80, 0, '◊', {
-            fontFamily: 'monospace',
-            fontSize: '28px',
-            fill: '#00f0ff'
-        }).setOrigin(0.5);
-        this.regionIndicator.add(this.regionSymbol);
-        
-        // Name
-        this.regionName = this.scene.add.text(-20, -10, 'PRISTINE VOID', {
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            fontStyle: 'bold',
-            fill: '#ffffff'
-        }).setOrigin(0, 0.5);
-        this.regionIndicator.add(this.regionName);
-        
-        // Effect description
-        this.regionEffect = this.scene.add.text(-20, 10, 'No terrain effects', {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            fill: '#888888'
-        }).setOrigin(0, 0.5);
-        this.regionIndicator.add(this.regionEffect);
-        
-        // Intensity bar
-        this.intensityBar = this.scene.add.rectangle(50, 15, 80, 4, 0x00f0ff, 0.8);
-        this.intensityBar.setOrigin(0, 0.5);
-        this.intensityBar.scaleX = 0;
-        this.regionIndicator.add(this.intensityBar);
+        // Region indicator - registered with panel-based HUD system
+        this.scene.hudPanels.registerSlot('ATHENAEUM', (container, width) => {
+            this.regionIndicator = container;
+            this.regionIndicator.setDepth(1000);
+            
+            // Symbol
+            this.regionSymbol = this.scene.add.text(-width/2 + 20, 0, '◊', {
+                fontFamily: 'monospace',
+                fontSize: '24px',
+                fill: '#00f0ff'
+            }).setOrigin(0.5);
+            container.add(this.regionSymbol);
+            
+            // Name
+            this.regionName = this.scene.add.text(0, -10, 'PRISTINE VOID', {
+                fontFamily: 'monospace',
+                fontSize: '11px',
+                fontStyle: 'bold',
+                fill: '#ffffff'
+            }).setOrigin(0.5);
+            container.add(this.regionName);
+            
+            // Effect description
+            this.regionEffect = this.scene.add.text(0, 8, 'No terrain effects', {
+                fontFamily: 'monospace',
+                fontSize: '9px',
+                fill: '#888888'
+            }).setOrigin(0.5);
+            container.add(this.regionEffect);
+            
+            // Intensity bar
+            const barWidth = Math.min(80, width - 20);
+            this.intensityBar = this.scene.add.rectangle(0, 20, barWidth, 3, 0x00f0ff, 0.8);
+            this.intensityBar.setOrigin(0.5);
+            this.intensityBar.scaleX = 0;
+            container.add(this.intensityBar);
+        }, 'BOTTOM_RIGHT');
     }
     
     initializeAtlas() {

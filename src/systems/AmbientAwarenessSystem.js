@@ -229,29 +229,34 @@ export default class AmbientAwarenessSystem {
     }
     
     createVisualElements() {
-        // Time-state indicator (subtle, top corner)
-        this.timeStateText = this.scene.add.text(
-            this.scene.cameras.main.width - 20, 20,
-            this.currentPalette.name.toUpperCase(),
-            {
-                fontFamily: 'monospace',
-                fontSize: '12px',
-                fill: '#' + this.currentPalette.accent.toString(16).padStart(6, '0'),
-                alpha: 0.6
-            }
-        ).setOrigin(1, 0).setScrollFactor(0).setDepth(1000);
-        
-        // Session duration (discreet, bottom corner)
-        this.sessionText = this.scene.add.text(
-            20, this.scene.cameras.main.height - 20,
-            '00:00',
-            {
-                fontFamily: 'monospace',
-                fontSize: '10px',
-                fill: '#666666',
-                alpha: 0.5
-            }
-        ).setOrigin(0, 1).setScrollFactor(0).setDepth(1000);
+        // Ambient status - registered with panel-based HUD system
+        this.scene.hudPanels.registerSlot('AMBIENT', (container, width) => {
+            // Time-state indicator
+            this.timeStateText = this.scene.add.text(
+                0, -8,
+                this.currentPalette.name.toUpperCase(),
+                {
+                    fontFamily: 'monospace',
+                    fontSize: '10px',
+                    fill: '#' + this.currentPalette.accent.toString(16).padStart(6, '0'),
+                    alpha: 0.6
+                }
+            ).setOrigin(0.5);
+            container.add(this.timeStateText);
+            
+            // Session duration
+            this.sessionText = this.scene.add.text(
+                0, 8,
+                '00:00',
+                {
+                    fontFamily: 'monospace',
+                    fontSize: '9px',
+                    fill: '#666666',
+                    alpha: 0.5
+                }
+            ).setOrigin(0.5);
+            container.add(this.sessionText);
+        }, 'TOP_RIGHT');
         
         // Dream overlay (for idle/dream states) - uses UnifiedGraphicsManager
         this.dreamOverlayActive = false;

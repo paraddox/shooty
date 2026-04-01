@@ -368,20 +368,20 @@ export default class ResonantWhisperSystem {
         this.responseContainer.setDepth(100);
         this.responseContainer.setVisible(false);
         
-        // Karma display in corner
-        this.karmaDisplay = this.scene.add.text(
-            this.scene.scale.width - 20,
-            this.scene.scale.height - 60,
-            '',
-            {
-                fontFamily: 'monospace',
-                fontSize: '12px',
-                fill: '#ffd700'
-            }
-        ).setOrigin(1, 0);
-        this.karmaDisplay.setScrollFactor(0);
-        this.karmaDisplay.setDepth(100);
-        this.updateKarmaDisplay();
+        // Karma display - registered with panel-based HUD system
+        this.scene.hudPanels.registerSlot('KARMA', (container, width) => {
+            this.karmaDisplay = this.scene.add.text(
+                0, 0,
+                '',
+                {
+                    fontFamily: 'monospace',
+                    fontSize: '11px',
+                    fill: '#ffd700'
+                }
+            ).setOrigin(0.5);
+            container.add(this.karmaDisplay);
+            this.updateKarmaDisplay();
+        }, 'BOTTOM_RIGHT');
     }
     
     setupInput() {

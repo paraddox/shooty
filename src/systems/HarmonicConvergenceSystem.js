@@ -133,22 +133,24 @@ export default class HarmonicConvergenceSystem {
             this.harmonicRings.push(ring);
         }
         
-        // Spectrum analyzer bars at bottom of screen
-        const barCount = 16;
-        const barWidth = 8;
-        const startX = (this.scene.scale.width - barCount * (barWidth + 2)) / 2;
-        
-        for (let i = 0; i < barCount; i++) {
-            const bar = this.scene.add.rectangle(
-                startX + i * (barWidth + 2),
-                this.scene.scale.height - 20,
-                barWidth, 2,
-                0x00f0ff, 0.5
-            );
-            bar.setScrollFactor(0);
-            bar.setDepth(95);
-            this.spectrumBars.push(bar);
-        }
+        // Spectrum analyzer bars - registered with panel-based HUD system
+        this.scene.hudPanels.registerSlot('HARMONIC', (container, width) => {
+            const barCount = Math.min(16, Math.floor(width / 10));
+            const barWidth = Math.min(8, (width - (barCount - 1) * 2) / barCount);
+            const startX = -width / 2 + barWidth / 2;
+            
+            for (let i = 0; i < barCount; i++) {
+                const bar = this.scene.add.rectangle(
+                    startX + i * (barWidth + 2),
+                    0,
+                    barWidth, 2,
+                    0x00f0ff, 0.5
+                );
+                bar.setDepth(95);
+                container.add(bar);
+                this.spectrumBars.push(bar);
+            }
+        }, 'BOTTOM_CENTER');
     }
     
     startMetronome() {

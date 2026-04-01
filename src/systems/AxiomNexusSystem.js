@@ -318,14 +318,12 @@ export default class AxiomNexusSystem {
         this.illuminationText.setDepth(100);
         this.illuminationText.setVisible(false);
         
-        // Synthesis discovery panel (top-right)
-        this.synthesisPanel = this.scene.add.container(
-            this.scene.scale.width - 20,
-            100
-        );
-        this.synthesisPanel.setScrollFactor(0);
-        this.synthesisPanel.setDepth(95);
-        this.synthesisPanel.setVisible(false);
+        // Synthesis discovery panel - registered with panel-based HUD system
+        this.scene.hudPanels.registerSlot('AXIOM_NEXUS', (container, width) => {
+            this.synthesisPanel = container;
+            this.synthesisPanel.setDepth(95);
+            this.synthesisPanel.setVisible(false);
+        }, 'TOP_RIGHT');
     }
     
     initializeUsageTracking() {

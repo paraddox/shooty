@@ -115,40 +115,36 @@ export default class BootstrapProtocolSystem {
     }
     
     createUI() {
-        // Bootstrap indicator - circular gauge showing paradox momentum
-        const x = this.scene.cameras.main.width - 60;
-        const y = 80;
+        // Bootstrap indicator - registered with panel-based HUD system
+        this.scene.hudPanels.registerSlot('BOOTSTRAP', (container, width) => {
+            this.bootstrapIndicator = container;
+            this.bootstrapIndicator.setDepth(100);
+            
+            // Background ring
+            const bgRing = this.scene.add.circle(0, 0, 20, 0x22222a, 0.8);
+            bgRing.setStrokeStyle(2, 0x444455);
+            container.add(bgRing);
+            
+            // Note: momentumArc now rendered via UnifiedGraphicsManager
+            
+            // Center icon
+            const icon = this.scene.add.text(0, 0, '⟲', {
+                fontFamily: 'monospace',
+                fontSize: '16px',
+                fill: '#ffaa00'
+            }).setOrigin(0.5);
+            container.add(icon);
+            
+            // Bootstrap level text
+            this.levelText = this.scene.add.text(0, 28, '0', {
+                fontFamily: 'monospace',
+                fontSize: '10px',
+                fill: '#ffaa00'
+            }).setOrigin(0.5);
+            container.add(this.levelText);
+        }, 'TOP_RIGHT');
         
-        this.bootstrapIndicator = this.scene.add.container(x, y);
-        this.bootstrapIndicator.setScrollFactor(0);
-        this.bootstrapIndicator.setDepth(100);
-        
-        // Background ring
-        const bgRing = this.scene.add.circle(0, 0, 20, 0x22222a, 0.8);
-        bgRing.setStrokeStyle(2, 0x444455);
-        this.bootstrapIndicator.add(bgRing);
-        
-        // Note: momentumArc now rendered via UnifiedGraphicsManager (see updateUI)
-        // Store position for UnifiedGraphicsManager rendering
-        this.indicatorPos = { x, y };
-        
-        // Center icon
-        const icon = this.scene.add.text(0, 0, '⟲', {
-            fontFamily: 'monospace',
-            fontSize: '16px',
-            fill: '#ffaa00'
-        }).setOrigin(0.5);
-        this.bootstrapIndicator.add(icon);
-        
-        // Bootstrap level text
-        this.levelText = this.scene.add.text(0, 28, '0', {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            fill: '#ffaa00'
-        }).setOrigin(0.5);
-        this.bootstrapIndicator.add(this.levelText);
-        
-        // Paradox text (floating announcements)
+        // Paradox text (floating announcements) - NOT in panel, screen-centered
         this.paradoxText = this.scene.add.text(
             this.scene.cameras.main.width / 2,
             this.scene.cameras.main.height / 2 - 100,

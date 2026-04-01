@@ -387,27 +387,29 @@ export default class NemesisGenesisSystem {
     
     createNemesisHUD() {
         const camera = this.scene.cameras.main;
-        const barWidth = 200;
-        const barHeight = 12;
-        
-        // Position below player health
-        this.nemesisHealthBg = this.scene.add.rectangle(
-            camera.width / 2, 70, barWidth, barHeight, 0x330011
-        ).setScrollFactor(0);
-        
-        this.nemesisHealthBar = this.scene.add.rectangle(
-            camera.width / 2 - barWidth/2, 70, barWidth, barHeight, 0xff0040
-        ).setOrigin(0, 0.5).setScrollFactor(0);
-        
-        this.nemesisNameText = this.scene.add.text(
-            camera.width / 2, 55,
-            `NEMESIS-GEN${this.nemesisGeneration}`,
-            {
-                fontFamily: 'monospace',
-                fontSize: '12px',
-                fill: '#ff0040'
-            }
-        ).setOrigin(0.5).setScrollFactor(0);
+        // Nemesis health bar - registered with panel-based HUD system
+        this.scene.hudPanels.registerSlot('NEMESIS', (container, width) => {
+            const barWidth = Math.min(200, width - 20);
+            const barHeight = 10;
+            
+            this.nemesisHealthBg = this.scene.add.rectangle(0, 8, barWidth, barHeight, 0x330011);
+            container.add(this.nemesisHealthBg);
+            
+            this.nemesisHealthBar = this.scene.add.rectangle(-barWidth/2, 8, barWidth, barHeight, 0xff0040);
+            this.nemesisHealthBar.setOrigin(0, 0.5);
+            container.add(this.nemesisHealthBar);
+            
+            this.nemesisNameText = this.scene.add.text(
+                0, -5,
+                `NEMESIS-GEN${this.nemesisGeneration}`,
+                {
+                    fontFamily: 'monospace',
+                    fontSize: '10px',
+                    fill: '#ff0040'
+                }
+            ).setOrigin(0.5);
+            container.add(this.nemesisNameText);
+        }, 'TOP_CENTER');
     }
     
     // ===== NEMESIS AI =====

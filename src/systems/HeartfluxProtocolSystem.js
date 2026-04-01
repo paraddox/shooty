@@ -158,48 +158,47 @@ export default class HeartfluxProtocolSystem {
     }
     
     createVisuals() {
-        // Main container in top-right corner
-        const x = this.scene.cameras.main.width - 60;
-        const y = 60;
+        // Heart flux indicator - registered with panel-based HUD system
+        this.scene.hudPanels.registerSlot('HEARTFLUX', (container, width) => {
+            this.container = container;
+            this.container.setDepth(1000);
+            
+            // Background ring (subtle)
+            const bgRing = this.scene.add.circle(0, 0, 30, 0x1a1a25, 0.5);
+            container.add(bgRing);
+            
+            // The Heart Orb — represents player's biometric state
+            this.heartOrb = this.scene.add.circle(0, 0, 20, this.BIOMETRIC_COLOR, 0.8);
+            container.add(this.heartOrb);
+            
+            // Inner glow that pulses
+            this.innerGlow = this.scene.add.circle(0, 0, 12, this.VOID_COLOR, 0.4);
+            container.add(this.innerGlow);
+            
+            // Pulse ring (expands with "heartbeat")
+            this.pulseRing = this.scene.add.circle(0, 0, 20, this.BIOMETRIC_COLOR, 0);
+            this.pulseRing.setStrokeStyle(2, this.BIOMETRIC_COLOR, 0.6);
+            container.add(this.pulseRing);
+            
+            // State indicator text
+            this.stateText = this.scene.add.text(0, 40, 'STREAM', {
+                fontFamily: 'monospace',
+                fontSize: '9px',
+                fill: '#ff6b9d',
+                align: 'center'
+            }).setOrigin(0.5);
+            container.add(this.stateText);
+            
+            // Arousal bar (mini)
+            const barWidth = Math.min(50, width - 10);
+            this.arousalBar = this.scene.add.rectangle(0, 52, barWidth, 3, 0x333344, 0.5);
+            container.add(this.arousalBar);
+            this.arousalFill = this.scene.add.rectangle(-barWidth/2, 52, 0, 3, this.STREAM_COLOR, 0.8);
+            this.arousalFill.setOrigin(0, 0.5);
+            container.add(this.arousalFill);
+        }, 'TOP_RIGHT');
         
-        this.container = this.scene.add.container(x, y);
-        this.container.setScrollFactor(0);
-        this.container.setDepth(1000);
-        
-        // Background ring (subtle)
-        const bgRing = this.scene.add.circle(0, 0, 35, 0x1a1a25, 0.5);
-        this.container.add(bgRing);
-        
-        // The Heart Orb — represents player's biometric state
-        this.heartOrb = this.scene.add.circle(0, 0, 25, this.BIOMETRIC_COLOR, 0.8);
-        this.container.add(this.heartOrb);
-        
-        // Inner glow that pulses
-        this.innerGlow = this.scene.add.circle(0, 0, 15, this.VOID_COLOR, 0.4);
-        this.container.add(this.innerGlow);
-        
-        // Pulse ring (expands with "heartbeat")
-        this.pulseRing = this.scene.add.circle(0, 0, 25, this.BIOMETRIC_COLOR, 0);
-        this.pulseRing.setStrokeStyle(2, this.BIOMETRIC_COLOR, 0.6);
-        this.container.add(this.pulseRing);
-        
-        // State indicator text
-        this.stateText = this.scene.add.text(0, 50, 'STREAM', {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            fill: '#ff6b9d',
-            align: 'center'
-        }).setOrigin(0.5);
-        this.container.add(this.stateText);
-        
-        // Arousal bar (mini)
-        this.arousalBar = this.scene.add.rectangle(0, 65, 50, 4, 0x333344, 0.5);
-        this.container.add(this.arousalBar);
-        this.arousalFill = this.scene.add.rectangle(-25, 65, 0, 4, this.STREAM_COLOR, 0.8);
-        this.arousalFill.setOrigin(0, 0.5);
-        this.container.add(this.arousalFill);
-        
-        // Breathing guide (initially hidden)
+        // Breathing guide (initially hidden) - NOT in panel, screen-centered overlay
         this.breathGuide = this.scene.add.text(
             this.scene.cameras.main.width / 2,
             this.scene.cameras.main.height - 100,
