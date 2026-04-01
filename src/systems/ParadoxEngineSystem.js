@@ -101,10 +101,8 @@ export default class ParadoxEngineSystem {
     }
     
     createVisuals() {
-        // Register layers with UnifiedGraphicsManager
-        // 'effects' for path/safe zones, 'echoes' for temporal echoes
-        this.scene.graphicsManager?.registerLayer('effects', 50);
-        this.scene.graphicsManager?.registerLayer('echoes', 55);
+        // Use existing 'effects' layer from UnifiedGraphicsManager
+        // (background, world, effects, ui, overlay layers are pre-configured)
 
         // Paradox overlay (scanlines)
         this.createParadoxOverlay();
