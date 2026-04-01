@@ -478,7 +478,7 @@ export default class ResonanceOrbSystem {
         
         // Add to Resonance Cascade chain
         if (this.scene.resonanceCascade) {
-            this.scene.resonanceCascade.addToChain('orb', orb.x, orb.y);
+            this.scene.resonanceCascade.recordActivation('orb', { x: orb.x, y: orb.y });
         }
         
         // Track stats
