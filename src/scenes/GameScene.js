@@ -3015,32 +3015,40 @@ export default class GameScene extends Phaser.Scene {
     updateHUD() {
         // Health
         const healthPercent = Math.max(0, this.player.health / this.player.maxHealth);
-        this.healthBar.width = 200 * healthPercent;
-        
-        // Color shift on low health
-        if (healthPercent < 0.3) {
-            this.healthBar.fillColor = 0xff3366;
-        } else {
-            this.healthBar.fillColor = 0x00f0ff;
+        if (this.healthBar) {
+            this.healthBar.width = 200 * healthPercent;
+            
+            // Color shift on low health
+            if (healthPercent < 0.3) {
+                this.healthBar.fillColor = 0xff3366;
+            } else {
+                this.healthBar.fillColor = 0x00f0ff;
+            }
         }
 
         // Score
-        this.scoreText.setText(this.score.toString().padStart(6, '0'));
+        if (this.scoreText) {
+            this.scoreText.setText(this.score.toString().padStart(6, '0'));
+        }
 
         // Enemy count
         const enemyCount = this.enemies.countActive();
-        this.enemyText.setText(`${enemyCount} ENEMY${enemyCount !== 1 ? 'IES' : ''}`);
+        if (this.enemyText) {
+            this.enemyText.setText(`${enemyCount} ENEMY${enemyCount !== 1 ? 'IES' : ''}`);
+        }
 
         // Near-miss streak indicator
-        if (this.nearMissState.streak > 0) {
-            const streakSymbols = '★'.repeat(Math.min(this.nearMissState.streak, 5));
-            this.nearMissText.setText(`STREAK ${streakSymbols}`);
-            this.nearMissText.setAlpha(1);
-        } else if (this.nearMissState.active) {
-            this.nearMissText.setText('BULLET TIME');
-            this.nearMissText.setAlpha(1);
-        } else {
-            this.nearMissText.setAlpha(0);
+        if (this.nearMissText) {
+            if (this.nearMissState.streak > 0) {
+                const streakSymbols = '★'.repeat(Math.min(this.nearMissState.streak, 5));
+                this.nearMissText.setText(`STREAK ${streakSymbols}`);
+                this.nearMissText.setAlpha(1);
+            } else if (this.nearMissState.active) {
+                this.nearMissText.setText('BULLET TIME');
+                this.nearMissText.setAlpha(1);
+            } else {
+                this.nearMissText.setAlpha(0);
+            }
         }
         
         // Apophenia Protocol pattern counter
@@ -3051,8 +3059,10 @@ export default class GameScene extends Phaser.Scene {
         }
 
         // Wave timer
-        const waveProgress = 1 - (this.nextWaveTime - this.time.now) / 30000;
-        this.waveTimerBar.width = Math.max(0, 100 * waveProgress);
+        if (this.waveTimerBar) {
+            const waveProgress = 1 - (this.nextWaveTime - this.time.now) / 30000;
+            this.waveTimerBar.width = Math.max(0, 100 * waveProgress);
+        }
         
         // Mnemosyne Weave status
         if (this.mnemosyneWeave) {
@@ -3085,7 +3095,7 @@ export default class GameScene extends Phaser.Scene {
         }
         
         // Syntropy display
-        if (this.syntropyEngine) {
+        if (this.syntropyEngine && this.syntropyText) {
             const syntropy = this.syntropyEngine.syntropy;
             this.syntropyText.setText(`◈ ${syntropy}`);
             // Color shifts from cyan (low) to gold (high)
@@ -3099,7 +3109,7 @@ export default class GameScene extends Phaser.Scene {
         }
         
         // Convergence display
-        if (this.aethericConvergence) {
+        if (this.aethericConvergence && this.convergenceText) {
             const activeConvergences = this.aethericConvergence.getActiveConvergences();
             if (activeConvergences.length > 0) {
                 const conv = activeConvergences[0]; // Show first active
@@ -3131,7 +3141,7 @@ export default class GameScene extends Phaser.Scene {
         }
         
         // Axiom Nexus synthesis display
-        if (this.axiomNexus) {
+        if (this.axiomNexus && this.synthesisText) {
             const stats = this.axiomNexus.getDiscoveryStats();
             this.synthesisText.setText(`◇ ${stats.discovered}/${stats.total}`);
             
