@@ -203,9 +203,8 @@ export default class HUDPanelManager {
      * @returns {Phaser.GameObjects.Container} The created element
      */
     registerSlot(slotId, createFn, region = 'TOP_LEFT') {
+        console.log(`[HUDPanelManager] registerSlot ENTRY: ${slotId} in ${region}`);
         try {
-            console.log(`[HUDPanelManager] registerSlot called: ${slotId} in ${region}`);
-            
             const panel = this.panels.get(region);
             if (!panel) {
                 console.warn(`[HUDPanelManager] Unknown panel: ${region}`);
@@ -215,7 +214,7 @@ export default class HUDPanelManager {
             // Find slot config
             const slotConfig = panel.config.slots.find(s => s.id === slotId);
             if (!slotConfig) {
-                console.warn(`[HUDPanelManager] Unknown slot: ${slotId} in ${region}`);
+                console.warn(`[HUDPanelManager] Unknown slot: ${slotId} in ${region}. Available: ${panel.config.slots.map(s => s.id).join(', ')}`);
                 return null;
             }
             
@@ -231,40 +230,42 @@ export default class HUDPanelManager {
             // Create slot container at the allocated position
             const slotContainer = this.scene.add.container(0, panel.nextY);
             slotContainer.setDepth(100);
-        
-        // Add slot label
-        const label = this.scene.add.text(0, 0, slotConfig.label, {
-            fontFamily: 'monospace',
-            fontSize: '9px',
-            letterSpacing: 1,
-            fill: '#666677'
-        });
-        slotContainer.add(label);
-        
-        // Create content area below label
-        const contentY = 12;
-        const contentContainer = this.scene.add.container(0, contentY);
-        slotContainer.add(contentContainer);
-        
-        // Let the system create its elements in the content container
-        const userElements = createFn(contentContainer, panel.config.width - this.panelPadding * 2);
-        
-        // Add to panel
-        panel.content.add(slotContainer);
-        
-        // Store reference
-        panel.slotMap.set(slotId, {
-            container: slotContainer,
-            content: contentContainer,
-            elements: userElements,
-            config: slotConfig
-        });
-        
-        // Advance nextY for following slots
-        panel.nextY += slotConfig.height + 3;
-        
-        console.log(`[HUDPanelManager] Successfully registered ${slotId} in ${region}`);
-        return contentContainer;
+            
+            // Add slot label
+            const label = this.scene.add.text(0, 0, slotConfig.label, {
+                fontFamily: 'monospace',
+                fontSize: '9px',
+                letterSpacing: 1,
+                fill: '#666677'
+            });
+            slotContainer.add(label);
+            
+            // Create content area below label
+            const contentY = 12;
+            const contentContainer = this.scene.add.container(0, contentY);
+            slotContainer.add(contentContainer);
+            
+            // Let the system create its elements in the content container
+            console.log(`[HUDPanelManager] Calling createFn for ${slotId}...`);
+            const userElements = createFn(contentContainer, panel.config.width - this.panelPadding * 2);
+            console.log(`[HUDPanelManager] createFn returned for ${slotId}`);
+            
+            // Add to panel
+            panel.content.add(slotContainer);
+            
+            // Store reference
+            panel.slotMap.set(slotId, {
+                container: slotContainer,
+                content: contentContainer,
+                elements: userElements,
+                config: slotConfig
+            });
+            
+            // Advance nextY for following slots
+            panel.nextY += slotConfig.height + 3;
+            
+            console.log(`[HUDPanelManager] Successfully registered ${slotId} in ${region}`);
+            return contentContainer;
         } catch (err) {
             console.error(`[HUDPanelManager] Error registering slot ${slotId}:`, err);
             return null;
