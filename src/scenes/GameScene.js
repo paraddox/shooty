@@ -1675,6 +1675,11 @@ export default class GameScene extends Phaser.Scene {
 
     update(time, delta) {
         if (!this.player.active) return;
+        
+        // FIX: Skip ALL system updates while dialogs are open (game is paused)
+        if (this.isExchangePaused || this.isContractPaused) {
+            return;
+        }
 
         // Clamp delta to prevent spiral of death when FPS drops
         // Max 50ms (20fps) - if slower, game slows down rather than skipping
