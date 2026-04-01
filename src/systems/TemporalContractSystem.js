@@ -286,40 +286,31 @@ export default class TemporalContractSystem {
     }
     
     createDebtIndicator() {
-        const pos = this.scene.hudLayout.getSlotPosition('DEBT_DISPLAY', 'TOP_RIGHT');
-        this.debtDisplay = this.scene.add.container(pos.x, pos.y);
-        this.debtDisplay.setScrollFactor(0);
-        this.debtDisplay.setDepth(1000);
-        this.scene.hudLayout.registerSlot('DEBT_DISPLAY', this.debtDisplay, 'TOP_RIGHT');
-        
-        // Background
-        const bg = this.scene.add.rectangle(0, 0, 120, 40, 0x1a1a25, 0.9);
-        bg.setStrokeStyle(2, this.INDIGO_COLOR);
-        this.debtDisplay.add(bg);
-        
-        // Indigo seal icon
-        const seal = this.scene.add.image(-45, 0, 'contractSeal').setScale(0.4);
-        this.debtDisplay.add(seal);
-        
-        // Debt text
-        this.debtText = this.scene.add.text(-10, 0, `DEBT: ${this.temporalDebt.toFixed(1)}`, {
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            fill: '#4b0082'
-        }).setOrigin(0, 0.5);
-        this.debtDisplay.add(this.debtText);
-        
-        // Contract count
-        this.contractCountText = this.scene.add.text(-10, 12, 
-            `${this.activeContracts.length} ACTIVE`, {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            fill: '#666666'
-        }).setOrigin(0, 0.5);
-        this.debtDisplay.add(this.contractCountText);
-        
-        // Hide if no debt
-        this.debtDisplay.setVisible(this.temporalDebt > 0);
+        // Register with panel-based HUD system
+        this.scene.hudPanels.registerSlot('DEBT_DISPLAY', (container, width) => {
+            this.debtDisplay = container;
+            this.debtDisplay.setDepth(1000);
+            
+            // Debt text
+            this.debtText = this.scene.add.text(0, -5, `DEBT: ${this.temporalDebt.toFixed(1)}`, {
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                fill: '#4b0082'
+            }).setOrigin(0.5);
+            container.add(this.debtText);
+            
+            // Contract count
+            this.contractCountText = this.scene.add.text(0, 10, 
+                `${this.activeContracts.length} ACTIVE`, {
+                fontFamily: 'monospace',
+                fontSize: '10px',
+                fill: '#666666'
+            }).setOrigin(0.5);
+            container.add(this.contractCountText);
+            
+            // Hide if no debt
+            this.debtDisplay.setVisible(this.temporalDebt > 0);
+        }, 'TOP_RIGHT');
     }
     
     setupInput() {

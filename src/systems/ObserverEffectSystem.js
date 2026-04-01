@@ -165,33 +165,29 @@ export default class ObserverEffectSystem {
         ctx.fill();
         
         this.scene.textures.addCanvas('observerEye', canvas);
-        // Observer icon - positioned via HUDLayoutManager (below Temporal Rewind in left column)
-        const iconPos = this.scene.hudLayout.getSlotPosition('TEMPORAL_REWIND', 'TOP_LEFT');
-        this.observerIcon = this.scene.add.image(
-            iconPos.x + 10, // Slight offset
-            iconPos.y + 25, // Below temporal rewind bar
-            'observerEye'
-        );
-        this.observerIcon.setScrollFactor(0);
-        this.observerIcon.setDepth(100);
-        this.observerIcon.setAlpha(0.3);
-        this.observerIcon.setScale(0.5);
         
-        // Analysis text - positioned via HUDLayoutManager at bottom-left (less crowded)
-        const pos = this.scene.hudLayout.getSlotPosition('PATTERN', 'TOP_LEFT'); // Reuse pattern slot area
-        this.analysisText = this.scene.add.text(
-            pos.x,
-            pos.y + 20, // Below pattern counter
-            'OBSERVING...',
-            {
-                fontFamily: 'monospace',
-                fontSize: '10px',
-                fill: '#00d4ff',
-                alpha: 0.3
-            }
-        );
-        this.analysisText.setScrollFactor(0);
-        this.analysisText.setDepth(100);
+        // Observer icon - registered with panel-based HUD system
+        this.scene.hudPanels.registerSlot('OBSERVER', (container, width) => {
+            this.observerIcon = this.scene.add.image(0, 0, 'observerEye');
+            this.observerIcon.setDepth(100);
+            this.observerIcon.setAlpha(0.3);
+            this.observerIcon.setScale(0.5);
+            container.add(this.observerIcon);
+            
+            // Analysis text
+            this.analysisText = this.scene.add.text(
+                0, 20,
+                'OBSERVING...',
+                {
+                    fontFamily: 'monospace',
+                    fontSize: '10px',
+                    fill: '#00d4ff',
+                    alpha: 0.3
+                }
+            );
+            this.analysisText.setDepth(100);
+            container.add(this.analysisText);
+        }, 'BOTTOM_RIGHT');
     }
     
     setupAnalysis() {

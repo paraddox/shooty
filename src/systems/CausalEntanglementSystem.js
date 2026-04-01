@@ -154,43 +154,34 @@ export default class CausalEntanglementSystem {
     }
     
     createHUDIndicator() {
-        const pos = this.scene.hudLayout.getSlotPosition('CAUSAL_LINK', 'TOP_LEFT');
-        this.hudContainer = this.scene.add.container(pos.x, pos.y);
-        this.hudContainer.setScrollFactor(0);
-        this.hudContainer.setDepth(100);
-        this.scene.hudLayout.registerSlot('CAUSAL_LINK', this.hudContainer, 'TOP_LEFT');
-        
-        // Background
-        const bg = this.scene.add.rectangle(0, 0, 60, 8, 0x22222a);
-        this.hudContainer.add(bg);
-        
-        // Segments for available links
-        this.linkSegments = [];
-        for (let i = 0; i < this.maxEntanglements; i++) {
-            const segment = this.scene.add.rectangle(
-                -25 + i * 8, 0, 6, 6, this.HARMONIC_COLOR, 0.3
-            );
-            segment.setOrigin(0, 0.5);
-            this.linkSegments.push(segment);
-            this.hudContainer.add(segment);
-        }
-        
-        // Label
-        const label = this.scene.add.text(0, -12, 'LINKS', {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            letterSpacing: 1,
-            fill: '#00f0ff'
-        }).setOrigin(0.5);
-        this.hudContainer.add(label);
-        
-        // Type indicator
-        this.typeIndicator = this.scene.add.text(35, 0, '≈', {
-            fontFamily: 'monospace',
-            fontSize: '14px',
-            fill: '#00f0ff'
-        }).setOrigin(0.5);
-        this.hudContainer.add(this.typeIndicator);
+        // Register with panel-based HUD system
+        this.scene.hudPanels.registerSlot('CAUSAL_LINK', (container, width) => {
+            this.hudContainer = container;
+            this.hudContainer.setDepth(100);
+            
+            // Background
+            const bg = this.scene.add.rectangle(0, 0, 60, 8, 0x22222a);
+            container.add(bg);
+            
+            // Segments for available links
+            this.linkSegments = [];
+            for (let i = 0; i < this.maxEntanglements; i++) {
+                const segment = this.scene.add.rectangle(
+                    -25 + i * 8, 0, 6, 6, this.HARMONIC_COLOR, 0.3
+                );
+                segment.setOrigin(0, 0.5);
+                this.linkSegments.push(segment);
+                container.add(segment);
+            }
+            
+            // Type indicator (replaces label - panel shows it)
+            this.typeIndicator = this.scene.add.text(35, 0, '≈', {
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                fill: '#00f0ff'
+            }).setOrigin(0.5);
+            container.add(this.typeIndicator);
+        }, 'TOP_LEFT');
     }
     
     createPulseTexture() {

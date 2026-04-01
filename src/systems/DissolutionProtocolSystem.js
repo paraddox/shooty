@@ -249,68 +249,51 @@ export default class DissolutionProtocolSystem {
     }
     
     createEssenceDisplay() {
-        // Position below Debt Display in TOP_RIGHT area
-        const pos = this.scene.hudLayout.getSlotPosition('DEBT_DISPLAY', 'TOP_RIGHT');
-        const x = pos.x;
-        const y = pos.y + 60; // Below debt display
-        
-        this.essenceContainer = this.scene.add.container(x, y);
-        this.essenceContainer.setScrollFactor(0);
-        this.essenceContainer.setDepth(1000);
-        
-        // Background
-        const bg = this.scene.add.graphics();
-        bg.fillStyle(0x000000, 0.7);
-        bg.fillRoundedRect(0, 0, 140, 90, 8);
-        bg.lineStyle(1, 0x2d1f3d, 0.8);
-        bg.strokeRoundedRect(0, 0, 140, 90, 8);
-        
-        // Title
-        const title = this.scene.add.text(70, 8, 'ESSENCE', {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            fill: '#2d1f3d'
-        }).setOrigin(0.5, 0);
-        
-        this.essenceContainer.add([bg, title]);
-        
-        // Essence bars
-        this.essenceBars = {};
-        const types = [
-            { key: 'temporal', color: '#ffd700', label: 'T' },
-            { key: 'spatial', color: '#00f0ff', label: 'S' },
-            { key: 'cognitive', color: '#9d4edd', label: 'C' },
-            { key: 'narrative', color: '#c0c0c0', label: 'N' },
-            { key: 'void', color: '#1a1a1a', label: 'V' }
-        ];
-        
-        types.forEach((type, i) => {
-            const yPos = 25 + i * 12;
+        // Register with panel-based HUD system
+        this.scene.hudPanels.registerSlot('DISSOLUTION', (container, width) => {
+            this.essenceContainer = container;
+            this.essenceContainer.setDepth(1000);
             
-            const label = this.scene.add.text(8, yPos, type.label, {
-                fontFamily: 'monospace',
-                fontSize: '9px',
-                fill: type.color
+            // Essence bars
+            this.essenceBars = {};
+            const types = [
+                { key: 'temporal', color: '#ffd700', label: 'T' },
+                { key: 'spatial', color: '#00f0ff', label: 'S' },
+                { key: 'cognitive', color: '#9d4edd', label: 'C' },
+                { key: 'narrative', color: '#c0c0c0', label: 'N' },
+                { key: 'void', color: '#1a1a1a', label: 'V' }
+            ];
+            
+            const barWidth = Math.min(100, width - 30);
+            
+            types.forEach((type, i) => {
+                const yPos = -30 + i * 12;
+                
+                const label = this.scene.add.text(-width/2 + 5, yPos, type.label, {
+                    fontFamily: 'monospace',
+                    fontSize: '9px',
+                    fill: type.color
+                });
+                
+                const bar = this.scene.add.graphics();
+                bar.fillStyle(parseInt(type.color.replace('#', '0x')), 0.3);
+                bar.fillRect(-width/2 + 15, yPos + 2, barWidth, 6);
+                
+                const value = this.scene.add.text(-width/2 + 15 + barWidth + 5, yPos, '0', {
+                    fontFamily: 'monospace',
+                    fontSize: '9px',
+                    fill: type.color
+                });
+                
+                this.essenceBars[type.key] = { bar, value, maxWidth: barWidth };
+                container.add([label, bar, value]);
             });
             
-            const bar = this.scene.add.graphics();
-            bar.fillStyle(parseInt(type.color.replace('#', '0x')), 0.3);
-            bar.fillRect(20, yPos + 2, 100, 6);
-            
-            const value = this.scene.add.text(122, yPos, '0', {
-                fontFamily: 'monospace',
-                fontSize: '9px',
-                fill: type.color
-            });
-            
-            this.essenceBars[type.key] = { bar, value, maxWidth: 100 };
-            this.essenceContainer.add([label, bar, value]);
-        });
-        
-        // Hide initially, show when essence gained
-        this.essenceContainer.setVisible(
-            Object.values(this.essence).some(v => v > 0)
-        );
+            // Hide initially, show when essence gained
+            this.essenceContainer.setVisible(
+                Object.values(this.essence).some(v => v > 0)
+            );
+        }, 'TOP_RIGHT');
     }
     
     updateEssenceDisplay() {

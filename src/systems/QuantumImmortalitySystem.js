@@ -110,41 +110,31 @@ export default class QuantumImmortalitySystem {
     createVisuals() {
         // Rendering via UnifiedGraphicsManager
         
-        // Entropy bar (top-right) - registered with HUDLayoutManager
-        const pos = this.scene.hudLayout.getSlotPosition('QUANTUM_IMMORTALITY', 'TOP_RIGHT');
-        this.entropyContainer = this.scene.add.container(pos.x, pos.y);
-        this.entropyContainer.setScrollFactor(0);
-        this.entropyContainer.setDepth(100);
-        this.scene.hudLayout.registerSlot('QUANTUM_IMMORTALITY', this.entropyContainer, 'TOP_RIGHT');
+        // Entropy bar (top-right) - registered with HUDPanelManager
+        this.scene.hudPanels.registerSlot('QUANTUM_IMMORTALITY', (container, width) => {
+            this.entropyContainer = container;
+            this.entropyContainer.setDepth(100);
+            
+            // Background
+            const bg = this.scene.add.rectangle(0, 0, Math.min(100, width), 12, 0x1a1a25, 0.9);
+            container.add(bg);
+            
+            // Entropy fill (white→gold gradient effect)
+            this.entropyFill = this.scene.add.rectangle(-Math.min(50, width/2), 0, 0, 10, this.ECHO_COLOR);
+            this.entropyFill.setOrigin(0, 0.5);
+            container.add(this.entropyFill);
+            
+            // Echo count indicator
+            this.echoIndicator = this.scene.add.text(0, 12, '◉ 0', {
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                letterSpacing: 2,
+                fill: '#ffffff'
+            }).setOrigin(0.5);
+            container.add(this.echoIndicator);
+        }, 'TOP_RIGHT');
         
-        // Background
-        const bg = this.scene.add.rectangle(0, 0, 100, 12, 0x1a1a25, 0.9);
-        this.entropyContainer.add(bg);
-        
-        // Entropy fill (white→gold gradient effect)
-        this.entropyFill = this.scene.add.rectangle(-50, 0, 0, 10, this.ECHO_COLOR);
-        this.entropyFill.setOrigin(0, 0.5);
-        this.entropyContainer.add(this.entropyFill);
-        
-        // Entropy label
-        this.entropyText = this.scene.add.text(0, -18, 'ENTROPY', {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            letterSpacing: 1,
-            fill: '#aaaaaa'
-        }).setOrigin(0.5);
-        this.entropyContainer.add(this.entropyText);
-        
-        // Echo count indicator
-        this.echoIndicator = this.scene.add.text(0, 18, '◉ 0', {
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            letterSpacing: 2,
-            fill: '#ffffff'
-        }).setOrigin(0.5);
-        this.entropyContainer.add(this.echoIndicator);
-        
-        // Merge prompt (appears when ready)
+        // Merge prompt (appears when ready) - NOT in panel, screen-centered
         this.mergePrompt = this.scene.add.text(this.scene.scale.width / 2, 120, '[Q] MERGE TIMELINES', {
             fontFamily: 'monospace',
             fontSize: '20px',

@@ -159,30 +159,30 @@ export default class ResonanceOrbSystem {
     }
     
     createOrbHUD() {
-        // HUD container at top-right, below other UI
-        const pos = this.scene.hudLayout.getSlotPosition('RESONANCE_ORB', 'TOP_RIGHT');
-        this.hudContainer = this.scene.add.container(pos.x, pos.y)
-            .setScrollFactor(0)
-            .setDepth(1000);
-        this.scene.hudLayout.registerSlot('RESONANCE_ORB', this.hudContainer, 'TOP_RIGHT');
-        
-        this.orbIndicators = [];
-        
-        // Background panel for active orbs
-        const bg = this.scene.add.rectangle(0, 0, 160, 40, 0x000000, 0.5);
-        bg.setStrokeStyle(1, 0x444444);
-        this.hudContainer.add(bg);
-        this.hudBg = bg;
-        
-        // Superposition text
-        this.superpositionText = this.scene.add.text(0, -35, '', {
-            fontFamily: 'Courier New',
-            fontSize: '11px',
-            color: '#ff00ff'
-        }).setOrigin(0.5);
-        this.hudContainer.add(this.superpositionText);
-        
-        this.hudContainer.setVisible(false);
+        // HUD container at top-right - now using panel-based system
+        this.scene.hudPanels.registerSlot('RESONANCE_ORB', (container, width) => {
+            this.hudContainer = container;
+            this.hudContainer.setDepth(1000);
+            
+            this.orbIndicators = [];
+            
+            // Background panel for active orbs
+            const bg = this.scene.add.rectangle(width / 2, 0, width, 40, 0x000000, 0.5);
+            bg.setStrokeStyle(1, 0x444444);
+            container.add(bg);
+            this.hudBg = bg;
+            
+            // Superposition text
+            this.superpositionText = this.scene.add.text(width / 2, -35, '', {
+                fontFamily: 'Courier New',
+                fontSize: '11px',
+                color: '#ff00ff'
+            }).setOrigin(0.5);
+            container.add(this.superpositionText);
+            
+            // Hide initially
+            this.hudContainer.setVisible(false);
+        }, 'TOP_RIGHT');
     }
     
     update(time, delta) {

@@ -74,44 +74,32 @@ export default class ChronoLoopSystem {
     }
     
     createLoopIndicator() {
-        const margin = 30;
-        
-        // Container for loop indicators - registered with HUDLayoutManager
-        const pos = this.scene.hudLayout.getSlotPosition('CHRONO_LOOP', 'TOP_LEFT');
-        this.loopIndicator = this.scene.add.container(pos.x, pos.y);
-        this.loopIndicator.setScrollFactor(0);
-        this.loopIndicator.setDepth(100);
-        this.scene.hudLayout.registerSlot('CHRONO_LOOP', this.loopIndicator, 'TOP_LEFT');
-        
-        // Background bar
-        const bg = this.scene.add.rectangle(0, 0, 60, 8, 0x22222a);
-        this.loopIndicator.add(bg);
-        
-        // Teal segments for each possible echo
-        this.loopSegments = [];
-        for (let i = 0; i < this.maxEchoes; i++) {
-            const segment = this.scene.add.rectangle(
-                -25 + i * 21, 0, 18, 6, this.TEAL_COLOR, 0.3
-            );
-            segment.setOrigin(0, 0.5);
-            this.loopSegments.push(segment);
-            this.loopIndicator.add(segment);
-        }
-        
-        // Recording progress bar (hidden by default)
-        this.recordProgressBar = this.scene.add.rectangle(-30, 0, 0, 4, this.TEAL_GLOW);
-        this.recordProgressBar.setOrigin(0, 0.5);
-        this.recordProgressBar.setVisible(false);
-        this.loopIndicator.add(this.recordProgressBar);
-        
-        // Label
-        const label = this.scene.add.text(0, -12, 'LOOPS', {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            letterSpacing: 1,
-            fill: '#008080'
-        }).setOrigin(0.5);
-        this.loopIndicator.add(label);
+        // Register with panel-based HUD system
+        this.scene.hudPanels.registerSlot('CHRONO_LOOP', (container, width) => {
+            this.loopIndicator = container;
+            this.loopIndicator.setDepth(100);
+            
+            // Background bar
+            const bg = this.scene.add.rectangle(0, 0, 60, 8, 0x22222a);
+            container.add(bg);
+            
+            // Teal segments for each possible echo
+            this.loopSegments = [];
+            for (let i = 0; i < this.maxEchoes; i++) {
+                const segment = this.scene.add.rectangle(
+                    -25 + i * 21, 0, 18, 6, this.TEAL_COLOR, 0.3
+                );
+                segment.setOrigin(0, 0.5);
+                this.loopSegments.push(segment);
+                container.add(segment);
+            }
+            
+            // Recording progress bar (hidden by default)
+            this.recordProgressBar = this.scene.add.rectangle(-30, 0, 0, 4, this.TEAL_GLOW);
+            this.recordProgressBar.setOrigin(0, 0.5);
+            this.recordProgressBar.setVisible(false);
+            container.add(this.recordProgressBar);
+        }, 'TOP_LEFT');
     }
     
     setupInput() {

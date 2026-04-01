@@ -215,56 +215,48 @@ export default class SymbioticPredictionSystem {
     }
     
     createSymbiosisIndicator() {
-        // Top-center indicator showing harmony/chaos balance - registered with HUDLayoutManager
-        const pos = this.scene.hudLayout.getSlotPosition('SYMBIOSIS', 'TOP_CENTER');
-        this.symbiosisContainer = this.scene.add.container(pos.x, pos.y);
-        this.symbiosisContainer.setScrollFactor(0);
-        this.symbiosisContainer.setDepth(100);
-        this.scene.hudLayout.registerSlot('SYMBIOSIS', this.symbiosisContainer, 'TOP_CENTER');
-        
-        // Background bar
-        const barBg = this.scene.add.rectangle(0, 0, 200, 6, 0x22222a);
-        this.symbiosisContainer.add(barBg);
-        
-        // Harmony side (left, cyan)
-        this.harmonyBar = this.scene.add.rectangle(-50, 0, 100, 4, this.HARMONY_COLOR, 0.3);
-        this.harmonyBar.setOrigin(0, 0.5);
-        this.symbiosisContainer.add(this.harmonyBar);
-        
-        // Chaos side (right, magenta)
-        this.chaosBar = this.scene.add.rectangle(50, 0, 100, 4, this.CHAOS_COLOR, 0.3);
-        this.chaosBar.setOrigin(1, 0.5);
-        this.symbiosisContainer.add(this.chaosBar);
-        
-        // Center marker
-        this.centerMarker = this.scene.add.rectangle(0, 0, 2, 8, 0xffffff, 0.5);
-        this.symbiosisContainer.add(this.centerMarker);
-        
-        // State label
-        this.symbiosisLabel = this.scene.add.text(0, -15, 'SYMBIOSIS', {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            letterSpacing: 2,
-            fill: '#666677'
-        }).setOrigin(0.5);
-        this.symbiosisContainer.add(this.symbiosisLabel);
-        
-        // Status text (HARMONY / CHAOS / BALANCED)
-        this.statusText = this.scene.add.text(0, 12, 'BALANCED', {
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            letterSpacing: 1,
-            fill: '#9d4edd'
-        }).setOrigin(0.5);
-        this.symbiosisContainer.add(this.statusText);
-        
-        // Symbiosis depth percentage
-        this.depthText = this.scene.add.text(120, 0, '0%', {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            fill: '#00f0ff'
-        }).setOrigin(0, 0.5);
-        this.symbiosisContainer.add(this.depthText);
+        // Top-center indicator showing harmony/chaos balance - registered with HUDPanelManager
+        this.scene.hudPanels.registerSlot('SYMBIOSIS_HARMONY', (container, width) => {
+            this.symbiosisContainer = container;
+            this.symbiosisContainer.setDepth(100);
+            
+            const barWidth = Math.min(200, width);
+            
+            // Background bar
+            const barBg = this.scene.add.rectangle(0, 0, barWidth, 6, 0x22222a);
+            container.add(barBg);
+            
+            // Harmony side (left, cyan)
+            this.harmonyBar = this.scene.add.rectangle(-barWidth/4, 0, barWidth/2, 4, this.HARMONY_COLOR, 0.3);
+            this.harmonyBar.setOrigin(0, 0.5);
+            container.add(this.harmonyBar);
+            
+            // Chaos side (right, magenta)
+            this.chaosBar = this.scene.add.rectangle(barWidth/4, 0, barWidth/2, 4, this.CHAOS_COLOR, 0.3);
+            this.chaosBar.setOrigin(1, 0.5);
+            container.add(this.chaosBar);
+            
+            // Center marker
+            this.centerMarker = this.scene.add.rectangle(0, 0, 2, 8, 0xffffff, 0.5);
+            container.add(this.centerMarker);
+            
+            // Status text (HARMONY / CHAOS / BALANCED)
+            this.statusText = this.scene.add.text(0, 12, 'BALANCED', {
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                letterSpacing: 1,
+                fill: '#9d4edd'
+            }).setOrigin(0.5);
+            container.add(this.statusText);
+            
+            // Symbiosis depth percentage
+            this.depthText = this.scene.add.text(barWidth/2 - 10, 0, '0%', {
+                fontFamily: 'monospace',
+                fontSize: '10px',
+                fill: '#00f0ff'
+            }).setOrigin(0, 0.5);
+            container.add(this.depthText);
+        }, 'TOP_CENTER');
     }
     
     setupInput() {

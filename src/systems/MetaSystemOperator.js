@@ -145,47 +145,28 @@ export default class MetaSystemOperator {
     }
     
     createPatchHUD() {
-        // Small indicator in corner showing active patches - registered with HUDLayoutManager
-        const pos = this.scene.hudLayout.getSlotPosition('META_SYSTEM', 'BOTTOM_RIGHT');
-        this.patchHUD = this.scene.add.container(pos.x, pos.y);
-        this.patchHUD.setDepth(100);
-        this.patchHUD.setScrollFactor(0);
-        this.scene.hudLayout.registerSlot('META_SYSTEM', this.patchHUD, 'BOTTOM_RIGHT');
-        
-        // Background
-        const bg = this.scene.add.rectangle(0, 0, 100, 60, 0x0a0a0f, 0.8);
-        bg.setStrokeStyle(1, this.META_COLOR, 0.5);
-        
-        // Title
-        const title = this.scene.add.text(0, -20, 'META-SYSTEM', {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            fill: '#ffb700'
-        }).setOrigin(0.5);
-        
-        // Patch count
-        this.patchCountText = this.scene.add.text(0, 0, 'PATCHES: 0/3', {
-            fontFamily: 'monospace',
-            fontSize: '11px',
-            fill: '#00f0ff'
-        }).setOrigin(0.5);
-        
-        // Energy bar
-        this.energyBarBg = this.scene.add.rectangle(0, 18, 80, 6, 0x222222);
-        this.energyBar = this.scene.add.rectangle(0, 18, 80, 6, this.META_COLOR);
-        
-        // Key hint
-        const hint = this.scene.add.text(0, 32, '[P] PATCH MODE', {
-            fontFamily: 'monospace',
-            fontSize: '8px',
-            fill: '#666666'
-        }).setOrigin(0.5);
-        
-        this.patchHUD.add([bg, title, this.patchCountText, this.energyBarBg, this.energyBar, hint]);
-        
-        // Initially hidden until discovered
-        this.patchHUD.setVisible(false);
-        this.patchHUD.setAlpha(0);
+        // Small indicator in corner showing active patches - registered with HUDPanelManager
+        this.scene.hudPanels.registerSlot('META_SYSTEM', (container, width) => {
+            this.patchHUD = container;
+            this.patchHUD.setDepth(100);
+            
+            // Patch count
+            this.patchCountText = this.scene.add.text(0, -5, 'PATCHES: 0/3', {
+                fontFamily: 'monospace',
+                fontSize: '11px',
+                fill: '#00f0ff'
+            }).setOrigin(0.5);
+            container.add(this.patchCountText);
+            
+            // Energy bar
+            this.energyBarBg = this.scene.add.rectangle(0, 12, Math.min(80, width-10), 6, 0x222222);
+            this.energyBar = this.scene.add.rectangle(0, 12, Math.min(80, width-10), 6, this.META_COLOR);
+            container.add([this.energyBarBg, this.energyBar]);
+            
+            // Initially hidden until discovered
+            this.patchHUD.setVisible(false);
+            this.patchHUD.setAlpha(0);
+        }, 'BOTTOM_RIGHT');
     }
     
     setupInput() {

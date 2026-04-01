@@ -150,42 +150,34 @@ export default class VoidCoherenceSystem {
         this.structureContainer = this.scene.add.container(0, 0);
         this.structureContainer.setDepth(6);
         
-        // Coherence bar (top-left) - registered with HUDLayoutManager
-        const pos = this.scene.hudLayout.getSlotPosition('VOID_COHERENCE', 'TOP_LEFT');
-        this.coherenceContainer = this.scene.add.container(pos.x, pos.y);
-        this.coherenceContainer.setScrollFactor(0);
-        this.coherenceContainer.setDepth(100);
-        this.scene.hudLayout.registerSlot('VOID_COHERENCE', this.coherenceContainer, 'TOP_LEFT');
+        // Coherence bar (top-left) - registered with HUDPanelManager
+        this.scene.hudPanels.registerSlot('VOID_COHERENCE', (container, width) => {
+            this.coherenceContainer = container;
+            this.coherenceContainer.setDepth(100);
+            
+            const barWidth = Math.min(200, width);
+            
+            // Background
+            const bg = this.scene.add.rectangle(0, 0, barWidth, 4, 0x1a1a25);
+            bg.setOrigin(0, 0.5);
+            container.add(bg);
+            
+            // Coherence fill (purple→cyan gradient effect)
+            this.coherenceFill = this.scene.add.rectangle(0, 0, 0, 4, 0x6b00ff);
+            this.coherenceFill.setOrigin(0, 0.5);
+            container.add(this.coherenceFill);
+            
+            // Structure count indicator
+            this.structureIndicator = this.scene.add.text(barWidth/2, 10, '◈ 0', {
+                fontFamily: 'monospace',
+                fontSize: '10px',
+                letterSpacing: 1,
+                fill: '#9d4edd'
+            }).setOrigin(0.5);
+            container.add(this.structureIndicator);
+        }, 'TOP_LEFT');
         
-        // Background
-        const bg = this.scene.add.rectangle(0, 0, 200, 4, 0x1a1a25);
-        bg.setOrigin(0, 0.5);
-        this.coherenceContainer.add(bg);
-        
-        // Coherence fill (purple→cyan gradient effect)
-        this.coherenceFill = this.scene.add.rectangle(0, 0, 0, 4, 0x6b00ff);
-        this.coherenceFill.setOrigin(0, 0.5);
-        this.coherenceContainer.add(this.coherenceFill);
-        
-        // Coherence label
-        this.coherenceText = this.scene.add.text(0, -12, 'VOID COHERENCE', {
-            fontFamily: 'monospace',
-            fontSize: '9px',
-            letterSpacing: 1,
-            fill: '#6b00ff'
-        }).setOrigin(0, 0.5);
-        this.coherenceContainer.add(this.coherenceText);
-        
-        // Structure count indicator
-        this.structureIndicator = this.scene.add.text(100, 12, '◈ 0', {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            letterSpacing: 1,
-            fill: '#9d4edd'
-        }).setOrigin(0.5);
-        this.coherenceContainer.add(this.structureIndicator);
-        
-        // Resonance prompt
+        // Resonance prompt - NOT in panel, screen-centered
         this.resonancePrompt = this.scene.add.text(
             this.scene.scale.width / 2, 
             150, 

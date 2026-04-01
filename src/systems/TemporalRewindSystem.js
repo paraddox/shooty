@@ -147,31 +147,32 @@ export default class TemporalRewindSystem {
     }
     
     createInstabilityBar() {
-        const pos = this.scene.hudLayout.getSlotPosition('TEMPORAL_REWIND', 'TOP_LEFT');
-        const x = pos.x;
-        const y = pos.y;
-        const width = 120;
-        const height = 6;
-        
-        // Background
-        this.instabilityBar = {
-            bg: this.scene.add.rectangle(x, y, width, height, 0x1a1a25, 0.8),
-            fill: this.scene.add.rectangle(x - width/2 + 1, y, 0, height - 2, this.AMBER_COLOR, 0.9),
-            glow: this.scene.add.rectangle(x, y, width, height, this.AMBER_GLOW, 0.3)
-        };
-        
-        // Set scroll factor 0 (fixed to screen)
-        Object.values(this.instabilityBar).forEach(el => {
-            el.setScrollFactor(0);
-            el.setDepth(101);
-        });
-        
-        // Warning text
-        this.instabilityText = this.scene.add.text(x + width/2 + 5, y, 'UNSTABLE', {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            fill: '#ffaa00'
-        }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(101).setVisible(false);
+        // Register with panel-based HUD system
+        this.scene.hudPanels.registerSlot('TEMPORAL_REWIND', (container, width) => {
+            const barWidth = Math.min(120, width);
+            const height = 6;
+            
+            // Background
+            this.instabilityBar = {
+                bg: this.scene.add.rectangle(0, 0, barWidth, height, 0x1a1a25, 0.8),
+                fill: this.scene.add.rectangle(-barWidth/2 + 1, 0, 0, height - 2, this.AMBER_COLOR, 0.9),
+                glow: this.scene.add.rectangle(0, 0, barWidth, height, this.AMBER_GLOW, 0.3)
+            };
+            
+            // Set depth
+            Object.values(this.instabilityBar).forEach(el => {
+                el.setDepth(101);
+                container.add(el);
+            });
+            
+            // Warning text
+            this.instabilityText = this.scene.add.text(barWidth/2 + 5, 0, 'UNSTABLE', {
+                fontFamily: 'monospace',
+                fontSize: '10px',
+                fill: '#ffaa00'
+            }).setOrigin(0, 0.5).setDepth(101).setVisible(false);
+            container.add(this.instabilityText);
+        }, 'TOP_LEFT');
     }
     
     createRewindOverlay() {

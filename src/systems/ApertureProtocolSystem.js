@@ -387,35 +387,32 @@ export default class ApertureProtocolSystem {
     }
     
     createUI() {
-        // Blink cooldown indicator
-        const pos = this.scene.hudLayout.getSlotPosition('APERTURE', 'BOTTOM_RIGHT');
-        this.blinkIndicator = this.scene.add.container(pos.x, pos.y);
-        this.blinkIndicator.setScrollFactor(0);
-        this.scene.hudLayout.registerSlot('APERTURE', this.blinkIndicator, 'BOTTOM_RIGHT');
-        this.blinkIndicator.setDepth(100);
-        
-        // Background
-        const bg = this.scene.add.circle(0, 0, 25, 0x22222a, 0.8);
-        bg.setStrokeStyle(2, 0x00d4aa);
-        this.blinkIndicator.add(bg);
-        
-        // Icon
-        this.blinkIcon = this.scene.add.text(0, 0, '◉', {
-            fontFamily: 'monospace',
-            fontSize: '20px',
-            fill: '#00d4aa'
-        }).setOrigin(0.5);
-        this.blinkIndicator.add(this.blinkIcon);
-        
-        // Cooldown arc - MIGRATED: Uses UnifiedGraphicsManager layer created in createVisualElements()
-        
-        // Attention meter (showing how many entities are charged) - inside container
-        this.attentionMeter = this.scene.add.text(0, 35, 'APERTURE: 0%', {
-            fontFamily: 'monospace',
-            fontSize: '10px',
-            fill: '#00d4aa'
-        }).setOrigin(0.5);
-        this.blinkIndicator.add(this.attentionMeter);
+        // Register with panel-based HUD system
+        this.scene.hudPanels.registerSlot('APERTURE', (container, width) => {
+            this.blinkIndicator = container;
+            this.blinkIndicator.setDepth(100);
+            
+            // Background
+            const bg = this.scene.add.circle(0, 0, 25, 0x22222a, 0.8);
+            bg.setStrokeStyle(2, 0x00d4aa);
+            container.add(bg);
+            
+            // Icon
+            this.blinkIcon = this.scene.add.text(0, 0, '◉', {
+                fontFamily: 'monospace',
+                fontSize: '20px',
+                fill: '#00d4aa'
+            }).setOrigin(0.5);
+            container.add(this.blinkIcon);
+            
+            // Attention meter (showing how many entities are charged)
+            this.attentionMeter = this.scene.add.text(0, 35, 'APERTURE: 0%', {
+                fontFamily: 'monospace',
+                fontSize: '10px',
+                fill: '#00d4aa'
+            }).setOrigin(0.5);
+            container.add(this.attentionMeter);
+        }, 'BOTTOM_RIGHT');
     }
     
     startTracking() {
