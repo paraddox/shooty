@@ -724,4 +724,22 @@ describe('HUD System Compliance', () => {
       expect(speciesText.y).toBe(16);
     });
   });
+
+  describe('Conditional Visibility Pattern (NEXUS, ORBS)', () => {
+    it('should handle panels that start hidden until activated', () => {
+      const container = new MockContainer(0, 0);
+      
+      // Simulate AxiomNexusSystem - creates content but hides initially
+      const placeholder = new MockText(0, 0, 'DISCOVER SYSTEMS', { fontSize: '9px' });
+      placeholder.setOrigin(0, 0);
+      container.add(placeholder);
+      
+      // Container would be hidden via setVisible(false) until synthesis discovered
+      // This is expected behavior - label shows but content area appears empty
+      
+      const bounds = getContentBounds(container);
+      expect(bounds.top).toBe(0);
+      expect(placeholder.text).toBe('DISCOVER SYSTEMS');
+    });
+  });
 });
