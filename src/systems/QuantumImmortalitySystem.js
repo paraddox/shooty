@@ -116,11 +116,14 @@ export default class QuantumImmortalitySystem {
             return;
         }
         console.log('[QuantumImmortalitySystem] Registering QUANTUM_IMMORTALITY slot...');
+        console.log('[QuantumImmortalitySystem] hudPanels object:', this.scene.hudPanels);
         console.log('[QuantumImmortalitySystem] hudPanels type:', typeof this.scene.hudPanels);
         console.log('[QuantumImmortalitySystem] registerSlot type:', typeof this.scene.hudPanels?.registerSlot);
+        console.log('[QuantumImmortalitySystem] panels Map:', this.scene.hudPanels?.panels);
         let result;
         try {
             result = this.scene.hudPanels.registerSlot('QUANTUM_IMMORTALITY', (container, width) => {
+                console.log('[QuantumImmortalitySystem] CALLBACK EXECUTING!');
                 this.entropyContainer = container;
                 this.entropyContainer.setDepth(100);
                 
