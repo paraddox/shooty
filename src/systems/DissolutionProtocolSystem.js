@@ -150,6 +150,10 @@ export default class DissolutionProtocolSystem {
         
         // ===== VISUALS =====
         this.createVisuals();
+        
+        // ===== THROTTLING =====
+        this.visualUpdateInterval = 5; // Update visuals every 5 frames
+        this.visualUpdateCounter = 0;
     }
     
     registerAllSystems() {
@@ -1068,9 +1072,13 @@ export default class DissolutionProtocolSystem {
             }
         });
         
-        // Visual updates in dissolution mode
+        // Visual updates in dissolution mode (throttled)
         if (this.dissolutionMode) {
-            this.updateDissolutionVisuals(time);
+            this.visualUpdateCounter++;
+            if (this.visualUpdateCounter >= this.visualUpdateInterval) {
+                this.visualUpdateCounter = 0;
+                this.updateDissolutionVisuals(time);
+            }
         }
     }
     

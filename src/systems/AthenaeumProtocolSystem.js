@@ -77,6 +77,10 @@ export default class AthenaeumProtocolSystem {
         this.currentRegion = null;
         this.regionEffectTimer = 0;
         
+        // Throttling for expensive graphics operations
+        this.renderFrameInterval = 3; // Only render every 3rd frame
+        this.renderFrameCounter = 0;
+        
         // UI
         this.regionIndicator = null;
         
@@ -196,9 +200,13 @@ export default class AthenaeumProtocolSystem {
         // Check current region and apply effects
         this.updateCurrentRegion(player, dt);
         
-        // Render visuals
-        this.renderRegions();
-        this.renderConnections();
+        // Render visuals (throttled for performance)
+        this.renderFrameCounter++;
+        if (this.renderFrameCounter >= this.renderFrameInterval) {
+            this.renderFrameCounter = 0;
+            this.renderRegions();
+            this.renderConnections();
+        }
         
         // Clear activity buffer
         this.activityBuffer.clear();

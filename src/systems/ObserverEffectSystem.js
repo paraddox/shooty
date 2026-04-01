@@ -821,8 +821,13 @@ export default class ObserverEffectSystem {
         }
         
         // Continuous mutation decay (very slow)
+        const prevMutation = this.mutationLevel;
         this.mutationLevel = Math.max(0, this.mutationLevel - dt * 0.5);
-        this.drawMutationBar();
+        
+        // Only redraw if mutation level changed significantly (throttled)
+        if (Math.abs(prevMutation - this.mutationLevel) > 1) {
+            this.drawMutationBar();
+        }
     }
     
     destroy() {
