@@ -896,6 +896,9 @@ export default class QuantumImmortalitySystem {
     }
     
     updateUI() {
+        // Guard: panel elements may not be initialized yet
+        if (!this.entropyFill || !this.echoIndicator || !this.entropyText) return;
+        
         // Update entropy bar
         const entropyPercent = this.timelineEntropy / 100;
         this.entropyFill.width = 98 * entropyPercent;
