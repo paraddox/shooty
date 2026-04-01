@@ -53,6 +53,9 @@ export default class HUDPanelManager {
                     { id: 'DEBT_DISPLAY', label: 'DEBT', type: 'compact', height: 45 },
                     { id: 'BOOTSTRAP', label: 'PARADOX', type: 'compact', height: 40 },
                     { id: 'DISSOLUTION', label: 'ESSENCE', type: 'compact', height: 50 },
+                    { id: 'AMBIENT', label: 'AMBIENT', type: 'compact', height: 30 },
+                    { id: 'AXIOM_NEXUS', label: 'NEXUS', type: 'compact', height: 30 },
+                    { id: 'HEARTFLUX', label: 'HEARTFLUX', type: 'compact', height: 30 },
                 ]
             },
             TOP_CENTER: {
@@ -76,6 +79,11 @@ export default class HUDPanelManager {
                     { id: 'META_SYSTEM', label: 'META', type: 'compact', height: 50 },
                     { id: 'APERTURE', label: 'BLINK', type: 'icon', height: 40 },
                     { id: 'OBSERVER', label: 'OBSERVER', type: 'icon', height: 30 },
+                    { id: 'KARMA', label: 'KARMA', type: 'compact', height: 30 },
+                    { id: 'PEDAGOGY', label: 'PEDAGOGY', type: 'compact', height: 30 },
+                    { id: 'ATHENAEUM', label: 'ATHENAEUM', type: 'compact', height: 30 },
+                    { id: 'INSCRIPTION', label: 'INSCRIPTION', type: 'compact', height: 30 },
+                    { id: 'HARMONIC', label: 'HARMONIC', type: 'compact', height: 30 },
                 ]
             }
         };

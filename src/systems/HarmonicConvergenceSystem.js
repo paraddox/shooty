@@ -150,7 +150,7 @@ export default class HarmonicConvergenceSystem {
                 container.add(bar);
                 this.spectrumBars.push(bar);
             }
-        }, 'BOTTOM_CENTER');
+        }, 'BOTTOM_RIGHT');
     }
     
     startMetronome() {

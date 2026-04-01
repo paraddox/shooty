@@ -457,11 +457,12 @@ export default class VoidCoherenceSystem {
                 visual = this.scene.add.container(structure.x, structure.y);
                 
                 const core = this.scene.add.circle(0, 0, 30, 0x00d4ff, 0.3);
-                const ring1 = this.scene.add.ring(0, 0, 35, 40, 0x9d4edd);
-                const ring2 = this.scene.add.ring(0, 0, 50, 55, 0x6b00ff);
-                
+                // Rings using circles with stroke (Phaser doesn't have ring primitive)
+                const ring1 = this.scene.add.circle(0, 0, 37, 0x9d4edd, 0).setStrokeStyle(4, 0x9d4edd);
+                const ring2 = this.scene.add.circle(0, 0, 52, 0x6b00ff, 0).setStrokeStyle(3, 0x6b00ff);
+
                 visual.add([core, ring1, ring2]);
-                
+
                 // Rotation animation
                 this.scene.tweens.add({
                     targets: [ring1, ring2],
