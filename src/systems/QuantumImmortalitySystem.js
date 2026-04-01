@@ -145,7 +145,7 @@ export default class QuantumImmortalitySystem {
         this.entropyContainer.add(this.echoIndicator);
         
         // Merge prompt (appears when ready)
-        this.mergePrompt = this.scene.add.text(screenWidth / 2, 120, '[Q] MERGE TIMELINES', {
+        this.mergePrompt = this.scene.add.text(this.scene.scale.width / 2, 120, '[Q] MERGE TIMELINES', {
             fontFamily: 'monospace',
             fontSize: '20px',
             fontStyle: 'bold',
