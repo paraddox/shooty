@@ -541,7 +541,7 @@ export default class CinematicArchiveSystem {
             localStorage.setItem('shooty_cinematic_archive', JSON.stringify(existing));
             
             // Also save to timeline chronicle if available
-            if (this.scene.timelineChronicle) {
+            if (this.scene.timelineChronicle?.recordCapture) {
                 this.scene.timelineChronicle.recordCapture(captureData);
             }
         } catch (e) {
