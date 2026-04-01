@@ -265,15 +265,14 @@ export default class TemporalResidueSystem {
             
             // Node core glow
             const glowRadius = 12 + Math.sin(node.pulsePhase) * 3;
-            const gradient = this.nodeGraphics;
             
             // Outer glow
-            gradient.fillStyle(this.NODE_COLOR, alpha * 0.3);
-            gradient.fillCircle(node.x, node.y, glowRadius * 1.5);
+            this.nodeGraphics.fillStyle(this.NODE_COLOR, alpha * 0.3);
+            this.nodeGraphics.fillCircle(node.x, node.y, glowRadius * 1.5);
             
             // Core
-            gradient.fillStyle(this.NODE_CORE_COLOR, alpha);
-            gradient.fillCircle(node.x, node.y, 8);
+            this.nodeGraphics.fillStyle(this.NODE_CORE_COLOR, alpha);
+            this.nodeGraphics.fillCircle(node.x, node.y, 8);
             
             // Health indicator (small dots around node)
             const dotRadius = 14;
@@ -283,32 +282,32 @@ export default class TemporalResidueSystem {
                 const dotY = node.y + Math.sin(dotAngle) * dotRadius;
                 
                 if (i < node.health) {
-                    gradient.fillStyle(this.NODE_CORE_COLOR, alpha);
-                    gradient.fillCircle(dotX, dotY, 2);
+                    this.nodeGraphics.fillStyle(this.NODE_CORE_COLOR, alpha);
+                    this.nodeGraphics.fillCircle(dotX, dotY, 2);
                 } else {
-                    gradient.fillStyle(0x333344, alpha * 0.5);
-                    gradient.fillCircle(dotX, dotY, 2);
+                    this.nodeGraphics.fillStyle(0x333344, alpha * 0.5);
+                    this.nodeGraphics.fillCircle(dotX, dotY, 2);
                 }
             }
             
             // Damage flash
             if (node.recentDamage) {
-                gradient.fillStyle(0xffffff, 0.6);
-                gradient.fillCircle(node.x, node.y, 10);
+                this.nodeGraphics.fillStyle(0xffffff, 0.6);
+                this.nodeGraphics.fillCircle(node.x, node.y, 10);
             }
             
             // Orbit indicator when active
             if (node.orbiting) {
-                gradient.lineStyle(1, this.NODE_COLOR, alpha * 0.5);
-                gradient.strokeCircle(node.x, node.y, 16);
+                this.nodeGraphics.lineStyle(1, this.NODE_COLOR, alpha * 0.5);
+                this.nodeGraphics.strokeCircle(node.x, node.y, 16);
             }
         });
         
         // Draw count indicator near player
         if (this.nodes.length > 0 && player.active) {
             const offsetY = -50;
-            gradient.fillStyle(this.NODE_COLOR, 0.8);
-            gradient.fillCircle(player.x - 20, player.y + offsetY, 4);
+            this.nodeGraphics.fillStyle(this.NODE_COLOR, 0.8);
+            this.nodeGraphics.fillCircle(player.x - 20, player.y + offsetY, 4);
             
             // Node count text
             this.scene.residueCountText = this.scene.residueCountText || 
