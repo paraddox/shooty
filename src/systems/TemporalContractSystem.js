@@ -524,17 +524,23 @@ export default class TemporalContractSystem {
     }
     
     setupNumberKeys() {
-        const keys = [
+        // FIX: Track keys so we can remove listeners later
+        if (!this.contractKeys) {
+            this.contractKeys = [];
+        }
+        
+        const keyCodes = [
             Phaser.Input.Keyboard.KeyCodes.ONE,
             Phaser.Input.Keyboard.KeyCodes.TWO,
             Phaser.Input.Keyboard.KeyCodes.THREE
         ];
         
-        keys.forEach((keyCode, index) => {
+        keyCodes.forEach((keyCode, index) => {
             const key = this.scene.input.keyboard.addKey(keyCode);
             key.on('down', () => {
                 this.acceptContract(index);
             });
+            this.contractKeys.push(key);
         });
     }
     
@@ -632,14 +638,14 @@ export default class TemporalContractSystem {
             this.contractUI = null;
         }
         
-        // Clean up number keys
-        [Phaser.Input.Keyboard.KeyCodes.ONE, Phaser.Input.Keyboard.KeyCodes.TWO, 
-         Phaser.Input.Keyboard.KeyCodes.THREE].forEach(keyCode => {
-            const key = this.scene.input.keyboard.getKey(keyCode);
-            if (key) {
+        // FIX: Use tracked keys to remove listeners (getKey doesn't exist)
+        if (this.contractKeys && this.contractKeys.length > 0) {
+            this.contractKeys.forEach(key => {
                 key.removeAllListeners();
-            }
-        });
+                key.destroy(); // Properly clean up the key
+            });
+            this.contractKeys = [];
+        }
     }
     
     updateDebtDisplay() {

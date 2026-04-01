@@ -384,6 +384,12 @@ export default class DreamStateProtocol {
     startDeathDream(deathData) {
         if (this.dreamState.isDreaming) return;
         
+        // FIX: Don't enter dream state if exchange is open (game is paused)
+        if (this.scene.isExchangePaused) {
+            console.log('[DreamState] Death occurred while exchange open - deferring dream');
+            return;
+        }
+        
         this.dreamState.dreamType = 'death';
         this.dreamState.dreamIntensity = 1.0;  // Maximum intensity
         this.dreamState.lucidity = 0;
@@ -858,7 +864,8 @@ export default class DreamStateProtocol {
         graphics.lineStyle(symbol.width, symbol.color, alpha * 0.6);
         graphics.beginPath();
         graphics.moveTo(symbol.x, symbol.y);
-        graphics.quadraticCurveTo(midX, midY, endX, endY);
+        // FIX: Phaser 3 uses curveTo, not quadraticCurveTo
+        graphics.curveTo(midX, midY, endX, endY);
         graphics.strokePath();
         
         // Flow particles

@@ -2565,6 +2565,11 @@ export default class GameScene extends Phaser.Scene {
     }
     
     playerHitByBullet(player, bullet) {
+        // FIX: Ignore collisions while exchange is open (game is paused)
+        if (this.isExchangePaused) {
+            return;
+        }
+        
         // Check if temporal residue node absorbed the bullet
         if (this.temporalResidue && this.temporalResidue.checkBulletCollision(bullet.x, bullet.y, 8)) {
             // Node absorbed the bullet - destroy bullet and protect player
@@ -3183,6 +3188,11 @@ export default class GameScene extends Phaser.Scene {
     }
 
     hitEnemy(bullet, enemy) {
+        // FIX: Ignore collisions while exchange is open (game is paused)
+        if (this.isExchangePaused) {
+            return;
+        }
+        
         // Track ghost bullet damage during fracture
         if (bullet.isGhostBullet && this.fractureSystem) {
             this.fractureSystem.onGhostBulletHitEnemy();
@@ -3388,6 +3398,11 @@ export default class GameScene extends Phaser.Scene {
     }
 
     playerHit(player, enemy) {
+        // FIX: Ignore collisions while exchange is open (game is paused)
+        if (this.isExchangePaused) {
+            return;
+        }
+        
         // Check if ghost player was hit (during fracture)
         if (this.fractureSystem && this.fractureSystem.isFractured) {
             const ghostHit = this.fractureSystem.checkGhostCollision(enemy.x, enemy.y, 30);

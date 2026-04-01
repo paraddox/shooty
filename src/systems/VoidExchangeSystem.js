@@ -361,12 +361,20 @@ export default class VoidExchangeSystem {
             this.scene.physics.world.pause();
             this.scene.physics.world.timeScale = 0;
             
+            // SET SCENE-WIDE PAUSE FLAG - other systems check this
+            this.scene.isExchangePaused = true;
+            
+            // Pause all tweens
+            this.scene.tweens.pauseAll();
+            
             // Pause all enemy movement and updates
             this.scene.enemies.children.entries.forEach(enemy => {
                 if (enemy.body) {
                     enemy._pausedVelocity = { x: enemy.body.velocity.x, y: enemy.body.velocity.y };
                     enemy.body.setVelocity(0, 0);
                 }
+                // Disable enemy updates
+                enemy._exchangePaused = true;
             });
             
             // Pause enemy bullets
@@ -388,6 +396,9 @@ export default class VoidExchangeSystem {
             // Disable player controls while exchange is open
             if (this.scene.player) {
                 this.scene.player._exchangePaused = true;
+                // Make player invulnerable while trading
+                this.scene.player._wasInvulnerable = this.scene.player.isInvulnerable;
+                this.scene.player.isInvulnerable = true;
             }
             
             this.tradingParticles.start();
@@ -400,12 +411,19 @@ export default class VoidExchangeSystem {
             this.scene.physics.world.resume();
             this.scene.physics.world.timeScale = 1;
             
+            // CLEAR SCENE-WIDE PAUSE FLAG
+            this.scene.isExchangePaused = false;
+            
+            // Resume all tweens
+            this.scene.tweens.resumeAll();
+            
             // Resume enemy movement
             this.scene.enemies.children.entries.forEach(enemy => {
                 if (enemy.body && enemy._pausedVelocity) {
                     enemy.body.setVelocity(enemy._pausedVelocity.x, enemy._pausedVelocity.y);
                     delete enemy._pausedVelocity;
                 }
+                delete enemy._exchangePaused;
             });
             
             // Resume enemy bullets
@@ -424,9 +442,14 @@ export default class VoidExchangeSystem {
                 }
             });
             
-            // Re-enable player controls
+            // Re-enable player controls and restore invulnerability state
             if (this.scene.player) {
                 this.scene.player._exchangePaused = false;
+                // Only remove invulnerability if player wasn't already invulnerable
+                if (!this.scene.player._wasInvulnerable) {
+                    this.scene.player.isInvulnerable = false;
+                }
+                delete this.scene.player._wasInvulnerable;
             }
             
             this.tradingParticles.stop();
