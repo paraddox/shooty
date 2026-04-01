@@ -87,31 +87,62 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     shoot(angle) {
-        const bullet = this.scene.getBulletsGroup().get(this.x, this.y, 'bullet');
+        // Get weapon stats from omni-weapon system
+        const weaponStats = this.scene.omniWeapon ? this.scene.omniWeapon.weaponStats : {
+            fireRate: 120, bulletSpeed: 600, spread: 0.05
+        };
         
-        if (bullet) {
-            // Reactivate recycled bullet
-            bullet.setActive(true);
-            bullet.setVisible(true);
-            bullet.setDepth(1);
-            bullet.body.enable = true;
-            bullet.body.reset(this.x, this.y);
-            bullet.baseScale = 0.5;
+        // Handle SPREAD barrel - multiple shots
+        const shotCount = weaponStats.spread > 0.15 ? 3 : 1;
+        const spreadAngles = shotCount === 3 ? [-0.15, 0, 0.15] : [0];
+        
+        spreadAngles.forEach(spreadOffset => {
+            const bullet = this.scene.getBulletsGroup().get(this.x, this.y, 'bullet');
             
-            // Slight random spread
-            const spread = (Math.random() - 0.5) * this.bulletSpread;
-            const finalAngle = angle + spread;
-            
-            bullet.setVelocity(
-                Math.cos(finalAngle) * this.bulletSpeed,
-                Math.sin(finalAngle) * this.bulletSpeed
-            );
-            
-            bullet.setRotation(finalAngle);
+            if (bullet) {
+                // Reactivate recycled bullet
+                bullet.setActive(true);
+                bullet.setVisible(true);
+                bullet.setDepth(1);
+                bullet.body.enable = true;
+                bullet.body.reset(this.x, this.y);
+                bullet.baseScale = shotCount === 3 ? 0.4 : 0.5;
+                
+                // Slight random spread + weapon spread + spread barrel
+                const randomSpread = (Math.random() - 0.5) * this.bulletSpread;
+                const finalAngle = angle + spreadOffset + randomSpread;
+                
+                bullet.setVelocity(
+                    Math.cos(finalAngle) * weaponStats.bulletSpeed,
+                    Math.sin(finalAngle) * weaponStats.bulletSpeed
+                );
+                
+                bullet.setRotation(finalAngle);
+                
+                // Apply omni-weapon effects
+                if (this.scene.omniWeapon) {
+                    this.scene.omniWeapon.applyBulletEffects(bullet);
+                }
+                
+                // Record in Timeline Chronicle
+                if (this.scene.timelineChronicle) {
+                    this.scene.timelineChronicle.recordBulletFired(
+                        this.x, this.y, finalAngle, weaponStats.bulletSpeed, true
+                    );
+                }
+            }
+        });
+        
+        // Track for Recursion Engine (shot analysis)
+        if (this.scene.recursionEngine) {
+            this.scene.recursionEngine.recordShot();
         }
     }
 
     takeDamage(amount) {
+        // Invulnerability check (e.g., after quantum respawn)
+        if (this.isInvulnerable) return;
+        
         this.health -= amount;
         
         // Flash white

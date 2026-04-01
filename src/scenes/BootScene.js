@@ -9,6 +9,7 @@ export default class BootScene extends Phaser.Scene {
         // Create minimalist geometric sprites
         this.createPlayerTexture();
         this.createBulletTexture();
+        this.createEnemyBulletTexture();
         this.createEnemyTexture();
         this.createFastEnemyTexture();
         this.createTankEnemyTexture();
@@ -59,6 +60,21 @@ export default class BootScene extends Phaser.Scene {
         graphics.fillRect(2, 3, 12, 2);
         
         graphics.generateTexture('bullet', 24, 8);
+        graphics.destroy();
+    }
+
+    createEnemyBulletTexture() {
+        const graphics = this.make.graphics({ x: 0, y: 0 });
+        
+        // Enemy bullet - red-pink, slightly smaller
+        graphics.fillStyle(0xff3366);
+        graphics.fillRect(0, 2, 18, 5);
+        
+        // Core bright
+        graphics.fillStyle(0xff99aa);
+        graphics.fillRect(2, 3, 8, 3);
+        
+        graphics.generateTexture('enemyBullet', 18, 9);
         graphics.destroy();
     }
 

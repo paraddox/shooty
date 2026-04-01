@@ -39,22 +39,86 @@ export default class GameOverScene extends Phaser.Scene {
             fill: '#666677'
         }).setOrigin(0.5);
 
-        // Restart prompt
-        const restart = this.add.text(cx, cy + 100, '[ RESTART ]', {
+        // Quantum Immortality stats (if available)
+        if (data.quantumStats && data.quantumStats.deaths > 0) {
+            this.add.text(cx, cy + 55, `TIMELINE BRANCHES  ${data.quantumStats.deaths}`, {
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                letterSpacing: 1,
+                fill: '#ffffff'
+            }).setOrigin(0.5);
+            
+            this.add.text(cx, cy + 75, `QUANTUM ECHOES  ${data.quantumStats.echoes}`, {
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                letterSpacing: 1,
+                fill: '#ffd700'
+            }).setOrigin(0.5);
+        }
+        
+        // New Timeline Shard info
+        if (data.newShard) {
+            const shardY = data.quantumStats && data.quantumStats.deaths > 0 ? cy + 105 : cy + 55;
+            const rarityColor = this.getRarityColor(data.newShard.rarity);
+            
+            this.add.text(cx, shardY, `◆ ${data.newShard.rarity.toUpperCase()} SHARD CREATED ◆`, {
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                fontStyle: 'bold',
+                letterSpacing: 2,
+                fill: rarityColor
+            }).setOrigin(0.5);
+            
+            this.add.text(cx, shardY + 22, 
+                `${data.newShard.playstyle} • ${data.newShard.dominantSystem}`, {
+                fontFamily: 'monospace',
+                fontSize: '11px',
+                letterSpacing: 1,
+                fill: '#888899'
+            }).setOrigin(0.5);
+        }
+        
+        // Causal Entanglement stats
+        if (data.entanglementStats && data.entanglementStats.linksCreated > 0) {
+            const entY = data.newShard ? cy + 155 : (data.quantumStats && data.quantumStats.deaths > 0 ? cy + 105 : cy + 55);
+            
+            this.add.text(cx, entY, `≈ CAUSAL LINKS  ${data.entanglementStats.linksCreated} ≈`, {
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                letterSpacing: 1,
+                fill: '#00f0ff'
+            }).setOrigin(0.5);
+            
+            if (data.entanglementStats.damageShared > 0) {
+                this.add.text(cx, entY + 18, 
+                    `Damage Shared: ${Math.floor(data.entanglementStats.damageShared)}`, {
+                    fontFamily: 'monospace',
+                    fontSize: '10px',
+                    letterSpacing: 1,
+                    fill: '#00d4ff'
+                }).setOrigin(0.5);
+            }
+        }
+
+        // Chronicle button
+        const chronicleBtn = this.add.text(cx - 100, cy + 100, '[ CHRONICLE ]', {
             fontFamily: 'monospace',
-            fontSize: '18px',
-            letterSpacing: 4,
+            fontSize: '14px',
+            letterSpacing: 2,
+            fill: '#9d4edd'
+        }).setOrigin(0.5).setInteractive();
+        
+        chronicleBtn.on('pointerdown', () => this.openChronicle());
+        chronicleBtn.on('pointerover', () => chronicleBtn.setFill('#ffffff'));
+        chronicleBtn.on('pointerout', () => chronicleBtn.setFill('#9d4edd'));
+
+        // Restart prompt
+        const restart = this.add.text(cx + 100, cy + 100, '[ RESTART ]', {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            letterSpacing: 2,
             fill: '#00f0ff'
         }).setOrigin(0.5).setInteractive();
-
-        this.tweens.add({
-            targets: restart,
-            alpha: 0.4,
-            duration: 800,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
 
         restart.on('pointerdown', () => this.restart());
         restart.on('pointerover', () => restart.setFill('#ffffff'));
@@ -62,7 +126,6 @@ export default class GameOverScene extends Phaser.Scene {
 
         this.input.keyboard.on('keydown-SPACE', () => this.restart());
         this.input.keyboard.on('keydown-ENTER', () => this.restart());
-        this.input.on('pointerdown', () => this.restart());
     }
 
     createGridEffect() {
@@ -89,5 +152,23 @@ export default class GameOverScene extends Phaser.Scene {
         this.cameras.main.once('camerafadeoutcomplete', () => {
             this.scene.start('MenuScene');
         });
+    }
+    
+    openChronicle() {
+        this.cameras.main.fade(300, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.start('ChronicleMenuScene');
+        });
+    }
+    
+    getRarityColor(rarity) {
+        const colors = {
+            common: '#aaaaaa',
+            rare: '#00f0ff',
+            epic: '#9d4edd',
+            legendary: '#ffd700',
+            mythic: '#ff0066'
+        };
+        return colors[rarity] || '#aaaaaa';
     }
 }

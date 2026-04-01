@@ -38,7 +38,8 @@ export default class MenuScene extends Phaser.Scene {
         const controls = [
             { key: 'WASD', desc: 'move' },
             { key: 'MOUSE', desc: 'aim' },
-            { key: 'CLICK', desc: 'shoot' }
+            { key: 'CLICK', desc: 'shoot' },
+            { key: 'SHIFT', desc: 'fracture time' }
         ];
 
         let y = cy + 40;
@@ -59,12 +60,12 @@ export default class MenuScene extends Phaser.Scene {
         });
 
         // Start prompt with pulse animation
-        const startText = this.add.text(cx, cy + 150, '[ CLICK TO START ]', {
+        const startText = this.add.text(cx, cy + 130, '[ CLICK TO START ]', {
             fontFamily: 'monospace',
             fontSize: '18px',
             letterSpacing: 4,
             fill: '#ffffff'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setInteractive();
 
         // Pulse animation
         this.tweens.add({
@@ -75,9 +76,27 @@ export default class MenuScene extends Phaser.Scene {
             repeat: -1,
             ease: 'Sine.easeInOut'
         });
+        
+        startText.on('pointerover', () => startText.setFill('#00f0ff'));
+        startText.on('pointerout', () => startText.setFill('#ffffff'));
+        startText.on('pointerdown', () => this.startGame());
+        
+        // Chronicle button (if shards exist)
+        const chronicle = this.loadChronicle();
+        if (chronicle.shards.length > 0) {
+            const chronicleText = this.add.text(cx, cy + 170, `[ CHRONICLE (${chronicle.shards.length}) ]`, {
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                letterSpacing: 2,
+                fill: '#9d4edd'
+            }).setOrigin(0.5).setInteractive();
+            
+            chronicleText.on('pointerover', () => chronicleText.setFill('#ffffff'));
+            chronicleText.on('pointerout', () => chronicleText.setFill('#9d4edd'));
+            chronicleText.on('pointerdown', () => this.openChronicle());
+        }
 
         // Input handlers
-        this.input.on('pointerdown', () => this.startGame());
         this.input.keyboard.on('keydown-SPACE', () => this.startGame());
         this.input.keyboard.on('keydown-ENTER', () => this.startGame());
 
@@ -110,5 +129,25 @@ export default class MenuScene extends Phaser.Scene {
         this.cameras.main.once('camerafadeoutcomplete', () => {
             this.scene.start('GameScene');
         });
+    }
+    
+    openChronicle() {
+        this.cameras.main.fade(300, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.start('ChronicleMenuScene');
+        });
+    }
+    
+    loadChronicle() {
+        try {
+            const saved = localStorage.getItem('shooty_chronicle_v1');
+            if (saved) {
+                return JSON.parse(saved);
+            }
+        } catch (e) {
+            console.warn('Failed to load chronicle:', e);
+        }
+        
+        return { shards: [] };
     }
 }
