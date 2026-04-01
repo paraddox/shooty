@@ -178,9 +178,9 @@ export default class VoidExchangeSystem {
         }).setOrigin(0.5);
         this.ui.container.add(subtitle);
         
-        // Price display headers - better aligned
+        // Price display headers - better aligned with proper spacing
         const headers = ['COMMODITY', 'PRICE', 'HELD', 'SHORT', ''];
-        const headerX = [-220, -70, 50, 140, 250];
+        const headerX = [-270, -50, 60, 140, 220, 290]; // More space between name and price
         headers.forEach((h, i) => {
             const text = this.scene.add.text(headerX[i], -165, h, {
                 fontFamily: 'monospace',
@@ -190,35 +190,29 @@ export default class VoidExchangeSystem {
             this.ui.container.add(text);
         });
         
-        // Commodity rows - better spacing
+        // Commodity rows - better spacing, no overlap
         const commodities = ['SCORE', 'SURVIVAL', 'ABILITY', 'WAVE'];
-        const rowX = [-220, -70, 50, 140, 235, 285];
+        const rowX = [-270, -50, 60, 140, 220, 290];
         commodities.forEach((commodity, index) => {
             const y = -130 + index * 50;
             
-            // Name
-            const name = this.scene.add.text(rowX[0], y, this.commodities[commodity].name, {
+            // Name - left aligned in its column
+            const nameText = this.commodities[commodity].name;
+            let displayName = nameText;
+            
+            // Add multiplier inline with the name
+            if (commodity === 'SCORE') displayName += ' (9x)';
+            if (commodity === 'ABILITY') displayName += ' (3x)';
+            if (commodity === 'WAVE') displayName += ' (2x)';
+            
+            const name = this.scene.add.text(rowX[0], y, displayName, {
                 fontFamily: 'monospace',
-                fontSize: '14px',
+                fontSize: '13px',
                 fill: '#00f0ff'
             }).setOrigin(0, 0.5);
             this.ui.container.add(name);
             
-            // Multiplier label (for some commodities)
-            let multiplier = '';
-            if (commodity === 'SCORE') multiplier = ' 9x';
-            if (commodity === 'ABILITY') multiplier = ' 3x';
-            if (commodity === 'WAVE') multiplier = ' 2x';
-            if (multiplier) {
-                const multLabel = this.scene.add.text(rowX[0] + 100, y, multiplier, {
-                    fontFamily: 'monospace',
-                    fontSize: '12px',
-                    fill: '#ff4444'
-                }).setOrigin(0, 0.5);
-                this.ui.container.add(multLabel);
-            }
-            
-            // Price (updated dynamically)
+            // Price (updated dynamically) - now has room at -50
             const price = this.scene.add.text(rowX[1], y, '1.00x', {
                 fontFamily: 'monospace',
                 fontSize: '14px',
@@ -323,13 +317,19 @@ export default class VoidExchangeSystem {
         this.ui.inventoryItems = [];
         
         this.marketInventory.forEach((item, index) => {
-            const x = -200 + (index % 3) * 200;
-            const y = baseY + 35 + Math.floor(index / 3) * 30;
+            // FIX: Tighter spacing to stay within dialog bounds
+            const x = -210 + (index % 3) * 210; // Was 200, now 210 for better fit
+            const y = baseY + 30 + Math.floor(index / 3) * 28; // Slightly tighter vertical
+            
+            // Shorten long names to fit
+            let displayName = item.name;
+            if (displayName === 'Divine Intervention') displayName = 'Divine Int.';
+            if (displayName === 'Temporary Godhood') displayName = 'Temp. Godhood';
             
             const text = this.scene.add.text(x, y, 
-                `${item.name}: ${item.cost} TC [${item.stock}]`, {
+                `${displayName}: ${item.cost}TC [${item.stock}]`, {
                 fontFamily: 'monospace',
-                fontSize: '11px',
+                fontSize: '10px',
                 fill: item.stock > 0 ? '#ffd700' : '#444444'
             }).setOrigin(0, 0.5);
             
