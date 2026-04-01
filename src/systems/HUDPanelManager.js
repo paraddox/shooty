@@ -204,8 +204,9 @@ export default class HUDPanelManager {
      * @returns {Phaser.GameObjects.Container} The created element
      */
     registerSlot(slotId, createFn, region = 'TOP_LEFT') {
-        console.log(`[HUDPanelManager] registerSlot ENTRY: ${slotId} in ${region}`);
+        console.log(`[HUDPanelManager] ========================== registerSlot START: ${slotId}`);
         try {
+            console.log(`[HUDPanelManager] Inside try block for ${slotId}`);
             const panel = this.panels.get(region);
             if (!panel) {
                 console.warn(`[HUDPanelManager] Unknown panel: ${region}`);
