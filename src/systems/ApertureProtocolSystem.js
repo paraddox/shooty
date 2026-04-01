@@ -2,29 +2,16 @@ import Phaser from 'phaser';
 import Enemy from '../entities/Enemy.js';
 
 /**
- * MIGRATION NOTICE (2026-04-01): FULLY MIGRATED TO UnifiedGraphicsManager
+ * ApertureProtocolSystem — Attention Economy System
  * 
- * All direct Phaser Graphics API usage has been removed:
- * - attentionField, resentmentOverlay, gazeTrailGraphics: REMOVED
- * - blinkCooldownArc: REMOVED
- * - chargeIndicators: Now stores layerName refs instead of Graphics objects
- * 
- * All rendering now uses UnifiedGraphicsManager layers:
- * - aperture_attention: Attention zone circles
- * - aperture_resentment: Resentment overlay rectangles
- * - aperture_gaze: Gaze trail (reserved for future use)
- * - aperture_blink: Blink cooldown arc
- * - aperture_charge_*: Per-enemy charge indicators (dynamic layers)
- * 
- * GPU clears reduced from 7 per frame to 0 (UnifiedGraphicsManager batches all rendering)
- */
-
-/**
- * APERTURE PROTOCOL — The 46th Cognitive Dimension: ATTENTION AS ONTOLOGY
+ * Uses UnifiedGraphicsManager with standard layers:
+ * - 'effects' layer: Attention zones, resentment overlay, gaze trail, charge indicators
+ * - 'ui' layer: Blink cooldown indicator
+*
+ * The 46th Cognitive Dimension: ATTENTION AS ONTOLOGY
  * 
  * The ultimate inversion. All previous systems respond to what you DO. 
  * The Aperture Protocol responds to where you LOOK.
- * 
  * === THE ATTENTION ECONOMY ===
  * 
  * Your gaze is a LIMITED RESOURCE. You cannot look everywhere. The mouse cursor
@@ -233,17 +220,9 @@ export default class ApertureProtocolSystem {
     }
     
     createVisualElements() {
-        // Attention field visualization (subtle cone around cursor) - UnifiedGraphicsManager only
-        this.graphicsManager.createLayer('aperture_attention', 50, 'effects');
-        
-        // Resentment overlay (shows danger in ignored areas) - UnifiedGraphicsManager only
-        this.graphicsManager.createLayer('aperture_resentment', 15, 'effects');
-        
-        // Gaze trail - UnifiedGraphicsManager only
-        this.graphicsManager.createLayer('aperture_gaze', 100, 'effects');
-        
-        // Blink cooldown - UnifiedGraphicsManager only  
-        this.graphicsManager.createLayer('aperture_blink', 100, 'ui');
+        // Uses standard UnifiedGraphicsManager layers:
+        // - 'effects' for attention field, resentment overlay, gaze trail
+        // - 'ui' for blink cooldown
         
         // Create attention charge particle texture
         const canvas = document.createElement('canvas');
@@ -460,7 +439,6 @@ export default class ApertureProtocolSystem {
         
         // During blink, skip all attention processing
         if (this.isBlinking) {
-            this.graphicsManager.clearLayer('aperture_attention');
             return;
         }
         
@@ -727,19 +705,18 @@ export default class ApertureProtocolSystem {
     }
     
     renderAttentionField() {
-        this.graphicsManager.clearLayer('aperture_attention');
         if (!this.showDebug) return;
         
         const gazeX = this.currentGaze.x;
         const gazeY = this.currentGaze.y;
         
-        this.graphicsManager.drawCircle('aperture_attention', gazeX, gazeY, this.zones.foveal.radius, {
+        this.graphicsManager.drawCircle('effects', gazeX, gazeY, this.zones.foveal.radius, {
             lineStyle: { width: 2, color: this.APERTURE_CYAN, alpha: 0.3 }
         });
-        this.graphicsManager.drawCircle('aperture_attention', gazeX, gazeY, this.zones.parafoveal.radius, {
+        this.graphicsManager.drawCircle('effects', gazeX, gazeY, this.zones.parafoveal.radius, {
             lineStyle: { width: 1, color: this.APERTURE_GLOW, alpha: 0.2 }
         });
-        this.graphicsManager.drawCircle('aperture_attention', gazeX, gazeY, this.zones.peripheral.radius, {
+        this.graphicsManager.drawCircle('effects', gazeX, gazeY, this.zones.peripheral.radius, {
             lineStyle: { width: 1, color: 0x666666, alpha: 0.1 }
         });
     }
@@ -750,14 +727,12 @@ export default class ApertureProtocolSystem {
         const cellW = worldWidth / this.gridCols;
         const cellH = worldHeight / this.gridRows;
         
-        // UnifiedGraphicsManager path only
-        this.graphicsManager.clearLayer('aperture_resentment');
         for (let y = 0; y < this.gridRows; y++) {
             for (let x = 0; x < this.gridCols; x++) {
                 const resentment = this.resentmentGrid[y][x];
                 if (resentment > 20) {
                     const alpha = Math.min(0.3, resentment / 200);
-                    this.graphicsManager.drawRect('aperture_resentment', x * cellW, y * cellH, cellW, cellH, {
+                    this.graphicsManager.drawRect('effects', x * cellW, y * cellH, cellW, cellH, {
                         fillStyle: { color: this.RESENTMENT_RED, alpha: alpha }
                     });
                 }
@@ -769,7 +744,6 @@ export default class ApertureProtocolSystem {
         // Clean up old indicators
         this.chargeIndicators.forEach((indicator, enemy) => {
             if (!enemy.active) {
-                this.graphicsManager.clearLayer(indicator.layerName);
                 this.chargeIndicators.delete(enemy);
             }
         });
@@ -779,11 +753,10 @@ export default class ApertureProtocolSystem {
             if (!enemy.active) return;
             
             let indicator = this.chargeIndicators.get(enemy);
-            const layerName = indicator?.layerName || `aperture_charge_${enemy.name || enemy.texture?.key || 'unknown'}_${Date.now()}`;
             
             if (data.charge > 0) {
                 if (!indicator) {
-                    indicator = this.createChargeIndicator(enemy, layerName);
+                    indicator = { enemy };
                     this.chargeIndicators.set(enemy, indicator);
                 }
                 
@@ -792,10 +765,8 @@ export default class ApertureProtocolSystem {
                 const color = data.charge > 75 ? this.APERTURE_CYAN : 
                              data.charge > 50 ? this.APERTURE_GLOW : 0x888888;
                 
-                // UnifiedGraphicsManager path only
-                this.graphicsManager.clearLayer(layerName);
                 // Background ring
-                this.graphicsManager.drawCircle(layerName, enemy.x, enemy.y - 40, radius, {
+                this.graphicsManager.drawCircle('effects', enemy.x, enemy.y - 40, radius, {
                     lineStyle: { width: 3, color: 0x333333, alpha: 0.5 }
                 });
                 // Charge arc (relative to enemy position)
@@ -814,20 +785,13 @@ export default class ApertureProtocolSystem {
                     });
                 }
                 for (let i = 0; i < arcPoints.length - 1; i++) {
-                    this.graphicsManager.drawLine(layerName, arcPoints[i].x, arcPoints[i].y, 
+                    this.graphicsManager.drawLine('effects', arcPoints[i].x, arcPoints[i].y, 
                         arcPoints[i+1].x, arcPoints[i+1].y, color, 0.8, 3);
                 }
             } else if (indicator) {
-                this.graphicsManager.clearLayer(indicator.layerName);
                 this.chargeIndicators.delete(enemy);
             }
         });
-    }
-    
-    createChargeIndicator(enemy, layerName) {
-        // Create layer for this indicator
-        this.graphicsManager.createLayer(layerName, 60, 'effects');
-        return { layerName };
     }
     
     updateUI() {
@@ -852,8 +816,6 @@ export default class ApertureProtocolSystem {
         const indicatorX = this.blinkIndicator.x;
         const indicatorY = this.blinkIndicator.y;
         
-        // UnifiedGraphicsManager path only
-        this.graphicsManager.clearLayer('aperture_blink');
         if (this.blinkCooldown > 0) {
             // Draw arc as series of short lines (since drawArc may not be available)
             const arcPoints = [];
@@ -866,7 +828,7 @@ export default class ApertureProtocolSystem {
                 });
             }
             for (let i = 0; i < arcPoints.length - 1; i++) {
-                this.graphicsManager.drawLine('aperture_blink', arcPoints[i].x, arcPoints[i].y, 
+                this.graphicsManager.drawLine('ui', arcPoints[i].x, arcPoints[i].y, 
                     arcPoints[i+1].x, arcPoints[i+1].y, 0x444444, 0.8, 4);
             }
         }
@@ -881,11 +843,7 @@ export default class ApertureProtocolSystem {
     
     cleanupEntity(enemy) {
         this.attentionMap.delete(enemy);
-        const indicator = this.chargeIndicators.get(enemy);
-        if (indicator) {
-            this.graphicsManager.clearLayer(indicator.layerName);
-            this.chargeIndicators.delete(enemy);
-        }
+        this.chargeIndicators.delete(enemy);
     }
     
     // ===== PUBLIC API =====
@@ -930,21 +888,9 @@ export default class ApertureProtocolSystem {
     // Toggle debug visualization
     toggleDebug() {
         this.showDebug = !this.showDebug;
-        if (!this.showDebug) {
-            this.graphicsManager.clearLayer('aperture_attention');
-        }
     }
     
     destroy() {
-        // Clean up unified graphics layers
-        this.graphicsManager.destroyLayer('aperture_attention');
-        this.graphicsManager.destroyLayer('aperture_resentment');
-        this.graphicsManager.destroyLayer('aperture_gaze');
-        this.graphicsManager.destroyLayer('aperture_blink');
-        this.chargeIndicators.forEach((indicator) => {
-            this.graphicsManager.destroyLayer(indicator.layerName);
-        });
-        
         this.attentionParticles.destroy();
         this.blinkIndicator.destroy();
         this.attentionMeter.destroy();
