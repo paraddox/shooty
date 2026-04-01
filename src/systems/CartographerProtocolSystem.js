@@ -117,30 +117,10 @@ export default class CartographerProtocolSystem {
     }
     
     init() {
-        this.createGraphics();
         this.initTerritoryGrid();
-    }
-    
-    createGraphics() {
-        // Void Tide graphics
-        this.rippleGraphics = this.scene.add.graphics();
-        this.rippleGraphics.setDepth(5); // Below player/enemies
         
-        // Lithography graphics
-        this.lithographyGraphics = this.scene.add.graphics();
-        this.lithographyGraphics.setDepth(10);
-        
-        // Stillness graphics
-        this.springGraphics = this.scene.add.graphics();
-        this.springGraphics.setDepth(8);
-        
-        // Crystal graphics
-        this.crystalGraphics = this.scene.add.graphics();
-        this.crystalGraphics.setDepth(12);
-        
-        // Territory graphics (floor overlay)
-        this.territoryGraphics = this.scene.add.graphics();
-        this.territoryGraphics.setDepth(3);
+        // Check for UnifiedGraphicsManager (new architecture)
+        this.useUnifiedRenderer = !!(this.scene.graphicsManager);
     }
     
     initTerritoryGrid() {
@@ -635,29 +615,46 @@ export default class CartographerProtocolSystem {
     
     // === RENDERING ===
     renderAll() {
-        this.renderRipples();
-        this.renderTerritory();
-        this.renderSprings();
+        // Use UnifiedGraphicsManager if available (new architecture)
+        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+            this.renderRipplesUnified();
+            this.renderTerritoryUnified();
+            this.renderSpringsUnified();
+        }
     }
     
+    // Legacy render methods - replaced by UnifiedGraphicsManager versions
     renderRipples() {
-        this.rippleGraphics.clear();
+        // Now handled by renderRipplesUnified() via UnifiedGraphicsManager
+    }
+    
+    renderTerritory() {
+        // Now handled by renderTerritoryUnified() via UnifiedGraphicsManager
+    }
+    
+    renderSprings() {
+        // Now handled by renderSpringsUnified() via UnifiedGraphicsManager
+    }
+    
+    // Unified Rendering Methods (UnifiedGraphicsManager)
+    renderRipplesUnified() {
+        const manager = this.scene.graphicsManager;
         
         this.ripples.forEach(ripple => {
             const alpha = ripple.alpha * 0.3 * ripple.intensity;
-            this.rippleGraphics.lineStyle(2, this.VOID_COLOR, alpha);
-            this.rippleGraphics.strokeCircle(ripple.x, ripple.y, ripple.radius);
+            
+            // Main ripple ring
+            manager.drawRing('effects', ripple.x, ripple.y, ripple.radius, this.VOID_COLOR, alpha, 2);
             
             // Second ring
             if (ripple.radius > 20) {
-                this.rippleGraphics.lineStyle(1, this.VOID_COLOR, alpha * 0.5);
-                this.rippleGraphics.strokeCircle(ripple.x, ripple.y, ripple.radius * 0.7);
+                manager.drawRing('effects', ripple.x, ripple.y, ripple.radius * 0.7, this.VOID_COLOR, alpha * 0.5, 1);
             }
         });
     }
     
-    renderTerritory() {
-        this.territoryGraphics.clear();
+    renderTerritoryUnified() {
+        const manager = this.scene.graphicsManager;
         
         for (let y = 0; y < this.gridHeight; y++) {
             for (let x = 0; x < this.gridWidth; x++) {
@@ -667,32 +664,27 @@ export default class CartographerProtocolSystem {
                 
                 if (cell.dominant === 'player') {
                     const alpha = Math.min(0.3, cell.playerInfluence * 0.5);
-                    this.territoryGraphics.fillStyle(this.PLAYER_TERRITORY_COLOR, alpha);
-                    this.territoryGraphics.fillRect(px, py, this.gridSize, this.gridSize);
+                    manager.drawRect('effects', px, py, this.gridSize, this.gridSize, this.PLAYER_TERRITORY_COLOR, alpha);
                 } else if (cell.dominant === 'enemy') {
                     const alpha = Math.min(0.3, Math.abs(cell.enemyInfluence) * 0.5);
-                    this.territoryGraphics.fillStyle(this.ENEMY_TERRITORY_COLOR, alpha);
-                    this.territoryGraphics.fillRect(px, py, this.gridSize, this.gridSize);
+                    manager.drawRect('effects', px, py, this.gridSize, this.gridSize, this.ENEMY_TERRITORY_COLOR, alpha);
                 }
             }
         }
     }
     
-    renderSprings() {
-        this.springGraphics.clear();
+    renderSpringsUnified() {
+        const manager = this.scene.graphicsManager;
         
         this.springs.forEach(spring => {
             // Outer glow
-            this.springGraphics.fillStyle(this.STILLNESS_COLOR, 0.2);
-            this.springGraphics.fillCircle(spring.x, spring.y, spring.radius * spring.pulseScale);
+            manager.drawCircle('effects', spring.x, spring.y, spring.radius * spring.pulseScale, this.STILLNESS_COLOR, 0.2);
             
             // Inner core
-            this.springGraphics.fillStyle(this.STILLNESS_COLOR, 0.4);
-            this.springGraphics.fillCircle(spring.x, spring.y, spring.radius * 0.5 * spring.pulseScale);
+            manager.drawCircle('effects', spring.x, spring.y, spring.radius * 0.5 * spring.pulseScale, this.STILLNESS_COLOR, 0.4);
             
             // Ring
-            this.springGraphics.lineStyle(2, this.STILLNESS_COLOR, 0.6);
-            this.springGraphics.strokeCircle(spring.x, spring.y, spring.radius * spring.pulseScale);
+            manager.drawRing('effects', spring.x, spring.y, spring.radius * spring.pulseScale, this.STILLNESS_COLOR, 0.6, 2);
         });
     }
     
@@ -769,11 +761,7 @@ export default class CartographerProtocolSystem {
     
     // === CLEANUP ===
     destroy() {
-        if (this.rippleGraphics) this.rippleGraphics.destroy();
-        if (this.lithographyGraphics) this.lithographyGraphics.destroy();
-        if (this.springGraphics) this.springGraphics.destroy();
-        if (this.crystalGraphics) this.crystalGraphics.destroy();
-        if (this.territoryGraphics) this.territoryGraphics.destroy();
+        // Note: Graphics objects are now managed by UnifiedGraphicsManager
         
         // Clean up physics bodies
         this.pathSegments.forEach(segment => {

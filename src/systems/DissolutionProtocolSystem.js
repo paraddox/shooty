@@ -141,6 +141,9 @@ export default class DissolutionProtocolSystem {
         this.essenceDisplay = null;
         this.dissolutionOverlay = null;
         
+        // ===== UNIFIED RENDERER =====
+        this.useUnifiedRenderer = false;
+        
         // ===== RESERVOIR STATE =====
         this.inReservoir = false;
         this.reservoirGraphics = null;
@@ -246,15 +249,21 @@ export default class DissolutionProtocolSystem {
     }
     
     createVisuals() {
-        // Dissolution overlay graphics
-        this.dissolutionGraphics = this.scene.add.graphics();
-        this.dissolutionGraphics.setDepth(100);
-        this.dissolutionGraphics.setVisible(false);
-        
-        // Reservoir graphics
-        this.reservoirGraphics = this.scene.add.graphics();
-        this.reservoirGraphics.setDepth(200);
-        this.reservoirGraphics.setVisible(false);
+        // Check for UnifiedGraphicsManager (new architecture)
+        if (this.scene.graphicsManager) {
+            this.useUnifiedRenderer = true;
+        } else {
+            // Legacy: Create graphics objects directly
+            // Dissolution overlay graphics
+            this.dissolutionGraphics = this.scene.add.graphics();
+            this.dissolutionGraphics.setDepth(100);
+            this.dissolutionGraphics.setVisible(false);
+            
+            // Reservoir graphics
+            this.reservoirGraphics = this.scene.add.graphics();
+            this.reservoirGraphics.setDepth(200);
+            this.reservoirGraphics.setVisible(false);
+        }
         
         // Essence display (bottom right)
         this.createEssenceDisplay();
@@ -338,6 +347,9 @@ export default class DissolutionProtocolSystem {
                 // Visual bar (logarithmic scale)
                 const maxEssence = 100;
                 const width = Math.min(display.maxWidth, (amount / maxEssence) * display.maxWidth);
+                
+                // Essence bars are UI elements - keep using direct graphics for these
+                // as they persist across frames rather than being redrawn each frame
                 display.bar.clear();
                 const colorHex = {
                     temporal: 0xffd700,
@@ -366,18 +378,25 @@ export default class DissolutionProtocolSystem {
         // Slow time
         this.scene.physics.world.timeScale = 0.1;
         
-        // Show overlay
-        this.dissolutionGraphics.setVisible(true);
-        this.dissolutionGraphics.clear();
-        
-        // Darken screen
-        this.dissolutionGraphics.fillStyle(0x000000, 0.5);
-        this.dissolutionGraphics.fillRect(
-            this.scene.cameras.main.scrollX,
-            this.scene.cameras.main.scrollY,
-            this.scene.cameras.main.width,
-            this.scene.cameras.main.height
-        );
+        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+            // Unified renderer: Register overlay command
+            const manager = this.scene.graphicsManager;
+            const cam = this.scene.cameras.main;
+            manager.drawRect('effects', cam.scrollX, cam.scrollY, cam.width, cam.height, 0x000000, 0.5);
+        } else {
+            // Legacy: Show overlay
+            this.dissolutionGraphics.setVisible(true);
+            this.dissolutionGraphics.clear();
+            
+            // Darken screen
+            this.dissolutionGraphics.fillStyle(0x000000, 0.5);
+            this.dissolutionGraphics.fillRect(
+                this.scene.cameras.main.scrollX,
+                this.scene.cameras.main.scrollY,
+                this.scene.cameras.main.width,
+                this.scene.cameras.main.height
+            );
+        }
         
         // Show available systems
         this.visualizeSystems();
@@ -398,9 +417,14 @@ export default class DissolutionProtocolSystem {
         // Restore time
         this.scene.physics.world.timeScale = 1.0;
         
-        // Hide overlay
-        this.dissolutionGraphics.setVisible(false);
-        this.dissolutionGraphics.clear();
+        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+            // Unified renderer: Layer will be cleared on next render cycle
+            // No need to explicitly clear
+        } else {
+            // Legacy: Hide and clear overlay
+            this.dissolutionGraphics.setVisible(false);
+            this.dissolutionGraphics.clear();
+        }
         
         // Remove system labels
         if (this.systemLabels) {
@@ -895,18 +919,25 @@ export default class DissolutionProtocolSystem {
         
         this.inReservoir = true;
         
-        // Create reservoir visualization
-        this.reservoirGraphics.setVisible(true);
-        this.reservoirGraphics.clear();
-        
-        // Draw liminal space
-        this.reservoirGraphics.fillStyle(0x1a0a2e, 0.9);
-        this.reservoirGraphics.fillRect(
-            this.scene.cameras.main.scrollX,
-            this.scene.cameras.main.scrollY,
-            this.scene.cameras.main.width,
-            this.scene.cameras.main.height
-        );
+        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+            // Unified renderer: Register overlay command for liminal space
+            const manager = this.scene.graphicsManager;
+            const cam = this.scene.cameras.main;
+            manager.drawRect('effects', cam.scrollX, cam.scrollY, cam.width, cam.height, 0x1a0a2e, 0.9);
+        } else {
+            // Legacy: Create reservoir visualization
+            this.reservoirGraphics.setVisible(true);
+            this.reservoirGraphics.clear();
+            
+            // Draw liminal space
+            this.reservoirGraphics.fillStyle(0x1a0a2e, 0.9);
+            this.reservoirGraphics.fillRect(
+                this.scene.cameras.main.scrollX,
+                this.scene.cameras.main.scrollY,
+                this.scene.cameras.main.width,
+                this.scene.cameras.main.height
+            );
+        }
         
         // Show dissolved systems
         let yOffset = 150;
@@ -970,7 +1001,13 @@ export default class DissolutionProtocolSystem {
     
     exitReservoir() {
         this.inReservoir = false;
-        this.reservoirGraphics.setVisible(false);
+        
+        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+            // Unified renderer: Layer will be cleared on next render cycle
+        } else {
+            // Legacy: Hide graphics
+            this.reservoirGraphics.setVisible(false);
+        }
         
         if (this.reservoirLabels) {
             this.reservoirLabels.forEach(label => label.destroy());
@@ -1085,14 +1122,23 @@ export default class DissolutionProtocolSystem {
     updateDissolutionVisuals(time) {
         // Pulsing effect for dissolution overlay
         const alpha = 0.3 + Math.sin(time / 500) * 0.1;
-        this.dissolutionGraphics.clear();
-        this.dissolutionGraphics.fillStyle(0x2d1f3d, alpha);
-        this.dissolutionGraphics.fillRect(
-            this.scene.cameras.main.scrollX,
-            this.scene.cameras.main.scrollY,
-            this.scene.cameras.main.width,
-            this.scene.cameras.main.height
-        );
+        
+        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+            // Unified renderer: Register the overlay as a render command
+            const manager = this.scene.graphicsManager;
+            const cam = this.scene.cameras.main;
+            manager.drawRect('effects', cam.scrollX, cam.scrollY, cam.width, cam.height, 0x2d1f3d, alpha);
+        } else {
+            // Legacy: Direct graphics manipulation
+            this.dissolutionGraphics.clear();
+            this.dissolutionGraphics.fillStyle(0x2d1f3d, alpha);
+            this.dissolutionGraphics.fillRect(
+                this.scene.cameras.main.scrollX,
+                this.scene.cameras.main.scrollY,
+                this.scene.cameras.main.width,
+                this.scene.cameras.main.height
+            );
+        }
     }
     
     saveEssence() {

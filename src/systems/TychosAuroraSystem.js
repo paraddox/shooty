@@ -179,11 +179,17 @@ export default class TychosAuroraSystem {
     }
     
     createAuroraGraphics() {
-        // Main aurora rendering layer
-        this.auroraGraphics = this.scene.add.graphics();
-        this.auroraGraphics.setDepth(5); // Between background (0) and gameplay (10+)
+        // Check for UnifiedGraphicsManager (new architecture)
+        if (this.scene.graphicsManager) {
+            this.useUnifiedRenderer = true;
+        } else {
+            this.useUnifiedRenderer = false;
+            // Legacy: Main aurora rendering layer
+            this.auroraGraphics = this.scene.add.graphics();
+            this.auroraGraphics.setDepth(5); // Between background (0) and gameplay (10+)
+        }
         
-        // Aurora texture for shader
+        // Aurora texture for shader (still needed for both paths)
         this.auroraCanvas = document.createElement('canvas');
         this.auroraCanvas.width = this.columns;
         this.auroraCanvas.height = this.rows;
@@ -255,10 +261,12 @@ export default class TychosAuroraSystem {
     
     createGravityWells() {
         // Container for spawn prediction gravity wells
-        this.gravityWellGraphics = this.scene.add.graphics();
-        this.gravityWellGraphics.setDepth(6);
+        if (!this.useUnifiedRenderer) {
+            this.gravityWellGraphics = this.scene.add.graphics();
+            this.gravityWellGraphics.setDepth(6);
+        }
         
-        // Well sprites pool
+        // Well sprites pool (still needed for both paths as they're game objects, not graphics)
         this.wellPool = [];
         for (let i = 0; i < 8; i++) {
             const well = this.scene.add.circle(0, 0, 30, this.colors.spawn, 0);
@@ -291,12 +299,14 @@ export default class TychosAuroraSystem {
     
     createWakeSystem() {
         // Player wake visualization
-        this.wakeGraphics = this.scene.add.graphics();
-        this.wakeGraphics.setDepth(6);
-        
-        // Wake line that follows player
-        this.wakeLine = this.scene.add.graphics();
-        this.wakeLine.setDepth(6);
+        if (!this.useUnifiedRenderer) {
+            this.wakeGraphics = this.scene.add.graphics();
+            this.wakeGraphics.setDepth(6);
+            
+            // Wake line that follows player
+            this.wakeLine = this.scene.add.graphics();
+            this.wakeLine.setDepth(6);
+        }
     }
     
     update(delta) {
@@ -576,17 +586,113 @@ export default class TychosAuroraSystem {
     }
     
     renderAurora() {
-        // Clear graphics
-        this.auroraGraphics.clear();
+        if (this.useUnifiedRenderer) {
+            // Unified: register commands with graphics manager
+            this.renderAuroraUnified();
+        } else {
+            // Legacy: clear all graphics and render directly
+            this.auroraGraphics.clear();
+            
+            // Update field texture for shader
+            this.updateFieldTexture();
+            
+            // Draw flow lines (safety corridors)
+            this.drawFlowLines();
+            
+            // Draw field cells (subtle background)
+            this.drawFieldCells();
+        }
+    }
+    
+    // Unified Rendering Methods (UnifiedGraphicsManager)
+    
+    renderAuroraUnified() {
+        const manager = this.scene.graphicsManager;
         
-        // Update field texture for shader
+        // Update field texture for shader (still needed)
         this.updateFieldTexture();
         
-        // Draw flow lines (safety corridors)
-        this.drawFlowLines();
+        // Draw flow lines using unified renderer
+        this.drawFlowLinesUnified(manager);
         
-        // Draw field cells (subtle background)
-        this.drawFieldCells();
+        // Draw field cells using unified renderer
+        this.drawFieldCellsUnified(manager);
+    }
+    
+    drawFlowLinesUnified(manager) {
+        // Draw flowing lines showing safe corridors
+        const time = this.time;
+        
+        // Draw lines along safety gradients
+        for (let row = 2; row < this.rows - 2; row += 2) {
+            for (let col = 2; col < this.columns - 2; col += 2) {
+                const idx = row * this.columns + col;
+                const safety = this.safetyField[idx];
+                
+                if (safety > 0.3) {
+                    const x = col * this.fieldWidth + this.fieldWidth / 2;
+                    const y = row * this.fieldHeight + this.fieldHeight / 2;
+                    
+                    // Calculate flow direction based on safety gradient
+                    const left = this.safetyField[idx - 1] || 0;
+                    const right = this.safetyField[idx + 1] || 0;
+                    const up = this.safetyField[idx - this.columns] || 0;
+                    const down = this.safetyField[idx + this.columns] || 0;
+                    
+                    const dx = (right - left) * this.fieldWidth * 2;
+                    const dy = (down - up) * this.fieldHeight * 2;
+                    
+                    // Draw flow line
+                    const flowLength = 20 + safety * 40;
+                    const angle = Math.atan2(dy, dx) + Math.sin(time + x * 0.01) * 0.2;
+                    
+                    const endX = x + Math.cos(angle) * flowLength;
+                    const endY = y + Math.sin(angle) * flowLength;
+                    
+                    const lineWidth = 1 + safety * 3;
+                    const alpha = 0.2 + safety * 0.3;
+                    
+                    manager.drawLine('effects', x, y, endX, endY, this.colors.safety, alpha, lineWidth);
+                }
+            }
+        }
+    }
+    
+    drawFieldCellsUnified(manager) {
+        // Draw cell-based aurora (subtle background glow)
+        for (let row = 0; row < this.rows; row++) {
+            for (let col = 0; col < this.columns; col++) {
+                const idx = row * this.columns + col;
+                const x = col * this.fieldWidth;
+                const y = row * this.fieldHeight;
+                
+                const safety = this.safetyField[idx];
+                const danger = this.dangerField[idx];
+                const momentum = this.momentumField[idx];
+                const memory = this.memoryField[idx];
+                
+                // Draw if any field is active
+                const maxVal = Math.max(safety, danger, momentum, memory);
+                if (maxVal > 0.1) {
+                    let color = this.colors.safety;
+                    let alpha = safety;
+                    
+                    if (danger > safety && danger > momentum) {
+                        color = this.colors.danger;
+                        alpha = danger;
+                    } else if (momentum > safety && momentum > danger) {
+                        color = this.colors.momentum;
+                        alpha = momentum;
+                    } else if (memory > 0.3) {
+                        color = this.colors.memory;
+                        alpha = memory;
+                    }
+                    
+                    // Subtle cell glow
+                    manager.drawRect('effects', x + 2, y + 2, this.fieldWidth - 4, this.fieldHeight - 4, color, alpha * 0.15, true);
+                }
+            }
+        }
     }
     
     updateFieldTexture() {
@@ -697,7 +803,43 @@ export default class TychosAuroraSystem {
     
     updateGravityWells() {
         // Update spawn prediction gravity wells
-        this.gravityWellGraphics.clear();
+        if (this.useUnifiedRenderer) {
+            this.updateGravityWellsUnified();
+        } else {
+            this.gravityWellGraphics.clear();
+            
+            // Use pool for active wells
+            let wellIndex = 0;
+            
+            this.spawnPredictions.forEach(prediction => {
+                if (wellIndex >= this.wellPool.length) return;
+                
+                const well = this.wellPool[wellIndex++];
+                well.setPosition(prediction.x, prediction.y);
+                well.setVisible(true);
+                
+                // Pulse based on confidence
+                const pulse = 0.5 + prediction.confidence * 0.5;
+                well.setScale(pulse);
+                well.setAlpha(0.3 + prediction.confidence * 0.4);
+                
+                // Draw gravity well rings
+                this.gravityWellGraphics.lineStyle(2, this.colors.spawn, 0.4);
+                this.gravityWellGraphics.strokeCircle(prediction.x, prediction.y, 40 * pulse);
+                
+                this.gravityWellGraphics.lineStyle(1, this.colors.spawn, 0.2);
+                this.gravityWellGraphics.strokeCircle(prediction.x, prediction.y, 60 * pulse);
+            });
+            
+            // Hide unused wells
+            for (let i = wellIndex; i < this.wellPool.length; i++) {
+                this.wellPool[i].setVisible(false);
+            }
+        }
+    }
+    
+    updateGravityWellsUnified() {
+        const manager = this.scene.graphicsManager;
         
         // Use pool for active wells
         let wellIndex = 0;
@@ -714,12 +856,18 @@ export default class TychosAuroraSystem {
             well.setScale(pulse);
             well.setAlpha(0.3 + prediction.confidence * 0.4);
             
-            // Draw gravity well rings
-            this.gravityWellGraphics.lineStyle(2, this.colors.spawn, 0.4);
-            this.gravityWellGraphics.strokeCircle(prediction.x, prediction.y, 40 * pulse);
+            // Draw gravity well rings using unified renderer
+            manager.addCommand('effects', 'circle', {
+                x: prediction.x, y: prediction.y,
+                radius: 40 * pulse,
+                color: this.colors.spawn, alpha: 0.4, filled: false, lineWidth: 2
+            });
             
-            this.gravityWellGraphics.lineStyle(1, this.colors.spawn, 0.2);
-            this.gravityWellGraphics.strokeCircle(prediction.x, prediction.y, 60 * pulse);
+            manager.addCommand('effects', 'circle', {
+                x: prediction.x, y: prediction.y,
+                radius: 60 * pulse,
+                color: this.colors.spawn, alpha: 0.2, filled: false, lineWidth: 1
+            });
         });
         
         // Hide unused wells
@@ -743,18 +891,38 @@ export default class TychosAuroraSystem {
         // Draw player wake - trail of recent positions
         if (this.playerPath.length < 2) return;
         
-        this.wakeLine.clear();
+        if (this.useUnifiedRenderer) {
+            this.updateWakeUnified();
+        } else {
+            this.wakeLine.clear();
+            
+            // Draw wake as fading line
+            for (let i = 1; i < this.playerPath.length; i++) {
+                const alpha = (1 - i / this.playerPath.length) * 0.4;
+                const width = (1 - i / this.playerPath.length) * 4;
+                
+                this.wakeLine.lineStyle(width, this.colors.momentum, alpha);
+                this.wakeLine.beginPath();
+                this.wakeLine.moveTo(this.playerPath[i - 1].x, this.playerPath[i - 1].y);
+                this.wakeLine.lineTo(this.playerPath[i].x, this.playerPath[i].y);
+                this.wakeLine.strokePath();
+            }
+        }
+    }
+    
+    updateWakeUnified() {
+        const manager = this.scene.graphicsManager;
         
-        // Draw wake as fading line
+        // Build wake path points
         for (let i = 1; i < this.playerPath.length; i++) {
             const alpha = (1 - i / this.playerPath.length) * 0.4;
-            const width = (1 - i / this.playerPath.length) * 4;
+            const lineWidth = (1 - i / this.playerPath.length) * 4;
             
-            this.wakeLine.lineStyle(width, this.colors.momentum, alpha);
-            this.wakeLine.beginPath();
-            this.wakeLine.moveTo(this.playerPath[i - 1].x, this.playerPath[i - 1].y);
-            this.wakeLine.lineTo(this.playerPath[i].x, this.playerPath[i].y);
-            this.wakeLine.strokePath();
+            manager.drawLine('effects', 
+                this.playerPath[i - 1].x, this.playerPath[i - 1].y,
+                this.playerPath[i].x, this.playerPath[i].y,
+                this.colors.momentum, alpha, lineWidth
+            );
         }
     }
     
@@ -768,27 +936,61 @@ export default class TychosAuroraSystem {
             this.addMemoryEcho(x, y);
         }
         
-        // Render echoes
+        if (this.useUnifiedRenderer) {
+            this.updateMemoryEchoesUnified();
+        } else {
+            // Render echoes (legacy)
+            this.memoryEchoes = this.memoryEchoes.filter(echo => {
+                echo.age += 0.016;
+                echo.x += echo.vx;
+                echo.y += echo.vy;
+                
+                if (echo.age > echo.lifespan) {
+                    if (echo.graphics) echo.graphics.destroy();
+                    return false;
+                }
+                
+                // Update echo visualization
+                if (!echo.graphics) {
+                    echo.graphics = this.scene.add.graphics();
+                    echo.graphics.setDepth(4);
+                }
+                
+                const alpha = (1 - echo.age / echo.lifespan) * 0.3;
+                echo.graphics.clear();
+                echo.graphics.lineStyle(1, this.colors.memory, alpha);
+                echo.graphics.strokeCircle(echo.x, echo.y, 20 + echo.age * 10);
+                
+                // Add to memory field
+                this.addToField('memory', echo.x, echo.y, alpha * 0.5);
+                
+                return true;
+            });
+        }
+    }
+    
+    updateMemoryEchoesUnified() {
+        const manager = this.scene.graphicsManager;
+        
+        // Render echoes using unified renderer
         this.memoryEchoes = this.memoryEchoes.filter(echo => {
             echo.age += 0.016;
             echo.x += echo.vx;
             echo.y += echo.vy;
             
             if (echo.age > echo.lifespan) {
-                if (echo.graphics) echo.graphics.destroy();
                 return false;
             }
             
-            // Update echo visualization
-            if (!echo.graphics) {
-                echo.graphics = this.scene.add.graphics();
-                echo.graphics.setDepth(4);
-            }
-            
             const alpha = (1 - echo.age / echo.lifespan) * 0.3;
-            echo.graphics.clear();
-            echo.graphics.lineStyle(1, this.colors.memory, alpha);
-            echo.graphics.strokeCircle(echo.x, echo.y, 20 + echo.age * 10);
+            const radius = 20 + echo.age * 10;
+            
+            // Register echo circle with unified renderer
+            manager.addCommand('effects', 'circle', {
+                x: echo.x, y: echo.y,
+                radius: radius,
+                color: this.colors.memory, alpha: alpha, filled: false, lineWidth: 1
+            });
             
             // Add to memory field
             this.addToField('memory', echo.x, echo.y, alpha * 0.5);
@@ -846,20 +1048,28 @@ export default class TychosAuroraSystem {
     }
     
     shutdown() {
-        // Clean up graphics
-        if (this.auroraGraphics) this.auroraGraphics.destroy();
-        if (this.gravityWellGraphics) this.gravityWellGraphics.destroy();
-        if (this.wakeGraphics) this.wakeGraphics.destroy();
-        if (this.wakeLine) this.wakeLine.destroy();
+        // Clean up legacy graphics (only if not using unified renderer)
+        if (!this.useUnifiedRenderer) {
+            if (this.auroraGraphics) this.auroraGraphics.destroy();
+            if (this.gravityWellGraphics) this.gravityWellGraphics.destroy();
+            if (this.wakeGraphics) this.wakeGraphics.destroy();
+            if (this.wakeLine) this.wakeLine.destroy();
+        }
+        
+        // These are always cleaned up (they're game objects, not graphics)
         if (this.eyeGraphics) this.eyeGraphics.destroy();
         if (this.eyeGlow) this.eyeGlow.destroy();
         
         // Clean up wells
         this.wellPool.forEach(well => well.destroy());
         
-        // Clean up echoes
-        this.memoryEchoes.forEach(echo => {
-            if (echo.graphics) echo.graphics.destroy();
-        });
+        // Clean up echoes (legacy only - unified doesn't create graphics objects)
+        if (!this.useUnifiedRenderer) {
+            this.memoryEchoes.forEach(echo => {
+                if (echo.graphics) echo.graphics.destroy();
+            });
+        }
+        
+        // Note: UnifiedGraphicsManager handles cleanup of its own graphics objects
     }
 }

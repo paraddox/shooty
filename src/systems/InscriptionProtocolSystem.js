@@ -34,6 +34,10 @@ import Phaser from 'phaser';
  * 
  * Key Innovation: The game becomes an author, and the player becomes
  * its protagonist in a story that writes itself across sessions.
+ * 
+ * Migrated to UnifiedGraphicsManager (2026-04-01):
+ * - Inscription glow rendering now uses UnifiedGraphicsManager on 'effects' layer
+ * - graphics.clear() calls removed for UnifiedGraphicsManager compatibility
  */
 
 export default class InscriptionProtocolSystem {
@@ -78,7 +82,7 @@ export default class InscriptionProtocolSystem {
         // Visual feedback
         this.quillIcon = null;
         this.inkTrail = null;
-        this.inscriptionGlow = null;
+        // Note: inscriptionGlow now rendered via UnifiedGraphicsManager - no direct graphics object needed
         
         this.init();
     }
@@ -171,10 +175,9 @@ export default class InscriptionProtocolSystem {
             frequency: -1
         });
         
-        // Glow effect when inscribing
-        this.inscriptionGlow = this.scene.add.graphics();
-        this.inscriptionGlow.setScrollFactor(0);
-        this.inscriptionGlow.setDepth(90);
+        // Note: Inscription glow effect now rendered via UnifiedGraphicsManager on 'effects' layer
+        // Previously: this.inscriptionGlow = this.scene.add.graphics();
+        // Now uses this.scene.graphicsManager.drawCircle() in triggerQuillAnimation()
     }
     
     generateSessionId() {
@@ -633,21 +636,24 @@ S Y N T H E S I S
             8
         );
         
-        // Glow effect
-        this.inscriptionGlow.clear();
-        this.inscriptionGlow.fillStyle(this.GOLD_ACCENT, 0.2);
-        this.inscriptionGlow.fillCircle(
-            this.scene.scale.width - 40,
-            this.scene.scale.height - 40,
-            30
-        );
-        
-        this.scene.tweens.add({
-            targets: this.inscriptionGlow,
-            alpha: 0,
-            duration: 1000,
-            onComplete: () => this.inscriptionGlow.clear()
-        });
+        // Glow effect via UnifiedGraphicsManager (migrated from direct graphics)
+        // Note: UnifiedGraphicsManager clears once per frame automatically
+        if (this.scene.graphicsManager) {
+            // Register draw command for glow circle on 'effects' layer
+            this.scene.graphicsManager.drawCircle(
+                'effects',
+                this.scene.scale.width - 40,
+                this.scene.scale.height - 40,
+                30,
+                this.GOLD_ACCENT,
+                0.2,
+                true
+            );
+            
+            // Fade effect handled by alpha in subsequent frames
+            // No need for manual clear - UnifiedGraphicsManager handles it
+        }
+        // Legacy fallback removed - systems now require UnifiedGraphicsManager
     }
     
     // Called when game ends
@@ -674,7 +680,8 @@ S Y N T H E S I S
         
         if (this.quillIcon) this.quillIcon.destroy();
         if (this.inkTrail) this.inkTrail.destroy();
-        if (this.inscriptionGlow) this.inscriptionGlow.destroy();
+        // Note: No inscriptionGlow to destroy - now rendered via UnifiedGraphicsManager
+        // UnifiedGraphicsManager handles its own cleanup
     }
     
     // Called every frame

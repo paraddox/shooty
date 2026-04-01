@@ -63,18 +63,7 @@ export default class FractureSystem {
     }
     
     createVisuals() {
-        // Momentum bar - positioned below health
-        const margin = 30;
-        this.momentumBar = this.scene.add.graphics();
-        this.momentumBar.setScrollFactor(0);
-        this.momentumBar.setDepth(100);
-        
-        // Fracture ready glow around player
-        this.fractureRing = this.scene.add.graphics();
-        this.fractureRing.setDepth(49);
-        this.fractureRing.setVisible(false);
-        
-        // Ghost afterimages pool
+        // Ghost afterimages pool (Image sprites, not graphics)
         for (let i = 0; i < 8; i++) {
             const ghost = this.scene.add.image(0, 0, 'player');
             ghost.setTint(0xffd700);
@@ -88,6 +77,9 @@ export default class FractureSystem {
                 maxLife: 20
             });
         }
+        
+        // Note: Graphics rendering is now handled by UnifiedGraphicsManager
+        // this.momentumBar, this.fractureRing, this.ghostRing are now command-based
     }
     
     setupInput() {
@@ -130,7 +122,7 @@ export default class FractureSystem {
     pulseMomentumBar() {
         // Flash effect when hitting momentum thresholds
         const flash = this.scene.add.rectangle(
-            this.momentumBar.x || 30, 
+            this.momentumBarX || 30, 
             36, 
             200, 
             4, 
@@ -238,9 +230,7 @@ export default class FractureSystem {
         this.ghostVisual.setScale(1.0);
         this.ghostVisual.setDepth(5);
         
-        // Pulsing ring around ghost
-        this.ghostRing = this.scene.add.graphics();
-        this.ghostRing.setDepth(4);
+        // Note: Ghost ring is now drawn via UnifiedGraphicsManager in updateFracture()
     }
     
     onFractureStart() {
@@ -250,14 +240,13 @@ export default class FractureSystem {
         // Screen effect
         this.scene.cameras.main.flash(200, 255, 215, 0, 0.3);
         
-        // Show fracture ring around real player
-        this.fractureRing.setVisible(true);
-        
         // Reset momentum
         this.momentum = 0;
         
         // Trail effect
         this.spawnFractureTrails();
+        
+        // Note: Fracture ring is now drawn via UnifiedGraphicsManager in updateFracture()
     }
     
     spawnFractureTrails() {
@@ -347,26 +336,27 @@ export default class FractureSystem {
         const width = 200;
         const height = 4;
         
-        this.momentumBar.clear();
+        const gm = this.scene.graphicsManager;
+        if (!gm) return;
         
         // Background
-        this.momentumBar.fillStyle(0x22222a, 1);
-        this.momentumBar.fillRect(margin, barY, width, height);
+        gm.drawRect('effects', margin, barY, width, height, 0x22222a, 1, true);
         
         // Fill - changes color as it fills
         const fill = this.momentum / this.maxMomentum;
         const color = fill >= 1 ? 0xffd700 : 0x00f0ff;
-        this.momentumBar.fillStyle(color, 1);
-        this.momentumBar.fillRect(margin, barY, width * fill, height);
+        gm.drawRect('effects', margin, barY, width * fill, height, color, 1, true);
         
-        // Glow when full
+        // Glow when full (outline rect)
         if (fill >= 1) {
-            this.momentumBar.lineStyle(1, 0xffd700, 0.5 + Math.sin(this.scene.time.now / 100) * 0.3);
-            this.momentumBar.strokeRect(margin, barY, width, height);
+            const pulseAlpha = 0.5 + Math.sin(this.scene.time.now / 100) * 0.3;
+            // Note: GraphicsManager doesn't support outline-only rects directly,
+            // so we draw a thin rect for the glow effect
+            gm.drawRect('effects', margin, barY, width, height, 0xffd700, pulseAlpha, true);
         }
         
         // Store position for pulse effect
-        this.momentumBar.x = margin;
+        this.momentumBarX = margin;
     }
     
     updateFracture(dt) {
@@ -375,21 +365,20 @@ export default class FractureSystem {
         // Update ghost player
         this.updateGhostPlayer(dt);
         
-        // Update fracture ring around real player
-        this.fractureRing.clear();
+        const gm = this.scene.graphicsManager;
+        if (!gm) return;
+        
+        // Update fracture ring around real player (drawn as circle outline via filled circles workaround)
         const pulse = 0.3 + Math.sin(this.scene.time.now / 100) * 0.2;
-        this.fractureRing.lineStyle(2, 0xffd700, pulse);
-        this.fractureRing.strokeCircle(
-            this.scene.player.x, 
-            this.scene.player.y, 
-            40 + Math.sin(this.scene.time.now / 80) * 5
-        );
+        const ringRadius = 40 + Math.sin(this.scene.time.now / 80) * 5;
+        // Draw ring as a thin filled circle outline
+        gm.drawCircle('effects', this.scene.player.x, this.scene.player.y, ringRadius, 0xffd700, pulse);
+        gm.drawCircle('effects', this.scene.player.x, this.scene.player.y, ringRadius - 2, 0x000000, 1); // Cutout center for ring effect
         
         // Update ghost ring
-        if (this.ghostRing && this.ghostPlayer.active) {
-            this.ghostRing.clear();
-            this.ghostRing.lineStyle(2, 0xffd700, 0.4);
-            this.ghostRing.strokeCircle(this.ghostPlayer.x, this.ghostPlayer.y, 35);
+        if (this.ghostPlayer && this.ghostPlayer.active) {
+            gm.drawCircle('effects', this.ghostPlayer.x, this.ghostPlayer.y, 35, 0xffd700, 0.4);
+            gm.drawCircle('effects', this.ghostPlayer.x, this.ghostPlayer.y, 33, 0x000000, 1); // Cutout center
         }
         
         // Auto-resolve when time runs out
@@ -560,10 +549,8 @@ export default class FractureSystem {
             });
         }
         
-        if (this.ghostRing) {
-            this.ghostRing.destroy();
-            this.ghostRing = null;
-        }
+        // Note: Ghost ring cleanup is now handled by UnifiedGraphicsManager
+        // No direct graphics object to destroy
         
         this.ghostPlayer = null;
     }
@@ -572,16 +559,15 @@ export default class FractureSystem {
         // Restore time scale
         this.scene.physics.world.timeScale = 1.0;
         
-        // Hide fracture ring
-        this.fractureRing.setVisible(false);
-        this.fractureRing.clear();
-        
         // Screen flash
         this.scene.cameras.main.flash(150, 255, 215, 0, 0.2);
         
         // Screen shake based on performance
         const intensity = 0.002 + this.killsInFracture * 0.001;
         this.scene.cameras.main.shake(200, intensity);
+        
+        // Note: Fracture ring clearing is now handled by UnifiedGraphicsManager
+        // Graphics are cleared once per frame, no manual clear needed
     }
     
     calculateBonus() {
@@ -741,12 +727,11 @@ export default class FractureSystem {
     
     destroy() {
         this.afterImages.forEach(img => img.sprite.destroy());
-        this.momentumBar.destroy();
-        this.fractureRing.destroy();
         
         if (this.ghostVisual) this.ghostVisual.destroy();
-        if (this.ghostRing) this.ghostRing.destroy();
         
         this.shiftKey.destroy();
+        
+        // Note: No graphics objects to destroy - UnifiedGraphicsManager handles cleanup
     }
 }

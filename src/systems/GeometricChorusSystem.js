@@ -145,21 +145,27 @@ export default class GeometricChorusSystem {
     }
     
     createVisuals() {
-        // Main wall rendering
-        this.wallGraphics = this.scene.add.graphics();
-        this.wallGraphics.setDepth(30); // Below enemies, above floor
-        
-        // Arena boundary graphics
-        this.arenaGraphics = this.scene.add.graphics();
-        this.arenaGraphics.setDepth(25);
-        
-        // Glow effects
-        this.glowGraphics = this.scene.add.graphics();
-        this.glowGraphics.setDepth(24);
-        
-        // Grid pattern on floor
-        this.gridGraphics = this.scene.add.graphics();
-        this.gridGraphics.setDepth(1);
+        // Check for UnifiedGraphicsManager (new architecture)
+        if (this.scene.graphicsManager) {
+            this.useUnifiedRenderer = true;
+        } else {
+            this.useUnifiedRenderer = false;
+            // Legacy: Main wall rendering
+            this.wallGraphics = this.scene.add.graphics();
+            this.wallGraphics.setDepth(30); // Below enemies, above floor
+            
+            // Legacy: Arena boundary graphics
+            this.arenaGraphics = this.scene.add.graphics();
+            this.arenaGraphics.setDepth(25);
+            
+            // Legacy: Glow effects
+            this.glowGraphics = this.scene.add.graphics();
+            this.glowGraphics.setDepth(24);
+            
+            // Legacy: Grid pattern on floor
+            this.gridGraphics = this.scene.add.graphics();
+            this.gridGraphics.setDepth(1);
+        }
         
         // Create wall texture
         this.createWallTexture();
@@ -200,19 +206,31 @@ export default class GeometricChorusSystem {
     
     createArenaGrid() {
         // Draw subtle grid on arena floor
-        this.gridGraphics.clear();
-        this.gridGraphics.lineStyle(1, this.CYAN_EDGE, 0.1);
-        
-        const gridSize = 120;
-        for (let x = 0; x <= 1920; x += gridSize) {
-            this.gridGraphics.moveTo(x, 0);
-            this.gridGraphics.lineTo(x, 1440);
+        if (this.useUnifiedRenderer) {
+            // Use UnifiedGraphicsManager - grid is static, register once
+            const gridSize = 120;
+            for (let x = 0; x <= 1920; x += gridSize) {
+                this.scene.graphicsManager.drawLine('background', x, 0, x, 1440, this.CYAN_EDGE, 0.1, 1);
+            }
+            for (let y = 0; y <= 1440; y += gridSize) {
+                this.scene.graphicsManager.drawLine('background', 0, y, 1920, y, this.CYAN_EDGE, 0.1, 1);
+            }
+        } else {
+            // Legacy: direct graphics
+            this.gridGraphics.clear();
+            this.gridGraphics.lineStyle(1, this.CYAN_EDGE, 0.1);
+            
+            const gridSize = 120;
+            for (let x = 0; x <= 1920; x += gridSize) {
+                this.gridGraphics.moveTo(x, 0);
+                this.gridGraphics.lineTo(x, 1440);
+            }
+            for (let y = 0; y <= 1440; y += gridSize) {
+                this.gridGraphics.moveTo(0, y);
+                this.gridGraphics.lineTo(1920, y);
+            }
+            this.gridGraphics.strokePath();
         }
-        for (let y = 0; y <= 1440; y += gridSize) {
-            this.gridGraphics.moveTo(0, y);
-            this.gridGraphics.lineTo(1920, y);
-        }
-        this.gridGraphics.strokePath();
     }
     
     startBreathing() {
@@ -923,22 +941,30 @@ export default class GeometricChorusSystem {
     }
     
     render() {
-        // Clear all graphics
-        this.wallGraphics.clear();
-        this.arenaGraphics.clear();
-        this.glowGraphics.clear();
-        
-        // Render arena boundaries
-        this.renderArenaBoundaries();
-        
-        // Render walls
-        this.renderWalls();
-        
-        // Render sanctuaries
-        this.renderSanctuaries();
-        
-        // Render chambers
-        this.renderChambers();
+        if (this.useUnifiedRenderer) {
+            // Unified: register commands with graphics manager
+            this.renderArenaBoundariesUnified();
+            this.renderWallsUnified();
+            this.renderSanctuariesUnified();
+            this.renderChambersUnified();
+        } else {
+            // Legacy: clear all graphics and render directly
+            this.wallGraphics.clear();
+            this.arenaGraphics.clear();
+            this.glowGraphics.clear();
+            
+            // Render arena boundaries
+            this.renderArenaBoundaries();
+            
+            // Render walls
+            this.renderWalls();
+            
+            // Render sanctuaries
+            this.renderSanctuaries();
+            
+            // Render chambers
+            this.renderChambers();
+        }
     }
     
     renderArenaBoundaries() {
@@ -1058,6 +1084,132 @@ export default class GeometricChorusSystem {
         });
     }
     
+    // Unified Rendering Methods (UnifiedGraphicsManager)
+    
+    renderArenaBoundariesUnified() {
+        const bounds = this.currentBounds;
+        const manager = this.scene.graphicsManager;
+        
+        // Glow effect - use line commands
+        manager.addCommand('effects', 'rect', {
+            x: bounds.x - 4, y: bounds.y - 4,
+            width: bounds.width + 8, height: bounds.height + 8,
+            color: this.INDIGO_GLOW, alpha: this.WALL_GLOW_ALPHA, filled: false, lineWidth: 8
+        });
+        
+        // Main boundary
+        const pulse = 1 + Math.sin(this.scene.time.now / 1000) * 0.1;
+        manager.addCommand('effects', 'rect', {
+            x: bounds.x, y: bounds.y,
+            width: bounds.width, height: bounds.height,
+            color: this.CYAN_EDGE, alpha: 0.8, filled: false, lineWidth: 3 * pulse
+        });
+        
+        // Corner markers
+        const cornerSize = 30;
+        const corners = [
+            { x: bounds.x - 2, y: bounds.y - 2 }, // Top-left
+            { x: bounds.x + bounds.width - cornerSize, y: bounds.y - 2 }, // Top-right
+            { x: bounds.x - 2, y: bounds.y + bounds.height - 3 }, // Bottom-left
+            { x: bounds.x + bounds.width - cornerSize, y: bounds.y + bounds.height - 3 } // Bottom-right
+        ];
+        
+        corners.forEach(corner => {
+            // Horizontal line
+            manager.drawRect('effects', corner.x, corner.y, cornerSize, 3, this.CYAN_EDGE, 0.6);
+            // Vertical line
+            manager.drawRect('effects', corner.x, corner.y, 3, cornerSize, this.CYAN_EDGE, 0.6);
+        });
+    }
+    
+    renderWallsUnified() {
+        const manager = this.scene.graphicsManager;
+        
+        this.walls.forEach(wall => {
+            const age = (this.scene.time.now / 1000) - wall.createdAt;
+            const remaining = wall.lifetime - age;
+            const alpha = Math.min(1, remaining / 2);
+            const fadeOut = remaining < 2 ? remaining / 2 : 1;
+            
+            // Wall glow
+            manager.drawLine('effects', wall.x1, wall.y1, wall.x2, wall.y2, this.INDIGO_GLOW, 0.2 * fadeOut, 12);
+            
+            // Wall body
+            manager.drawLine('effects', wall.x1, wall.y1, wall.x2, wall.y2, this.INDIGO_COLOR, this.WALL_ALPHA * alpha * fadeOut, 4);
+            
+            // Wall pulse
+            const pulse = 1 + Math.sin(this.scene.time.now / 500) * 0.2;
+            const midX = (wall.x1 + wall.x2) / 2;
+            const midY = (wall.y1 + wall.y2) / 2;
+            const dx = (wall.x2 - wall.x1) * 0.5 * pulse;
+            const dy = (wall.y2 - wall.y1) * 0.5 * pulse;
+            
+            manager.drawLine('effects', midX - dx, midY - dy, midX + dx, midY + dy, this.CYAN_EDGE, 0.6 * alpha * fadeOut, 2);
+        });
+    }
+    
+    renderSanctuariesUnified() {
+        const manager = this.scene.graphicsManager;
+        
+        this.sanctuaries.forEach(sanctuary => {
+            const pulse = 1 + Math.sin(sanctuary.pulsePhase) * 0.1;
+            
+            // Outer glow
+            manager.drawCircle('effects', sanctuary.x, sanctuary.y, sanctuary.radius * pulse, this.CYAN_EDGE, 0.1);
+            
+            // Main circle (stroke)
+            manager.addCommand('effects', 'circle', {
+                x: sanctuary.x, y: sanctuary.y,
+                radius: sanctuary.radius * pulse,
+                color: this.CYAN_EDGE, alpha: 0.6, filled: false, lineWidth: 2
+            });
+            
+            // Inner calm zone
+            manager.drawCircle('effects', sanctuary.x, sanctuary.y, sanctuary.radius * 0.7, this.CYAN_EDGE, 0.05);
+        });
+    }
+    
+    renderChambersUnified() {
+        const manager = this.scene.graphicsManager;
+        
+        this.chambers.forEach(chamber => {
+            const rotation = chamber.rotation;
+            
+            // Build hexagon points
+            const hexPoints = [];
+            for (let i = 0; i < 6; i++) {
+                const angle = rotation + (i * Math.PI) / 3;
+                hexPoints.push({
+                    x: chamber.x + Math.cos(angle) * chamber.radius,
+                    y: chamber.y + Math.sin(angle) * chamber.radius
+                });
+            }
+            
+            // Rotating hexagon
+            manager.addCommand('effects', 'path', {
+                points: hexPoints, color: this.INDIGO_COLOR, alpha: 0.5, lineWidth: 3
+            });
+            
+            // Build inner square points
+            const squarePoints = [];
+            for (let i = 0; i < 4; i++) {
+                const angle = -rotation + (i * Math.PI) / 2;
+                squarePoints.push({
+                    x: chamber.x + Math.cos(angle) * chamber.radius * 0.5,
+                    y: chamber.y + Math.sin(angle) * chamber.radius * 0.5
+                });
+            }
+            
+            // Inner rotating square
+            manager.addCommand('effects', 'path', {
+                points: squarePoints, color: this.CYAN_EDGE, alpha: 0.4, lineWidth: 2
+            });
+            
+            // Center glow
+            manager.drawCircle('effects', chamber.x, chamber.y, 20, this.INDIGO_GLOW, 0.2);
+        });
+    }
+    
     // Public API for other systems
     
     getArenaBounds() {
@@ -1111,9 +1263,12 @@ export default class GeometricChorusSystem {
     
     destroy() {
         this.active = false;
-        this.wallGraphics?.destroy();
-        this.arenaGraphics?.destroy();
-        this.glowGraphics?.destroy();
-        this.gridGraphics?.destroy();
+        if (!this.useUnifiedRenderer) {
+            this.wallGraphics?.destroy();
+            this.arenaGraphics?.destroy();
+            this.glowGraphics?.destroy();
+            this.gridGraphics?.destroy();
+        }
+        // Note: UnifiedGraphicsManager handles cleanup of its own graphics objects
     }
 }

@@ -131,17 +131,26 @@ export default class RhythmOfTheVoidSystem {
     }
     
     createVisualElements() {
-        // Central beat indicator
-        this.beatIndicator = this.scene.add.graphics();
-        this.beatIndicator.setDepth(90);
+        // Detect UnifiedGraphicsManager
+        if (this.scene.graphicsManager) {
+            this.useUnifiedRenderer = true;
+        } else {
+            // Legacy: Central beat indicator
+            this.beatIndicator = this.scene.add.graphics();
+            this.beatIndicator.setDepth(90);
+            
+            // Measure ring that expands/contracts
+            this.measureRing = this.scene.add.graphics();
+            this.measureRing.setDepth(89);
+            
+            // Beat flash effect
+            this.beatFlash = this.scene.add.graphics();
+            this.beatFlash.setDepth(88);
+        }
         
-        // Measure ring that expands/contracts
-        this.measureRing = this.scene.add.graphics();
-        this.measureRing.setDepth(89);
-        
-        // Beat flash effect
-        this.beatFlash = this.scene.add.graphics();
-        this.beatFlash.setDepth(88);
+        // State for unified rendering
+        this.pulseState = { active: false, progress: 0, color: 0xffd700, maxRadius: 50 };
+        this.flashState = { active: false, alpha: 0 };
     }
     
     connectToSynaesthesia() {
@@ -588,11 +597,45 @@ export default class RhythmOfTheVoidSystem {
                       type === 'snare' ? this.WARNING_RED : 
                       this.SAFE_CYAN;
         
-        // Ring pulse from player
-        this.beatIndicator.clear();
-        
         const maxRadius = 50 + intensity * 100;
-        const duration = this.beatDuration * 500;
+        
+        if (this.useUnifiedRenderer) {
+            // Unified: Set pulse state for render method to pick up
+            this.pulseState = {
+                active: true,
+                progress: 0,
+                color: color,
+                maxRadius: maxRadius,
+                playerX: player.x,
+                playerY: player.y
+            };
+            
+            // Animate the pulse state
+            const startTime = this.scene.time.now;
+            const duration = this.beatDuration * 500;
+            
+            const updatePulse = () => {
+                const elapsed = this.scene.time.now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                if (this.pulseState) {
+                    this.pulseState.progress = progress;
+                    this.pulseState.playerX = this.scene.player.x;
+                    this.pulseState.playerY = this.scene.player.y;
+                }
+                
+                if (progress < 1) {
+                    this.scene.time.delayedCall(16, updatePulse);
+                } else {
+                    this.pulseState.active = false;
+                }
+            };
+            updatePulse();
+            return;
+        }
+        
+        // Legacy: Ring pulse from player
+        this.beatIndicator.clear();
         
         // Animated ring
         let progress = 0;
@@ -619,6 +662,28 @@ export default class RhythmOfTheVoidSystem {
         // Bright flash when player acts on beat
         const player = this.scene.player;
         
+        if (this.useUnifiedRenderer) {
+            // Unified: Set flash state
+            this.flashState = {
+                active: true,
+                alpha: 0.6,
+                playerX: player.x,
+                playerY: player.y
+            };
+            
+            // Animate fade out
+            this.scene.tweens.add({
+                targets: this.flashState,
+                alpha: 0,
+                duration: 200,
+                onComplete: () => {
+                    this.flashState.active = false;
+                }
+            });
+            return;
+        }
+        
+        // Legacy: Direct graphics
         this.beatFlash.clear();
         this.beatFlash.fillStyle(this.RHYTHM_GOLD, 0.6);
         this.beatFlash.fillCircle(player.x, player.y, 60);
@@ -769,12 +834,78 @@ export default class RhythmOfTheVoidSystem {
         if (this.renderCounter === 0) {
             this.updateAttachedVisuals();
         }
+        
+        // Unified rendering
+        if (this.useUnifiedRenderer && this.renderCounter === 0) {
+            this.render();
+        }
+    }
+    
+    // ===== UNIFIED RENDERING =====
+    
+    render() {
+        // Route to unified or legacy rendering
+        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+            this.renderUnified();
+        }
+    }
+    
+    renderUnified() {
+        const manager = this.scene.graphicsManager;
+        const player = this.scene.player;
+        
+        // Render beat pulse
+        if (this.pulseState?.active && this.pulseState.progress < 1) {
+            const radius = this.pulseState.maxRadius * this.pulseState.progress;
+            const alpha = 1 - this.pulseState.progress;
+            manager.drawCircle('effects', this.pulseState.playerX, this.pulseState.playerY, radius, this.pulseState.color, alpha * 0.5);
+            // Draw outline
+            manager.drawCircle('effects', this.pulseState.playerX, this.pulseState.playerY, radius - 1, this.pulseState.color, alpha);
+        }
+        
+        // Render flash
+        if (this.flashState?.active && this.flashState.alpha > 0) {
+            manager.drawCircle('effects', this.flashState.playerX, this.flashState.playerY, 60, this.RHYTHM_GOLD, this.flashState.alpha);
+        }
+        
+        // Render measure ring
+        if (this.measureRingState) {
+            const { phase, radius, playerX, playerY } = this.measureRingState;
+            
+            // Main ring
+            manager.drawCircle('effects', playerX, playerY, radius, this.RHYTHM_GOLD, 0.15);
+            
+            // Beat markers
+            for (let i = 0; i < 4; i++) {
+                const angle = (i / 4) * Math.PI * 2 - Math.PI / 2;
+                const markerX = playerX + Math.cos(angle) * radius;
+                const markerY = playerY + Math.sin(angle) * radius;
+                
+                const isCurrentBeat = i === Math.floor(phase * 4);
+                const alpha = isCurrentBeat ? 0.6 : 0.2;
+                const size = isCurrentBeat ? 6 : 3;
+                
+                manager.drawCircle('effects', markerX, markerY, size, this.RHYTHM_GOLD, alpha);
+            }
+        }
     }
     
     updateMeasureRing(phase) {
         const player = this.scene.player;
         const radius = 80 + phase * 40;
         
+        if (this.useUnifiedRenderer) {
+            // Unified: Store state for render method
+            this.measureRingState = {
+                phase: phase,
+                radius: radius,
+                playerX: player.x,
+                playerY: player.y
+            };
+            return;
+        }
+        
+        // Legacy: Direct graphics
         this.measureRing.clear();
         this.measureRing.lineStyle(2, this.RHYTHM_GOLD, 0.3);
         this.measureRing.strokeCircle(player.x, player.y, radius);
@@ -814,9 +945,15 @@ export default class RhythmOfTheVoidSystem {
     // ===== CLEANUP =====
     
     destroy() {
+        // Legacy cleanup
         this.beatIndicator?.destroy();
         this.measureRing?.destroy();
         this.beatFlash?.destroy();
+        
+        // Unified state cleanup
+        this.pulseState = null;
+        this.flashState = null;
+        this.measureRingState = null;
         
         this.spawnPreviews.forEach(p => p.destroy());
         this.safeCorridors.forEach(c => c.destroy());

@@ -88,12 +88,8 @@ export default class OmniWeaponSystem {
         this.elementalState = 0; // 0=fire, 1=frost, 2=shock
         this.elementalTimer = 0;
         
-        // Visual attachments
-        this.attachments = {
-            barrel: null,
-            chamber: null,
-            lens: null
-        };
+        // Visual attachments - now rendered via UnifiedGraphicsManager on 'effects' layer
+        // (Legacy graphics objects removed - drawing is now centralized)
         
         // UI elements
         this.uiContainer = null;
@@ -108,20 +104,9 @@ export default class OmniWeaponSystem {
     }
     
     createVisuals() {
-        const player = this.scene.player;
-        if (!player) return;
-        
-        // Barrel attachment (front of ship)
-        this.attachments.barrel = this.scene.add.graphics();
-        this.attachments.barrel.setDepth(51);
-        
-        // Chamber attachment (center/core glow)
-        this.attachments.chamber = this.scene.add.graphics();
-        this.attachments.chamber.setDepth(49);
-        
-        // Lens attachment (targeting reticle ring)
-        this.attachments.lens = this.scene.add.graphics();
-        this.attachments.lens.setDepth(50);
+        // Note: Graphics rendering is now handled by UnifiedGraphicsManager
+        // All visual effects are drawn via the 'effects' layer
+        // Attachments are now drawn through updateVisualAttachments() using graphicsManager
     }
     
     createUI() {
@@ -363,13 +348,10 @@ export default class OmniWeaponSystem {
     }
     
     updateVisualAttachments() {
+        // Note: Graphics clearing is now handled by UnifiedGraphicsManager (single clear per frame per layer)
         const player = this.scene.player;
-        if (!player || !this.attachments.barrel) return;
-        
-        // Clear all
-        this.attachments.barrel.clear();
-        this.attachments.chamber.clear();
-        this.attachments.lens.clear();
+        const gm = this.scene.graphicsManager;
+        if (!player || !gm) return;
         
         // Position attachments at player
         const x = player.x;
@@ -379,7 +361,6 @@ export default class OmniWeaponSystem {
         // Draw BARREL attachment
         if (this.slots.BARREL) {
             const color = this.getModColor(this.slots.BARREL);
-            this.attachments.barrel.lineStyle(2, color, 0.8);
             
             switch (this.slots.BARREL) {
                 case 'RAPID':
@@ -387,24 +368,21 @@ export default class OmniWeaponSystem {
                     for (let i = -1; i <= 1; i++) {
                         const bx = x + Math.cos(angle) * 25 + Math.cos(angle + Math.PI/2) * i * 6;
                         const by = y + Math.sin(angle) * 25 + Math.sin(angle + Math.PI/2) * i * 6;
-                        this.attachments.barrel.strokeCircle(bx, by, 3);
+                        gm.drawRing('effects', bx, by, 3, color, 0.8, 2);
                     }
                     break;
                 case 'PIERCE':
                     // Long barrel extension
                     const px = x + Math.cos(angle) * 30;
                     const py = y + Math.sin(angle) * 30;
-                    this.attachments.barrel.lineStyle(3, color, 0.9);
-                    this.attachments.barrel.strokeCircle(px, py, 4);
-                    this.attachments.barrel.lineStyle(1, color, 0.5);
-                    this.attachments.barrel.strokeCircle(px, py, 8);
+                    gm.drawRing('effects', px, py, 4, color, 0.9, 3);
+                    gm.drawRing('effects', px, py, 8, color, 0.5, 1);
                     break;
                 case 'SPREAD':
                     // Wide muzzle
                     const sx = x + Math.cos(angle) * 22;
                     const sy = y + Math.sin(angle) * 22;
-                    this.attachments.barrel.fillStyle(color, 0.3);
-                    this.attachments.barrel.fillCircle(sx, sy, 10);
+                    gm.drawCircle('effects', sx, sy, 10, color, 0.3, true);
                     break;
             }
         }
@@ -412,27 +390,23 @@ export default class OmniWeaponSystem {
         // Draw CHAMBER attachment
         if (this.slots.CHAMBER) {
             const color = this.getModColor(this.slots.CHAMBER);
-            this.attachments.chamber.lineStyle(2, color, 0.6);
             
             switch (this.slots.CHAMBER) {
                 case 'EXPLOSIVE':
                     // Pulsing core
                     const pulse = 0.7 + Math.sin(this.scene.time.now / 100) * 0.3;
-                    this.attachments.chamber.fillStyle(color, 0.4 * pulse);
-                    this.attachments.chamber.fillCircle(x, y, 12);
+                    gm.drawCircle('effects', x, y, 12, color, 0.4 * pulse, true);
                     break;
                 case 'ELEMENTAL':
                     // Rotating element indicator
                     const elemColors = [0xff4400, 0x00ffff, 0xffff00]; // fire, frost, shock
                     const elemIndex = Math.floor(this.scene.time.now / 500) % 3;
-                    this.attachments.chamber.fillStyle(elemColors[elemIndex], 0.5);
-                    this.attachments.chamber.fillCircle(x, y, 10);
+                    gm.drawCircle('effects', x, y, 10, elemColors[elemIndex], 0.5, true);
                     break;
                 case 'PHASING':
                     // Ghostly ring
                     const alpha = 0.3 + Math.sin(this.scene.time.now / 80) * 0.2;
-                    this.attachments.chamber.lineStyle(2, color, alpha);
-                    this.attachments.chamber.strokeCircle(x, y, 15);
+                    gm.drawRing('effects', x, y, 15, color, alpha, 2);
                     break;
             }
         }
@@ -440,20 +414,15 @@ export default class OmniWeaponSystem {
         // Draw LENS attachment
         if (this.slots.LENS) {
             const color = this.getModColor(this.slots.LENS);
-            this.attachments.lens.lineStyle(1, color, 0.4);
             
             switch (this.slots.LENS) {
                 case 'HOMING':
                     // Targeting ring
-                    this.attachments.lens.strokeCircle(x, y, 35);
+                    gm.drawRing('effects', x, y, 35, color, 0.4, 1);
                     // Crosshair
                     const cSize = 8;
-                    this.attachments.lens.lineStyle(1, color, 0.6);
-                    this.attachments.lens.moveTo(x - cSize, y);
-                    this.attachments.lens.lineTo(x + cSize, y);
-                    this.attachments.lens.moveTo(x, y - cSize);
-                    this.attachments.lens.lineTo(x, y + cSize);
-                    this.attachments.lens.strokePath();
+                    gm.drawLine('effects', x - cSize, y, x + cSize, y, color, 0.6, 1);
+                    gm.drawLine('effects', x, y - cSize, x, y + cSize, color, 0.6, 1);
                     break;
                 case 'RICOCHET':
                     // Bounce indicator arcs
@@ -461,20 +430,18 @@ export default class OmniWeaponSystem {
                         const arcAngle = angle + (i - 1) * 0.5;
                         const ax = x + Math.cos(arcAngle) * 40;
                         const ay = y + Math.sin(arcAngle) * 40;
-                        this.attachments.lens.strokeCircle(ax, ay, 5);
+                        gm.drawRing('effects', ax, ay, 5, color, 0.4, 1);
                     }
                     break;
                 case 'SPLIT':
                     // Y-shaped indicator
                     const splitLen = 20;
-                    this.attachments.lens.lineStyle(2, color, 0.5);
-                    this.attachments.lens.moveTo(x, y);
-                    this.attachments.lens.lineTo(x + Math.cos(angle - 0.3) * splitLen,
-                                                  y + Math.sin(angle - 0.3) * splitLen);
-                    this.attachments.lens.moveTo(x, y);
-                    this.attachments.lens.lineTo(x + Math.cos(angle + 0.3) * splitLen,
-                                                  y + Math.sin(angle + 0.3) * splitLen);
-                    this.attachments.lens.strokePath();
+                    const leftX = x + Math.cos(angle - 0.3) * splitLen;
+                    const leftY = y + Math.sin(angle - 0.3) * splitLen;
+                    const rightX = x + Math.cos(angle + 0.3) * splitLen;
+                    const rightY = y + Math.sin(angle + 0.3) * splitLen;
+                    gm.drawLine('effects', x, y, leftX, leftY, color, 0.5, 2);
+                    gm.drawLine('effects', x, y, rightX, rightY, color, 0.5, 2);
                     break;
             }
         }

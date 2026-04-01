@@ -3,6 +3,11 @@ import Phaser from 'phaser';
 /**
  * APOPHENIA PROTOCOL — The 53rd Dimension: PATTERN DIVINATION
  * 
+ * Migrated to UnifiedGraphicsManager (2026-04-01):
+ * - Pattern visualization now uses UnifiedGraphicsManager on 'effects' layer
+ * - Point cloud rendering migrated to UnifiedGraphicsManager
+ * - graphics.clear() calls removed for UnifiedGraphicsManager compatibility
+ * 
  * The game becomes a divination instrument. Every combat action inscribes
  * meaning onto the arena floor. Death positions form constellations.
  * Bullet trails draw ideograms. Movement paths trace mandalas.
@@ -184,8 +189,7 @@ export default class ApopheniaProtocol {
         };
         
         // ===== VISUALS =====
-        this.patternGraphics = null;
-        this.pointGraphics = null;
+        // Note: patternGraphics and pointGraphics removed - now rendered via UnifiedGraphicsManager
         this.divinationOverlay = null;
         this.patternAuras = [];
         
@@ -205,17 +209,10 @@ export default class ApopheniaProtocol {
     }
     
     createGraphics() {
-        // Pattern visualization layer
-        this.patternGraphics = this.scene.add.graphics();
-        this.patternGraphics.setDepth(25);
-        this.patternGraphics.setAlpha(0.6);
+        // Note: Pattern visualization now rendered via UnifiedGraphicsManager on 'effects' layer
+        // No direct graphics objects needed - all drawing goes through this.scene.graphicsManager
         
-        // Point cloud layer (subtle)
-        this.pointGraphics = this.scene.add.graphics();
-        this.pointGraphics.setDepth(20);
-        this.pointGraphics.setAlpha(0.3);
-        
-        // Divination overlay (visible in focus mode)
+        // Divination overlay (visible in focus mode) - container is still needed for text
         this.divinationOverlay = this.scene.add.container(0, 0);
         this.divinationOverlay.setDepth(100);
         this.divinationOverlay.setVisible(false);
@@ -1078,137 +1075,130 @@ export default class ApopheniaProtocol {
     }
     
     // ===== VISUALIZATION =====
+    // Note: All visualization now uses UnifiedGraphicsManager on 'effects' layer
+    // Methods migrated from direct graphics drawing to command-based rendering
     
     visualizePattern(pattern) {
-        const g = this.patternGraphics;
+        const gm = this.scene.graphicsManager;
+        if (!gm) return;
+        
         const color = pattern.color;
         const { x, y } = pattern.center;
         
         switch (pattern.type) {
             case 'triangle':
-                this.drawTriangle(g, pattern.points, color);
+                this.drawTriangleUnified(gm, pattern.points, color);
                 break;
             case 'square':
-                this.drawSquare(g, pattern.points, color);
+                this.drawSquareUnified(gm, pattern.points, color);
                 break;
             case 'circle':
                 const radius = this.calculateAverageRadius(pattern);
-                g.lineStyle(2, color, 0.6);
-                g.strokeCircle(x, y, radius);
+                gm.drawRing('effects', x, y, radius, color, 0.6, 2);
                 break;
             case 'spiral':
-                this.drawSpiral(g, x, y, color);
+                this.drawSpiralUnified(gm, x, y, color);
                 break;
             case 'cross':
-                this.drawCross(g, pattern.points, color);
+                this.drawCrossUnified(gm, pattern.points, color);
                 break;
             case 'star':
-                this.drawStar(g, x, y, 5, 30, 60, color);
+                this.drawStarUnified(gm, x, y, 5, 30, 60, color);
                 break;
             case 'wings':
-                this.drawWings(g, pattern.points, color);
+                this.drawWingsUnified(gm, pattern.points, color);
                 break;
             case 'gate':
-                this.drawGate(g, pattern.points, color);
+                this.drawGateUnified(gm, pattern.points, color);
                 break;
         }
         
-        // Center glow
-        g.fillStyle(color, 0.3);
-        g.fillCircle(x, y, 8);
+        // Center glow - filled circle
+        gm.drawCircle('effects', x, y, 8, color, 0.3, true);
     }
     
-    drawTriangle(g, points, color) {
+    drawTriangleUnified(gm, points, color) {
         if (points.length < 3) return;
-        g.lineStyle(2, color, 0.6);
-        g.beginPath();
-        g.moveTo(points[0].x, points[0].y);
-        g.lineTo(points[1].x, points[1].y);
-        g.lineTo(points[2].x, points[2].y);
-        g.closePath();
-        g.strokePath();
+        // Draw three lines to form triangle
+        gm.drawLine('effects', points[0].x, points[0].y, points[1].x, points[1].y, color, 0.6, 2);
+        gm.drawLine('effects', points[1].x, points[1].y, points[2].x, points[2].y, color, 0.6, 2);
+        gm.drawLine('effects', points[2].x, points[2].y, points[0].x, points[0].y, color, 0.6, 2);
     }
     
-    drawSquare(g, points, color) {
+    drawSquareUnified(gm, points, color) {
         if (points.length < 4) return;
-        g.lineStyle(2, color, 0.6);
-        g.beginPath();
-        g.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < 4; i++) {
-            g.lineTo(points[i].x, points[i].y);
-        }
-        g.closePath();
-        g.strokePath();
+        // Draw four lines to form square
+        gm.drawLine('effects', points[0].x, points[0].y, points[1].x, points[1].y, color, 0.6, 2);
+        gm.drawLine('effects', points[1].x, points[1].y, points[2].x, points[2].y, color, 0.6, 2);
+        gm.drawLine('effects', points[2].x, points[2].y, points[3].x, points[3].y, color, 0.6, 2);
+        gm.drawLine('effects', points[3].x, points[3].y, points[0].x, points[0].y, color, 0.6, 2);
     }
     
-    drawSpiral(g, x, y, color) {
-        g.lineStyle(2, color, 0.5);
-        g.beginPath();
+    drawSpiralUnified(gm, x, y, color) {
+        // Build spiral as a series of short line segments
+        const points = [];
         for (let i = 0; i < 50; i++) {
             const angle = 0.2 * i;
             const r = 5 + i * 1.5;
-            const sx = x + r * Math.cos(angle);
-            const sy = y + r * Math.sin(angle);
-            if (i === 0) g.moveTo(sx, sy);
-            else g.lineTo(sx, sy);
+            points.push({
+                x: x + r * Math.cos(angle),
+                y: y + r * Math.sin(angle)
+            });
         }
-        g.strokePath();
+        gm.drawPath('effects', points, color, 0.5, 2);
     }
     
-    drawCross(g, points, color) {
+    drawCrossUnified(gm, points, color) {
         if (points.length < 4) return;
-        g.lineStyle(2, color, 0.6);
-        g.beginPath();
         // Line 1
-        g.moveTo(points[0].x, points[0].y);
-        g.lineTo(points[1].x, points[1].y);
+        gm.drawLine('effects', points[0].x, points[0].y, points[1].x, points[1].y, color, 0.6, 2);
         // Line 2
-        g.moveTo(points[2].x, points[2].y);
-        g.lineTo(points[3].x, points[3].y);
-        g.strokePath();
+        gm.drawLine('effects', points[2].x, points[2].y, points[3].x, points[3].y, color, 0.6, 2);
     }
     
-    drawStar(g, x, y, points, innerRadius, outerRadius, color) {
-        g.lineStyle(2, color, 0.6);
-        g.beginPath();
+    drawStarUnified(gm, x, y, points, innerRadius, outerRadius, color) {
+        // Build star as a path
+        const pathPoints = [];
         for (let i = 0; i < points * 2; i++) {
             const radius = i % 2 === 0 ? outerRadius : innerRadius;
             const angle = (Math.PI * i) / points - Math.PI / 2;
-            const sx = x + radius * Math.cos(angle);
-            const sy = y + radius * Math.sin(angle);
-            if (i === 0) g.moveTo(sx, sy);
-            else g.lineTo(sx, sy);
+            pathPoints.push({
+                x: x + radius * Math.cos(angle),
+                y: y + radius * Math.sin(angle)
+            });
         }
-        g.closePath();
-        g.strokePath();
+        // Close the star by adding first point again
+        pathPoints.push({ ...pathPoints[0] });
+        gm.drawPath('effects', pathPoints, color, 0.6, 2);
     }
     
-    drawWings(g, points, color) {
+    drawWingsUnified(gm, points, color) {
         if (points.length < 6) return;
-        g.lineStyle(2, color, 0.5);
-        // Draw curves connecting symmetric pairs
+        // Draw curves connecting symmetric pairs using line segments
         for (let i = 0; i < points.length - 1; i += 2) {
-            g.beginPath();
-            g.moveTo(points[i].x, points[i].y);
+            const p1 = points[i];
+            const p2 = points[i + 1];
+            const midX = (p1.x + p2.x) / 2;
+            const midY = Math.min(p1.y, p2.y) - 50;
             
-            // Control point for curve
-            const midX = (points[i].x + points[i + 1].x) / 2;
-            const midY = Math.min(points[i].y, points[i + 1].y) - 50;
-            
-            g.quadraticCurveTo(midX, midY, points[i + 1].x, points[i + 1].y);
-            g.strokePath();
+            // Approximate quadratic curve with line segments
+            const curvePoints = [];
+            for (let t = 0; t <= 1; t += 0.1) {
+                const invT = 1 - t;
+                curvePoints.push({
+                    x: invT * invT * p1.x + 2 * invT * t * midX + t * t * p2.x,
+                    y: invT * invT * p1.y + 2 * invT * t * midY + t * t * p2.y
+                });
+            }
+            gm.drawPath('effects', curvePoints, color, 0.5, 2);
         }
     }
     
-    drawGate(g, points, color) {
-        g.lineStyle(3, color, 0.5);
+    drawGateUnified(gm, points, color) {
         // Draw parallel lines
         for (let i = 0; i < Math.min(points.length, 6); i += 2) {
             if (i + 1 >= points.length) break;
-            g.beginPath();
-            g.moveTo(points[i].x, points[i].y);
-            g.lineTo(points[i + 1].x, points[i + 1].y);
-            g.strokePath();
+            gm.drawLine('effects', points[i].x, points[i].y, points[i + 1].x, points[i + 1].y, color, 0.5, 3);
         }
     }
     
@@ -1342,7 +1332,10 @@ export default class ApopheniaProtocol {
     }
     
     renderPointCloud() {
-        this.pointGraphics.clear();
+        // Note: Point cloud rendering now uses UnifiedGraphicsManager on 'effects' layer
+        // UnifiedGraphicsManager clears once per frame automatically
+        const gm = this.scene.graphicsManager;
+        if (!gm) return;
         
         // Draw subtle points
         const allPoints = this.getWeightedPoints();
@@ -1351,8 +1344,7 @@ export default class ApopheniaProtocol {
             const alpha = 1 - (age / this.config.pointDecay);
             if (alpha > 0) {
                 const size = p.weight * 3;
-                this.pointGraphics.fillStyle(this.PRISM_WHITE, alpha * 0.3);
-                this.pointGraphics.fillCircle(p.x, p.y, size);
+                gm.drawCircle('effects', p.x, p.y, size, this.PRISM_WHITE, alpha * 0.3, true);
             }
         });
     }
@@ -1377,8 +1369,10 @@ export default class ApopheniaProtocol {
     }
     
     destroy() {
-        this.patternGraphics.destroy();
-        this.pointGraphics.destroy();
-        this.divinationOverlay.destroy();
+        // Note: patternGraphics and pointGraphics no longer exist - managed by UnifiedGraphicsManager
+        // UnifiedGraphicsManager handles its own cleanup
+        if (this.divinationOverlay) {
+            this.divinationOverlay.destroy();
+        }
     }
 }

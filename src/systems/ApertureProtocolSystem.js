@@ -150,6 +150,10 @@ export default class ApertureProtocolSystem {
     constructor(scene) {
         this.scene = scene;
         
+        // ===== GRAPHICS MANAGER DETECTION =====
+        this.graphicsManager = scene.graphicsManager || null;
+        this.useUnifiedGraphics = !!this.graphicsManager;
+        
         // ===== ATTENTION ZONES =====
         this.zones = {
             foveal: { radius: 100, chargeRate: 5, label: 'FOVEAL' },      // Direct focus
@@ -214,14 +218,23 @@ export default class ApertureProtocolSystem {
     
     createVisualElements() {
         // Attention field visualization (subtle cone around cursor)
+        if (this.useUnifiedGraphics) {
+            this.unifiedAttentionField = this.graphicsManager.createLayer('aperture_attention', 50, 'effects');
+        }
         this.attentionField = this.scene.add.graphics();
         this.attentionField.setDepth(50);
         
         // Resentment overlay (shows danger in ignored areas)
+        if (this.useUnifiedGraphics) {
+            this.unifiedResentmentOverlay = this.graphicsManager.createLayer('aperture_resentment', 15, 'effects');
+        }
         this.resentmentOverlay = this.scene.add.graphics();
         this.resentmentOverlay.setDepth(15);
         
         // Gaze trail
+        if (this.useUnifiedGraphics) {
+            this.unifiedGazeTrail = this.graphicsManager.createLayer('aperture_gaze', 100, 'effects');
+        }
         this.gazeTrailGraphics = this.scene.add.graphics();
         this.gazeTrailGraphics.setDepth(100);
         
@@ -410,6 +423,9 @@ export default class ApertureProtocolSystem {
         this.blinkIndicator.add(this.blinkIcon);
         
         // Cooldown arc
+        if (this.useUnifiedGraphics) {
+            this.unifiedBlinkCooldownArc = this.graphicsManager.createLayer('aperture_blink', 101, 'effects');
+        }
         this.blinkCooldownArc = this.scene.add.graphics();
         this.blinkIndicator.add(this.blinkCooldownArc);
         
@@ -442,6 +458,9 @@ export default class ApertureProtocolSystem {
         
         // During blink, skip all attention processing
         if (this.isBlinking) {
+            if (this.useUnifiedGraphics) {
+                this.graphicsManager.clearLayer('aperture_attention');
+            }
             this.attentionField.clear();
             return;
         }
@@ -709,6 +728,27 @@ export default class ApertureProtocolSystem {
     }
     
     renderAttentionField() {
+        // Unified graphics path
+        if (this.useUnifiedGraphics) {
+            this.graphicsManager.clearLayer('aperture_attention');
+            if (!this.showDebug) return;
+            
+            const gazeX = this.currentGaze.x;
+            const gazeY = this.currentGaze.y;
+            
+            this.graphicsManager.drawCircle('aperture_attention', gazeX, gazeY, this.zones.foveal.radius, {
+                lineStyle: { width: 2, color: this.APERTURE_CYAN, alpha: 0.3 }
+            });
+            this.graphicsManager.drawCircle('aperture_attention', gazeX, gazeY, this.zones.parafoveal.radius, {
+                lineStyle: { width: 1, color: this.APERTURE_GLOW, alpha: 0.2 }
+            });
+            this.graphicsManager.drawCircle('aperture_attention', gazeX, gazeY, this.zones.peripheral.radius, {
+                lineStyle: { width: 1, color: 0x666666, alpha: 0.1 }
+            });
+            return;
+        }
+        
+        // Legacy graphics path
         this.attentionField.clear();
         
         // Only draw if showing debug/overlay
@@ -734,13 +774,30 @@ export default class ApertureProtocolSystem {
     }
     
     renderResentmentOverlay() {
-        this.resentmentOverlay.clear();
-        
         const worldWidth = 1920;
         const worldHeight = 1440;
         const cellW = worldWidth / this.gridCols;
         const cellH = worldHeight / this.gridRows;
         
+        // Unified graphics path
+        if (this.useUnifiedGraphics) {
+            this.graphicsManager.clearLayer('aperture_resentment');
+            for (let y = 0; y < this.gridRows; y++) {
+                for (let x = 0; x < this.gridCols; x++) {
+                    const resentment = this.resentmentGrid[y][x];
+                    if (resentment > 20) {
+                        const alpha = Math.min(0.3, resentment / 200);
+                        this.graphicsManager.drawRect('aperture_resentment', x * cellW, y * cellH, cellW, cellH, {
+                            fillStyle: { color: this.RESENTMENT_RED, alpha: alpha }
+                        });
+                    }
+                }
+            }
+            return;
+        }
+        
+        // Legacy graphics path
+        this.resentmentOverlay.clear();
         for (let y = 0; y < this.gridRows; y++) {
             for (let x = 0; x < this.gridCols; x++) {
                 const resentment = this.resentmentGrid[y][x];
@@ -757,6 +814,9 @@ export default class ApertureProtocolSystem {
         // Clean up old indicators
         this.chargeIndicators.forEach((indicator, enemy) => {
             if (!enemy.active) {
+                if (indicator.unifiedLayer) {
+                    this.graphicsManager.clearLayer(indicator.unifiedLayer.name);
+                }
                 indicator.destroy();
                 this.chargeIndicators.delete(enemy);
             }
@@ -767,6 +827,7 @@ export default class ApertureProtocolSystem {
             if (!enemy.active) return;
             
             let indicator = this.chargeIndicators.get(enemy);
+            const layerName = indicator?.unifiedLayer?.name || `aperture_charge_${enemy.name || enemy.texture?.key || 'unknown'}_${Date.now()}`;
             
             if (data.charge > 0) {
                 if (!indicator) {
@@ -774,26 +835,43 @@ export default class ApertureProtocolSystem {
                     this.chargeIndicators.set(enemy, indicator);
                 }
                 
-                // Update visual
-                indicator.clear();
                 const radius = 25;
                 const arcLength = (data.charge / 100) * Math.PI * 2;
+                const color = data.charge > 75 ? this.APERTURE_CYAN : 
+                             data.charge > 50 ? this.APERTURE_GLOW : 0x888888;
                 
+                // Unified graphics path
+                if (this.useUnifiedGraphics && indicator.unifiedLayer) {
+                    this.graphicsManager.clearLayer(layerName);
+                    // Background ring
+                    this.graphicsManager.drawCircle(layerName, 0, 0, radius, {
+                        lineStyle: { width: 3, color: 0x333333, alpha: 0.5 }
+                    });
+                    // Charge arc
+                    this.graphicsManager.drawArc(layerName, 0, 0, radius, -Math.PI / 2, -Math.PI / 2 + arcLength, {
+                        lineStyle: { width: 3, color: color, alpha: 0.8 }
+                    });
+                    // Update position (for unified, we need to redraw at correct position)
+                    indicator.unifiedLayer.x = enemy.x;
+                    indicator.unifiedLayer.y = enemy.y - 40;
+                }
+                
+                // Legacy graphics path
+                indicator.clear();
                 // Background ring
                 indicator.lineStyle(3, 0x333333, 0.5);
                 indicator.strokeCircle(0, 0, radius);
-                
                 // Charge arc
-                const color = data.charge > 75 ? this.APERTURE_CYAN : 
-                             data.charge > 50 ? this.APERTURE_GLOW : 0x888888;
                 indicator.lineStyle(3, color, 0.8);
                 indicator.beginPath();
                 indicator.arc(0, 0, radius, -Math.PI / 2, -Math.PI / 2 + arcLength);
                 indicator.strokePath();
-                
                 indicator.x = enemy.x;
                 indicator.y = enemy.y - 40;
             } else if (indicator) {
+                if (indicator.unifiedLayer) {
+                    this.graphicsManager.clearLayer(indicator.unifiedLayer.name);
+                }
                 indicator.destroy();
                 this.chargeIndicators.delete(enemy);
             }
@@ -801,8 +879,13 @@ export default class ApertureProtocolSystem {
     }
     
     createChargeIndicator(enemy) {
+        let unifiedLayer = null;
+        if (this.useUnifiedGraphics) {
+            unifiedLayer = this.graphicsManager.createLayer(`aperture_charge_${enemy.name || enemy.texture?.key || 'unknown'}_${Date.now()}`, 60, 'effects');
+        }
         const indicator = this.scene.add.graphics();
         indicator.setDepth(60);
+        indicator.unifiedLayer = unifiedLayer;
         return indicator;
     }
     
@@ -822,18 +905,31 @@ export default class ApertureProtocolSystem {
     }
     
     updateBlinkUI() {
-        this.blinkCooldownArc.clear();
+        const pct = this.blinkCooldown / this.blinkCooldownMax;
+        const startAngle = -Math.PI / 2;
+        const endAngle = startAngle + (pct * Math.PI * 2);
         
+        // Unified graphics path
+        if (this.useUnifiedGraphics) {
+            this.graphicsManager.clearLayer('aperture_blink');
+            if (this.blinkCooldown > 0) {
+                this.graphicsManager.drawArc('aperture_blink', 0, 0, 22, startAngle, endAngle, {
+                    lineStyle: { width: 4, color: 0x444444, alpha: 0.8 }
+                });
+            }
+        } else {
+            // Legacy graphics path
+            this.blinkCooldownArc.clear();
+            if (this.blinkCooldown > 0) {
+                this.blinkCooldownArc.lineStyle(4, 0x444444, 0.8);
+                this.blinkCooldownArc.beginPath();
+                this.blinkCooldownArc.arc(0, 0, 22, startAngle, endAngle);
+                this.blinkCooldownArc.strokePath();
+            }
+        }
+        
+        // Update icon alpha for both paths
         if (this.blinkCooldown > 0) {
-            const pct = this.blinkCooldown / this.blinkCooldownMax;
-            const startAngle = -Math.PI / 2;
-            const endAngle = startAngle + (pct * Math.PI * 2);
-            
-            this.blinkCooldownArc.lineStyle(4, 0x444444, 0.8);
-            this.blinkCooldownArc.beginPath();
-            this.blinkCooldownArc.arc(0, 0, 22, startAngle, endAngle);
-            this.blinkCooldownArc.strokePath();
-            
             this.blinkIcon.setAlpha(0.3);
         } else {
             this.blinkIcon.setAlpha(1);
@@ -892,11 +988,27 @@ export default class ApertureProtocolSystem {
     toggleDebug() {
         this.showDebug = !this.showDebug;
         if (!this.showDebug) {
+            if (this.useUnifiedGraphics) {
+                this.graphicsManager.clearLayer('aperture_attention');
+            }
             this.attentionField.clear();
         }
     }
     
     destroy() {
+        // Clean up unified graphics layers
+        if (this.useUnifiedGraphics) {
+            this.graphicsManager.destroyLayer('aperture_attention');
+            this.graphicsManager.destroyLayer('aperture_resentment');
+            this.graphicsManager.destroyLayer('aperture_gaze');
+            this.graphicsManager.destroyLayer('aperture_blink');
+            this.chargeIndicators.forEach((indicator) => {
+                if (indicator.unifiedLayer) {
+                    this.graphicsManager.destroyLayer(indicator.unifiedLayer.name);
+                }
+            });
+        }
+        
         this.attentionField.destroy();
         this.resentmentOverlay.destroy();
         this.gazeTrailGraphics.destroy();

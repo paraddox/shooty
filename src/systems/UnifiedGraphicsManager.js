@@ -71,8 +71,12 @@ export default class UnifiedGraphicsManager {
     }
     
     // Convenience methods for systems
-    drawCircle(layer, x, y, radius, color, alpha = 1) {
-        this.addCommand(layer, 'circle', { x, y, radius, color, alpha });
+    drawCircle(layer, x, y, radius, color, alpha = 1, filled = true, lineWidth = 1) {
+        this.addCommand(layer, 'circle', { x, y, radius, color, alpha, filled, lineWidth });
+    }
+    
+    drawRing(layer, x, y, radius, color, alpha = 1, lineWidth = 1) {
+        this.addCommand(layer, 'circle', { x, y, radius, color, alpha, filled: false, lineWidth });
     }
     
     drawLine(layer, x1, y1, x2, y2, color, alpha = 1, lineWidth = 1) {
@@ -129,6 +133,7 @@ export default class UnifiedGraphicsManager {
         // Batch by type for GPU efficiency
         let currentLineStyle = null;
         let currentFillStyle = null;
+        let currentLineWidth = null;
         
         for (const cmd of commands) {
             switch (cmd.type) {
@@ -140,9 +145,11 @@ export default class UnifiedGraphicsManager {
                         }
                         graphics.fillCircle(cmd.params.x, cmd.params.y, cmd.params.radius);
                     } else {
-                        if (currentLineStyle !== cmd.params.color) {
-                            graphics.lineStyle(1, cmd.params.color, cmd.params.alpha);
+                        const lineWidth = cmd.params.lineWidth || 1;
+                        if (currentLineStyle !== cmd.params.color || currentLineWidth !== lineWidth) {
+                            graphics.lineStyle(lineWidth, cmd.params.color, cmd.params.alpha);
                             currentLineStyle = cmd.params.color;
+                            currentLineWidth = lineWidth;
                         }
                         graphics.strokeCircle(cmd.params.x, cmd.params.y, cmd.params.radius);
                     }

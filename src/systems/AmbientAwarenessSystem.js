@@ -3,6 +3,11 @@ import Phaser from 'phaser';
 /**
  * AMBIENT AWARENESS SYSTEM — The Game That Breathes With Reality
  * 
+ * MIGRATED to UnifiedGraphicsManager (2026-04-01):
+ * - Dream formation rendering now uses UnifiedGraphicsManager on 'effects' layer
+ * - graphics.clear() calls removed for UnifiedGraphicsManager compatibility
+ * - Removed direct graphics object creation, now uses batch rendering
+ * 
  * The 36th cognitive dimension: ECOLOGICAL EMBEDDEDNESS
  * 
  * While all 35 previous systems exist entirely within the game world, the Ambient
@@ -195,7 +200,7 @@ export default class AmbientAwarenessSystem {
         
         // Visual elements
         this.timeOverlay = null;
-        this.dreamOverlay = null;
+        // Note: dreamOverlay removed - now uses UnifiedGraphicsManager
         this.sessionText = null;
         this.timeStateText = null;
         
@@ -211,8 +216,8 @@ export default class AmbientAwarenessSystem {
             reverbAmount: 0.3
         };
         
-        // Dream crystal visuals
-        this.dreamGraphics = null;
+        // Note: Dream formations now rendered via UnifiedGraphicsManager
+        // No direct graphics objects needed
         
         this.init();
     }
@@ -248,15 +253,11 @@ export default class AmbientAwarenessSystem {
             }
         ).setOrigin(0, 1).setScrollFactor(0).setDepth(1000);
         
-        // Dream overlay (for idle/dream states)
-        this.dreamOverlay = this.scene.add.graphics();
-        this.dreamOverlay.setDepth(999);
-        this.dreamOverlay.setVisible(false);
+        // Dream overlay (for idle/dream states) - uses UnifiedGraphicsManager
+        this.dreamOverlayActive = false;
         
-        // Dream graphics for formations
-        this.dreamGraphics = this.scene.add.graphics();
-        this.dreamGraphics.setDepth(40);
-        this.dreamGraphics.setVisible(false);
+        // Dream graphics for formations - now rendered via UnifiedGraphicsManager on 'effects' layer
+        // Note: Direct graphics objects removed; use scene.graphicsManager.drawLine() etc.
     }
     
     getTimeOfDayState() {
@@ -364,9 +365,8 @@ export default class AmbientAwarenessSystem {
         // Slow everything down
         this.scene.physics.world.timeScale = 0.1;
         
-        // Show dream overlay
-        this.dreamOverlay.setVisible(true);
-        this.dreamGraphics.setVisible(true);
+        // Dream overlay active flag (rendered via UnifiedGraphicsManager)
+        this.dreamOverlayActive = true;
         
         // Create dream text
         if (!this.dreamText) {
@@ -401,9 +401,8 @@ export default class AmbientAwarenessSystem {
         // Restore normal time
         this.scene.physics.world.timeScale = 1.0;
         
-        // Hide dream visuals
-        this.dreamOverlay.setVisible(false);
-        this.dreamGraphics.setVisible(false);
+        // Hide dream visuals (UnifiedGraphicsManager stops rendering when inactive)
+        this.dreamOverlayActive = false;
         if (this.dreamText) {
             this.dreamText.setVisible(false);
         }
@@ -828,8 +827,10 @@ export default class AmbientAwarenessSystem {
     }
     
     updateDreamFormations() {
-        // Draw dream formations
-        this.dreamGraphics.clear();
+        // Render dream formations via UnifiedGraphicsManager on 'effects' layer
+        // Note: graphics.clear() no longer needed - UnifiedGraphicsManager clears automatically each frame
+        const manager = this.scene.graphicsManager;
+        if (!manager) return;
         
         // Connect enemy bullets with soft lines
         const bullets = this.scene.enemyBullets.children.entries.filter(b => b.active);
@@ -846,8 +847,8 @@ export default class AmbientAwarenessSystem {
                 const dist = Phaser.Math.Distance.Between(b1.x, b1.y, b2.x, b2.y);
                 if (dist < 100) {
                     const alpha = (1 - dist / 100) * 0.2;
-                    this.dreamGraphics.lineStyle(1, 0xffffff, alpha);
-                    this.dreamGraphics.lineBetween(b1.x, b1.y, b2.x, b2.y);
+                    // Use UnifiedGraphicsManager instead of direct graphics
+                    manager.drawLine('effects', b1.x, b1.y, b2.x, b2.y, 0xffffff, alpha, 1);
                 }
             }
         }
@@ -889,8 +890,7 @@ export default class AmbientAwarenessSystem {
         if (this.timeStateText) this.timeStateText.destroy();
         if (this.sessionText) this.sessionText.destroy();
         if (this.dreamText) this.dreamText.destroy();
-        if (this.dreamOverlay) this.dreamOverlay.destroy();
-        if (this.dreamGraphics) this.dreamGraphics.destroy();
+        // Note: dreamOverlay and dreamGraphics no longer exist - rendered via UnifiedGraphicsManager
         
         // Clean up dream crystals
         this.dreamState.dreamCrystals.forEach(c => {

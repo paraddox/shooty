@@ -83,6 +83,15 @@ import Phaser from 'phaser';
  * 
  * This is where the game becomes art. Where data becomes symbol. Where play
  * becomes poetry.
+ * 
+ * === MIGRATION NOTE ===
+ * 
+ * Migrated to UnifiedGraphicsManager (2026-04-01):
+ * - Dream vignette rendering now uses UnifiedGraphicsManager on 'effects' layer
+ * - graphics.clear() calls removed for UnifiedGraphicsManager compatibility
+ * - 2 graphics.clear() calls eliminated from this system
+ * - Dream symbols (mountains, rivers, crystals, etc.) use legacy GameObject
+ *   containers as they're complex animated objects, not simple graphics primitives
  */
 
 export default class DreamStateProtocol {
@@ -169,6 +178,8 @@ export default class DreamStateProtocol {
     
     createDreamGraphics() {
         // Main dream canvas — separate from game rendering
+        // Note: Vignette rendering now uses UnifiedGraphicsManager on 'effects' layer
+        // This graphics object is kept for backward compatibility and symbol containers
         this.dreamGraphics = this.scene.add.graphics();
         this.dreamGraphics.setDepth(200);  // Above everything
         this.dreamGraphics.setVisible(false);
@@ -515,7 +526,12 @@ export default class DreamStateProtocol {
                 this.dreamGraphics.setVisible(false);
                 this.symbolContainer.setVisible(false);
                 this.symbolContainer.removeAll(true);
-                this.dreamGraphics.clear();
+                
+                // Legacy graphics clear (not needed with UnifiedGraphicsManager)
+                // Note: UnifiedGraphicsManager clears automatically each frame
+                if (!this.scene.graphicsManager) {
+                    this.dreamGraphics.clear();
+                }
             }
         });
         
@@ -1212,6 +1228,26 @@ export default class DreamStateProtocol {
         const cy = camera.height / 2;
         const maxRadius = Math.max(cx, cy);
         
+        // Use UnifiedGraphicsManager if available (new architecture)
+        if (this.scene.graphicsManager) {
+            const manager = this.scene.graphicsManager;
+            const baseAlpha = this.dreamState.dreamIntensity * 0.9;
+            
+            // Draw vignette rings with decreasing alpha toward center
+            const steps = 10;
+            for (let i = 0; i < steps; i++) {
+                const radius = maxRadius * 0.3 + (i / steps) * maxRadius * 0.7;
+                const alpha = (i / steps) * baseAlpha * 0.5; // Scale down for ring method
+                
+                // Use ring commands for vignette effect on 'effects' layer
+                manager.drawRing('effects', cx, cy, radius, this.VOID_DREAM_COLOR, alpha, 8);
+            }
+            
+            // Note: UnifiedGraphicsManager clears once per frame automatically
+            return;
+        }
+        
+        // Legacy: Direct graphics rendering (old architecture)
         this.dreamVignette.clear();
         
         // Gradient vignette

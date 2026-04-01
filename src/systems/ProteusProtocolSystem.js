@@ -1,6 +1,22 @@
 import Phaser from 'phaser';
 
 /**
+ * MIGRATED to UnifiedGraphicsManager (April 2025):
+ * - DNA helix visualization now uses UnifiedGraphicsManager on 'effects' layer
+ * - Fitness mini-graph now uses UnifiedGraphicsManager on 'effects' layer  
+ * - Removed: this.ui.helixGraphics (Phaser Graphics object)
+ * - Removed: this.ui.fitnessGraph (Phaser Graphics object)
+ * - Removed: 2 graphics.clear() calls
+ * 
+ * Previously each frame did:
+ *   this.ui.helixGraphics.clear() + draw helix
+ *   this.ui.fitnessGraph.clear() + draw graph
+ * 
+ * Now registers draw commands with UnifiedGraphicsManager which batches
+ * all rendering and clears once per frame per layer.
+ */
+
+/**
  * PROTEUS PROTOCOL — The 57th Dimension: THE EVOLUTION OF RULES 🧬
  * 
  * The game becomes a living organism. Its fundamental parameters — enemy speed,
@@ -290,12 +306,11 @@ export default class ProteusProtocolSystem {
         // UI Elements
         this.ui = {
             container: null,
-            helixGraphics: null,
             generationText: null,
             speciesText: null,
-            fitnessGraph: null,
             mutationTicker: null,
             chromosomeDisplay: null
+            // Note: helixGraphics and fitnessGraph removed - now rendered via UnifiedGraphicsManager
         };
         
         // Speciation thresholds
@@ -425,9 +440,8 @@ export default class ProteusProtocolSystem {
         this.ui.container.setDepth(1000);
         this.ui.container.setAlpha(0.9);
         
-        // DNA Helix visualization (stylized)
-        this.ui.helixGraphics = this.scene.add.graphics();
-        this.ui.container.add(this.ui.helixGraphics);
+        // Note: DNA Helix and fitness graph now rendered via UnifiedGraphicsManager
+        // Previously used: this.ui.helixGraphics and this.ui.fitnessGraph with clear()
         
         // Generation counter
         this.ui.generationText = this.scene.add.text(0, -35, `GEN ${this.genome.generation}`, {
@@ -446,10 +460,7 @@ export default class ProteusProtocolSystem {
         }).setOrigin(0.5);
         this.ui.container.add(this.ui.speciesText);
         
-        // Fitness mini-graph
-        this.ui.fitnessGraph = this.scene.add.graphics();
-        this.ui.fitnessGraph.y = 15;
-        this.ui.container.add(this.ui.fitnessGraph);
+        // Note: Fitness mini-graph now rendered via UnifiedGraphicsManager on 'effects' layer
         
         // Mutation ticker
         this.ui.mutationTicker = this.scene.add.text(0, 45, '', {
@@ -459,9 +470,7 @@ export default class ProteusProtocolSystem {
         }).setOrigin(0.5);
         this.ui.container.add(this.ui.mutationTicker);
         
-        // Draw initial helix
-        this.drawHelix();
-        this.drawFitnessGraph();
+        // Initial draw calls now handled in update() via UnifiedGraphicsManager
         
         // Initial phenotype expression
         this.applyToGameScene();
@@ -473,9 +482,14 @@ export default class ProteusProtocolSystem {
         }
     }
     
+    /**
+     * Draw DNA helix via UnifiedGraphicsManager (migrated from direct graphics)
+     * Previously used: this.ui.helixGraphics.clear() and direct drawing
+     * Now registers draw commands with UnifiedGraphicsManager on 'effects' layer
+     */
     drawHelix() {
-        const graphics = this.ui.helixGraphics;
-        graphics.clear();
+        const manager = this.scene.graphicsManager;
+        if (!manager) return;
         
         const time = this.scene.time.now / 1000;
         const width = 80;
@@ -483,47 +497,50 @@ export default class ProteusProtocolSystem {
         const strands = 2;
         const points = 20;
         
-        // Draw double helix strands
+        // Get container position for world coordinates
+        const containerX = this.ui.container?.x || this.scene.scale.width - 180;
+        const containerY = this.ui.container?.y || 80;
+        
+        // Draw double helix strands as paths
         for (let s = 0; s < strands; s++) {
             const color = s === 0 ? this.PROTEUS_COLOR_1 : this.PROTEUS_COLOR_2;
             const offset = s * Math.PI;
             
-            graphics.lineStyle(2, color, 0.8);
-            graphics.beginPath();
-            
+            // Build path points for the helix strand
+            const pathPoints = [];
             for (let i = 0; i <= points; i++) {
                 const t = i / points;
-                const x = (t - 0.5) * width;
+                const x = containerX + (t - 0.5) * width;
                 const angle = t * Math.PI * 4 + time * 0.5 + offset;
-                const y = Math.sin(angle) * height * 0.3;
-                
-                if (i === 0) {
-                    graphics.moveTo(x, y);
-                } else {
-                    graphics.lineTo(x, y);
-                }
+                const y = containerY + Math.sin(angle) * height * 0.3;
+                pathPoints.push({ x, y });
             }
             
-            graphics.strokePath();
+            // Draw path via UnifiedGraphicsManager
+            manager.drawPath('effects', pathPoints, color, 0.8, 2);
         }
         
-        // Draw connecting "rungs" (genes)
-        graphics.lineStyle(1, 0xffffff, 0.3);
+        // Draw connecting "rungs" (genes) as individual lines
         for (let i = 0; i < points; i += 2) {
             const t = i / points;
-            const x = (t - 0.5) * width;
+            const x = containerX + (t - 0.5) * width;
             const angle1 = t * Math.PI * 4 + time * 0.5;
             const angle2 = angle1 + Math.PI;
-            const y1 = Math.sin(angle1) * height * 0.3;
-            const y2 = Math.sin(angle2) * height * 0.3;
+            const y1 = containerY + Math.sin(angle1) * height * 0.3;
+            const y2 = containerY + Math.sin(angle2) * height * 0.3;
             
-            graphics.lineBetween(x, y1, x, y2);
+            manager.drawLine('effects', x, y1, x, y2, 0xffffff, 0.3, 1);
         }
     }
     
+    /**
+     * Draw fitness graph via UnifiedGraphicsManager (migrated from direct graphics)
+     * Previously used: this.ui.fitnessGraph.clear() and direct drawing
+     * Now registers draw commands with UnifiedGraphicsManager on 'effects' layer
+     */
     drawFitnessGraph() {
-        const graphics = this.ui.fitnessGraph;
-        graphics.clear();
+        const manager = this.scene.graphicsManager;
+        if (!manager) return;
         
         const history = this.genome.fitness.slice(-20);
         if (history.length < 2) return;
@@ -531,26 +548,22 @@ export default class ProteusProtocolSystem {
         const width = 100;
         const height = 25;
         
-        graphics.lineStyle(1, this.PROTEUS_COLOR_1, 0.6);
-        graphics.beginPath();
+        // Get container position for world coordinates (fitness graph is below species text)
+        const containerX = this.ui.container?.x || this.scene.scale.width - 180;
+        const containerY = (this.ui.container?.y || 80) + 15; // Offset for graph position
         
-        history.forEach((fitness, i) => {
-            const x = (i / (history.length - 1)) * width - width / 2;
-            const y = height / 2 - fitness * height;
-            
-            if (i === 0) {
-                graphics.moveTo(x, y);
-            } else {
-                graphics.lineTo(x, y);
-            }
-        });
+        // Build path points for fitness history
+        const pathPoints = history.map((fitness, i) => ({
+            x: containerX + (i / (history.length - 1)) * width - width / 2,
+            y: containerY + height / 2 - fitness * height
+        }));
         
-        graphics.strokePath();
+        // Draw fitness history path via UnifiedGraphicsManager
+        manager.drawPath('effects', pathPoints, this.PROTEUS_COLOR_1, 0.6, 1);
         
         // Draw average line
-        const avgY = height / 2 - this.evolutionState.averageFitness * height;
-        graphics.lineStyle(1, this.PROTEUS_COLOR_2, 0.4);
-        graphics.lineBetween(-width / 2, avgY, width / 2, avgY);
+        const avgY = containerY + height / 2 - this.evolutionState.averageFitness * height;
+        manager.drawLine('effects', containerX - width / 2, avgY, containerX + width / 2, avgY, this.PROTEUS_COLOR_2, 0.4, 1);
     }
     
     update() {
@@ -1124,5 +1137,7 @@ export default class ProteusProtocolSystem {
         if (this.ui.container) {
             this.ui.container.destroy();
         }
+        // Note: No graphics objects to destroy - helix and fitness graph are now 
+        // rendered via UnifiedGraphicsManager which handles its own cleanup
     }
 }

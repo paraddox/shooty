@@ -1,6 +1,15 @@
 import Phaser from 'phaser';
 
 /**
+ * MIGRATION NOTICE (April 2025):
+ * This system has been migrated to use UnifiedGraphicsManager for rendering:
+ * - Crimson foresight prediction lines now use graphicsManager.drawLine() on 'effects' layer
+ * - Removed direct graphics.clear() call (was 1 clear per effect use)
+ * - Removed this.graphics Phaser Graphics object creation
+ * - UnifiedGraphicsManager batches all effects layer rendering with single clear per frame
+ * 
+ * Benefits: Reduced GPU flushes, centralized rendering, consistent layer management
+ * 
  * Nemesis Genesis System — The Adversarial Mirror
  * 
  * Every game has bosses. No game has a boss that IS you.
@@ -120,8 +129,10 @@ export default class NemesisGenesisSystem {
         this.lastClusterUpdate = 0;
         
         // ===== VISUALS =====
-        this.graphics = null;
+        // Note: Nemesis genesis effects now rendered via UnifiedGraphicsManager on 'effects' layer
         this.nemesisGlow = null;
+        this.crimsonForesightActive = false;
+        this.crimsonForesightEndTime = 0;
         
         // ===== SHADOW GALLERY =====
         this.defeatedShadows = []; // Persistent across runs
@@ -135,8 +146,8 @@ export default class NemesisGenesisSystem {
     }
     
     createVisuals() {
-        this.graphics = this.scene.add.graphics();
-        this.graphics.setDepth(45);
+        // Note: Graphics rendering now handled by UnifiedGraphicsManager on 'effects' layer
+        // No direct graphics objects needed - reduces GPU flushes
     }
     
     // ===== BEHAVIORAL PROFILING =====
@@ -704,20 +715,25 @@ export default class NemesisGenesisSystem {
     
     useCrimsonForesight() {
         // Show prediction lines for where player WILL be
+        // Activate the effect for 1 second (rendered via UnifiedGraphicsManager)
+        this.crimsonForesightActive = true;
+        this.crimsonForesightEndTime = this.scene.time.now + 1000;
+    }
+    
+    /**
+     * Render crimson foresight prediction lines via UnifiedGraphicsManager
+     * Called from update() each frame when effect is active
+     */
+    renderCrimsonForesight() {
+        const graphicsManager = this.scene.graphicsManager;
+        if (!graphicsManager || !this.nemesis) return;
+        
         const player = this.scene.player;
+        const targetX = player.x + (this.nemesis.nemesisState.leadX || 0) * 3;
+        const targetY = player.y + (this.nemesis.nemesisState.leadY || 0) * 3;
         
-        // Draw prediction lines
-        this.graphics.lineStyle(2, 0xff0040, 0.5);
-        this.graphics.lineBetween(
-            this.nemesis.x, this.nemesis.y,
-            player.x + (this.nemesis.nemesisState.leadX || 0) * 3,
-            player.y + (this.nemesis.nemesisState.leadY || 0) * 3
-        );
-        
-        // Clear after delay
-        this.scene.time.delayedCall(1000, () => {
-            this.graphics.clear();
-        });
+        // Draw prediction line on 'effects' layer
+        graphicsManager.drawLine('effects', this.nemesis.x, this.nemesis.y, targetX, targetY, 0xff0040, 0.5, 2);
     }
     
     useTacticalMines() {
@@ -965,6 +981,15 @@ export default class NemesisGenesisSystem {
         if (this.shouldSpawnNemesis(this.scene.wave)) {
             this.spawnNemesis();
         }
+        
+        // Render crimson foresight effect via UnifiedGraphicsManager
+        if (this.crimsonForesightActive) {
+            if (this.scene.time.now > this.crimsonForesightEndTime) {
+                this.crimsonForesightActive = false;
+            } else {
+                this.renderCrimsonForesight();
+            }
+        }
     }
     
     // ===== COLLISION HELPERS =====
@@ -984,10 +1009,7 @@ export default class NemesisGenesisSystem {
             this.nemesis.destroy();
             this.nemesis = null;
         }
-        if (this.graphics) {
-            this.graphics.destroy();
-            this.graphics = null;
-        }
+        // Note: No graphics object to destroy - UnifiedGraphicsManager handles cleanup
         if (this.nemesisHealthBg) this.nemesisHealthBg.destroy();
         if (this.nemesisHealthBar) this.nemesisHealthBar.destroy();
         if (this.nemesisNameText) this.nemesisNameText.destroy();

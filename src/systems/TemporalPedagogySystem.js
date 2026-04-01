@@ -3,6 +3,11 @@ import Phaser from 'phaser';
 /**
  * TEMPORAL PEDAGOGY SYSTEM — The Self-Teaching Game
  * 
+ * MIGRATED to UnifiedGraphicsManager (April 2025):
+ * - Removed unused graphics object (was created but never drawn to)
+ * - System uses Phaser text/containers for HUD elements (not graphics-based)
+ * - Compatible with UnifiedGraphicsManager architecture
+ * 
  * The 38th cognitive dimension: ADAPTIVE TEACHING
  * 
  * With 36 interconnected temporal systems, the game had become a cognitive
@@ -201,7 +206,6 @@ export default class TemporalPedagogySystem {
         this.pedagogyColor = 0x20b2aa;      // Pedagogical Teal
         this.pedagogyGlow = 0x40e0d0;
         this.hintText = null;
-        this.masteryGlow = null;
         this.systemIndicators = new Map();
         
         // ===== CURRICULUM DEFINITION =====
@@ -303,10 +307,7 @@ export default class TemporalPedagogySystem {
         this.hintText.setScrollFactor(0);
         this.hintText.setDepth(95);
         
-        // Mastery glow ring (appears around player when learning)
-        this.masteryGlow = this.scene.add.graphics();
-        this.masteryGlow.setDepth(45);
-        
+        // Note: Visual effects rendered via scene.add.circle() - no graphics needed
         // System indicators will be created as systems are discovered
     }
     
@@ -794,7 +795,6 @@ export default class TemporalPedagogySystem {
         this.saveLearningProfile();
         
         if (this.hintText) this.hintText.destroy();
-        if (this.masteryGlow) this.masteryGlow.destroy();
         
         for (const indicator of this.systemIndicators.values()) {
             indicator.container.destroy();

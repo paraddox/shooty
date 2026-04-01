@@ -172,9 +172,14 @@ export default class KairosMomentSystem {
         this.kairosOverlay.setAlpha(0);
         this.kairosOverlay.setBlendMode(Phaser.BlendModes.ADD);
         
-        // Flow trail graphics
-        this.flowTrail = this.scene.add.graphics();
-        this.flowTrail.setDepth(35);
+        // Flow trail graphics - migrated to UnifiedGraphicsManager
+        this.useUnifiedRenderer = !!this.scene.graphicsManager;
+        this.flowTrailLayer = 'effects';
+        if (!this.useUnifiedRenderer) {
+            // Legacy fallback
+            this.flowTrail = this.scene.add.graphics();
+            this.flowTrail.setDepth(35);
+        }
         
         // Kairos particles
         this.kairosParticles = this.scene.add.particles(0, 0, 'particle', {
@@ -511,8 +516,10 @@ export default class KairosMomentSystem {
             onComplete: () => this.kairosOverlay.setVisible(false)
         });
         
-        // Clear trail
-        this.flowTrail.clear();
+        // Clear trail - UnifiedGraphicsManager handles clearing automatically
+        if (!this.useUnifiedRenderer && this.flowTrail) {
+            this.flowTrail.clear();
+        }
         this.positionHistory = [];
         
         this.recordSystemActivation('KAIROS_EXIT');
@@ -521,20 +528,27 @@ export default class KairosMomentSystem {
     updateVisuals(dt) {
         // Draw flow trail during Kairos
         if (this.inKairosState && this.positionHistory.length > 1) {
-            this.flowTrail.clear();
-            
-            const color = this.KAIROS_COLOR;
-            this.flowTrail.lineStyle(3, color, 0.6);
-            
-            // Draw smooth curve through positions
-            this.flowTrail.beginPath();
-            this.flowTrail.moveTo(this.positionHistory[0].x, this.positionHistory[0].y);
-            
-            for (let i = 1; i < this.positionHistory.length; i++) {
-                this.flowTrail.lineTo(this.positionHistory[i].x, this.positionHistory[i].y);
+            if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+                // UnifiedGraphicsManager path - register draw command
+                const points = this.positionHistory.map(p => ({ x: p.x, y: p.y }));
+                this.scene.graphicsManager.drawPath(
+                    this.flowTrailLayer,
+                    points,
+                    this.KAIROS_COLOR,
+                    0.6,
+                    3
+                );
+            } else if (this.flowTrail) {
+                // Legacy graphics path
+                this.flowTrail.clear();
+                this.flowTrail.lineStyle(3, this.KAIROS_COLOR, 0.6);
+                this.flowTrail.beginPath();
+                this.flowTrail.moveTo(this.positionHistory[0].x, this.positionHistory[0].y);
+                for (let i = 1; i < this.positionHistory.length; i++) {
+                    this.flowTrail.lineTo(this.positionHistory[i].x, this.positionHistory[i].y);
+                }
+                this.flowTrail.strokePath();
             }
-            
-            this.flowTrail.strokePath();
         }
         
         // Pulsing particles while in Kairos
@@ -775,5 +789,6 @@ export default class KairosMomentSystem {
         if (this.kairosParticles) {
             this.kairosParticles.destroy();
         }
+        // Note: UnifiedGraphicsManager handles cleanup of 'effects' layer commands automatically
     }
 }

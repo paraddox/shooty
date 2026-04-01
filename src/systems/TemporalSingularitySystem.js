@@ -49,6 +49,9 @@ export default class TemporalSingularitySystem {
         this.chargeBar = null;
         this.trailGraphics = null;
         
+        // Rendering
+        this.useUnifiedRenderer = false;
+        
         // Input
         this.spaceKey = null;
         this.canDeploy = false;
@@ -67,12 +70,26 @@ export default class TemporalSingularitySystem {
     }
     
     createVisuals() {
-        // Charge bar (positioned below momentum bar)
-        this.chargeBar = this.scene.add.graphics();
-        this.chargeBar.setScrollFactor(0);
-        this.chargeBar.setDepth(100);
+        // Check for UnifiedGraphicsManager (new architecture)
+        if (this.scene.graphicsManager) {
+            this.useUnifiedRenderer = true;
+        } else {
+            this.useUnifiedRenderer = false;
+            // Legacy: Charge bar (positioned below momentum bar)
+            this.chargeBar = this.scene.add.graphics();
+            this.chargeBar.setScrollFactor(0);
+            this.chargeBar.setDepth(100);
+            
+            // Legacy: Ring graphics
+            this.singularityRing = this.scene.add.graphics();
+            this.singularityRing.setDepth(44);
+            
+            // Legacy: Trail graphics for orbital paths
+            this.trailGraphics = this.scene.add.graphics();
+            this.trailGraphics.setDepth(43);
+        }
         
-        // Singularity core (glowing orb)
+        // Singularity core (glowing orb) - sprite-based, not affected by migration
         const canvas = document.createElement('canvas');
         canvas.width = 128;
         canvas.height = 128;
@@ -93,13 +110,13 @@ export default class TemporalSingularitySystem {
         this.singularityCore.setDepth(45);
         this.singularityCore.setVisible(false);
         
-        // Ring graphics
-        this.singularityRing = this.scene.add.graphics();
-        this.singularityRing.setDepth(44);
-        
-        // Trail graphics for orbital paths
-        this.trailGraphics = this.scene.add.graphics();
-        this.trailGraphics.setDepth(43);
+        // Create legacy graphics if not using unified renderer
+        if (this.useUnifiedRenderer) {
+            // Still need chargeBar for UI layer (UI is not batched the same way)
+            this.chargeBar = this.scene.add.graphics();
+            this.chargeBar.setScrollFactor(0);
+            this.chargeBar.setDepth(100);
+        }
     }
     
     setupInput() {
@@ -400,8 +417,12 @@ export default class TemporalSingularitySystem {
         });
         
         // Clear ring
-        this.singularityRing.clear();
-        this.trailGraphics.clear();
+        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+            this.scene.graphicsManager.clearLayer('effects');
+        } else {
+            this.singularityRing.clear();
+            this.trailGraphics.clear();
+        }
     }
     
     showDetonateBonus(bonus, count) {
@@ -591,6 +612,79 @@ export default class TemporalSingularitySystem {
         this.singularityCore.setScale(scale);
         this.singularityCore.setAlpha(pulse);
         
+        // Render singularity visuals (split based on renderer)
+        if (this.useUnifiedRenderer) {
+            this.renderSingularityUnified(dt);
+        } else {
+            this.renderSingularityLegacy(dt);
+        }
+        
+        // Life warning
+        if (this.singularityLife <= 2) {
+            this.singularityCore.setTint(0xffaa00); // Yellow warning
+        }
+        
+        // Auto-collapse if life runs out
+        if (this.singularityLife <= 0) {
+            this.detonateSingularity();
+        }
+    }
+    
+    /**
+     * Unified rendering for singularity effects
+     */
+    renderSingularityUnified(dt) {
+        const manager = this.scene.graphicsManager;
+        
+        // Draw singularity ring (stroke circle)
+        manager.addCommand('effects', 'circle', {
+            x: this.singularityX,
+            y: this.singularityY,
+            radius: this.singularityRadius,
+            color: this.SINGULARITY_COLOR,
+            alpha: 0.5,
+            filled: false,
+            lineWidth: 2
+        });
+        
+        // Draw trapped bullet orbits
+        this.trappedBullets.forEach(trapped => {
+            // Update orbit angle
+            trapped.orbitAngle += trapped.orbitSpeed * trapped.orbitDirection * dt;
+            
+            // Calculate position
+            const x = this.singularityX + Math.cos(trapped.orbitAngle) * trapped.orbitRadius;
+            const y = this.singularityY + Math.sin(trapped.orbitAngle) * trapped.orbitRadius;
+            
+            // Update bullet position
+            trapped.bullet.x = x;
+            trapped.bullet.y = y;
+            trapped.bullet.setRotation(trapped.orbitAngle + Math.PI / 2);
+            
+            // Draw orbit trail as a small arc using line segments
+            const arcStart = trapped.orbitAngle - 0.5;
+            const arcEnd = trapped.orbitAngle + 0.5;
+            const segments = 3;
+            const radius = trapped.orbitRadius;
+            
+            for (let i = 0; i < segments; i++) {
+                const t1 = arcStart + (arcEnd - arcStart) * (i / segments);
+                const t2 = arcStart + (arcEnd - arcStart) * ((i + 1) / segments);
+                
+                const x1 = this.singularityX + Math.cos(t1) * radius;
+                const y1 = this.singularityY + Math.sin(t1) * radius;
+                const x2 = this.singularityX + Math.cos(t2) * radius;
+                const y2 = this.singularityY + Math.sin(t2) * radius;
+                
+                manager.drawLine('effects', x1, y1, x2, y2, this.ORBIT_COLOR, 0.2, 1);
+            }
+        });
+    }
+    
+    /**
+     * Legacy rendering for singularity effects (direct graphics)
+     */
+    renderSingularityLegacy(dt) {
         // Update ring
         this.singularityRing.clear();
         this.singularityRing.lineStyle(2, this.SINGULARITY_COLOR, 0.5);
@@ -623,16 +717,6 @@ export default class TemporalSingularitySystem {
             );
             this.trailGraphics.strokePath();
         });
-        
-        // Life warning
-        if (this.singularityLife <= 2) {
-            this.singularityCore.setTint(0xffaa00); // Yellow warning
-        }
-        
-        // Auto-collapse if life runs out
-        if (this.singularityLife <= 0) {
-            this.detonateSingularity();
-        }
     }
     
     updateSeekingBullets() {
@@ -710,8 +794,10 @@ export default class TemporalSingularitySystem {
     destroy() {
         this.chargeBar.destroy();
         this.singularityCore.destroy();
-        this.singularityRing.destroy();
-        this.trailGraphics.destroy();
+        if (!this.useUnifiedRenderer) {
+            this.singularityRing.destroy();
+            this.trailGraphics.destroy();
+        }
         this.spaceKey.destroy();
     }
 }

@@ -95,8 +95,8 @@ export default class VoidCoherenceSystem {
         this.resonanceRequiredCoherence = 85;
         
         // ===== VISUALS =====
-        this.graphics = null;
-        this.voidOverlay = null;
+        // Note: Graphics now rendered via UnifiedGraphicsManager on 'effects' layer
+        // this.graphics and this.voidOverlay removed - using graphicsManager instead
         this.coherenceBar = null;
         this.structureContainer = null;
         this.resonancePrompt = null;
@@ -141,14 +141,10 @@ export default class VoidCoherenceSystem {
     }
     
     createVisuals() {
-        // Main graphics for void effects
-        this.graphics = this.scene.add.graphics();
-        this.graphics.setDepth(5); // Behind bullets but above floor
+        // Note: Graphics now rendered via UnifiedGraphicsManager on 'effects' layer
         
-        // Void overlay (subtle purple tint at high coherence)
-        this.voidOverlay = this.scene.add.graphics();
-        this.voidOverlay.setScrollFactor(0);
-        this.voidOverlay.setDepth(4);
+        // Void overlay is no longer needed - handled by UnifiedGraphicsManager
+        // this.voidOverlay removed - using graphicsManager instead
         
         // Structure container
         this.structureContainer = this.scene.add.container(0, 0);
@@ -861,20 +857,24 @@ export default class VoidCoherenceSystem {
     }
     
     updateVisuals() {
-        this.graphics.clear();
+        const manager = this.scene.graphicsManager;
+        if (!manager) return;
         
-        // Draw coherence paths
+        // Draw coherence paths via UnifiedGraphicsManager
         for (const cell of this.trajectoryMemory.values()) {
             if (cell.coherence > 20) {
                 const alpha = cell.coherence / 100 * 0.3;
                 const size = this.memoryResolution * 0.8;
                 
-                this.graphics.fillStyle(0x6b00ff, alpha);
-                this.graphics.fillRect(
+                manager.drawRect(
+                    'effects',
                     cell.x - size/2, 
                     cell.y - size/2, 
                     size, 
-                    size
+                    size,
+                    0x6b00ff,
+                    alpha,
+                    true
                 );
             }
         }
@@ -882,19 +882,28 @@ export default class VoidCoherenceSystem {
         // Draw void overlay at high coherence
         if (this.coherenceLevel > 50) {
             const overlayAlpha = (this.coherenceLevel - 50) / 100 * 0.15;
-            this.voidOverlay.clear();
-            this.voidOverlay.fillStyle(0x6b00ff, overlayAlpha);
-            this.voidOverlay.fillRect(0, 0, this.scene.scale.width, this.scene.height);
+            manager.drawRect(
+                'effects',
+                0, 0, 
+                this.scene.scale.width, 
+                this.scene.height,
+                0x6b00ff,
+                overlayAlpha,
+                true
+            );
         }
         
         // Resonance effects
         if (this.resonanceActive) {
             const waveRadius = (this.resonanceDuration - this.resonanceRemaining) / this.resonanceDuration * 500;
-            this.graphics.lineStyle(2, 0x00d4ff, 0.5);
-            this.graphics.strokeCircle(
+            manager.drawRing(
+                'effects',
                 this.scene.player.x, 
                 this.scene.player.y, 
-                waveRadius
+                waveRadius,
+                0x00d4ff,
+                0.5,
+                2
             );
         }
     }
@@ -959,8 +968,7 @@ export default class VoidCoherenceSystem {
         });
         this.entities = [];
         
-        this.graphics.clear();
-        this.voidOverlay.clear();
+        // Note: UnifiedGraphicsManager handles cleanup of its own graphics objects
         this.coherenceContainer.destroy();
         this.resonancePrompt.destroy();
     }

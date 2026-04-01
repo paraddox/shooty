@@ -1,6 +1,19 @@
 import Phaser from 'phaser';
 
 /**
+ * MIGRATED to UnifiedGraphicsManager (April 2025):
+ * - Connection line rendering now uses UnifiedGraphicsManager on 'effects' layer
+ * - Removed: this.connectionGraphics.clear() from renderConnectionLines()
+ * - Removed: Direct graphics.lineBetween() calls - now batched via manager
+ * 
+ * Previously each frame did:
+ *   this.connectionGraphics.clear() + lineBetween for each active prediction
+ * 
+ * Now registers draw commands with UnifiedGraphicsManager which batches
+ * all rendering and clears once per frame per layer.
+ */
+
+/**
  * Symbiotic Prediction Engine — The Game That Thinks With You
  * 
  * The ultimate evolution of the Observer Effect: the game doesn't just watch,
@@ -124,6 +137,9 @@ export default class SymbioticPredictionSystem {
         this.harmonyIndicator = null; // Shows current state
         this.connectionLines = []; // Lines to predictions
         
+        // ===== UNIFIED RENDERING =====
+        this.useUnifiedRenderer = false;
+        
         // ===== BONUS STATE =====
         this.harmonyActive = false;
         this.harmonyTimer = 0;
@@ -146,19 +162,26 @@ export default class SymbioticPredictionSystem {
     }
     
     createVisuals() {
+        // Check for UnifiedGraphicsManager
+        if (this.scene.graphicsManager) {
+            this.useUnifiedRenderer = true;
+        }
+        
         // Prediction field - subtle grid showing AI confidence
         this.createPredictionField();
         
         // Harmony/Chaos indicator (top of screen)
         this.createSymbiosisIndicator();
         
-        // Echo graphics pool
+        // Echo graphics pool (one-time graphics, not cleared per-frame)
         this.echoGraphics = this.scene.add.graphics();
         this.echoGraphics.setDepth(35);
         
-        // Connection lines to active predictions
-        this.connectionGraphics = this.scene.add.graphics();
-        this.connectionGraphics.setDepth(34);
+        // Connection lines to active predictions - only create if not using unified renderer
+        if (!this.useUnifiedRenderer) {
+            this.connectionGraphics = this.scene.add.graphics();
+            this.connectionGraphics.setDepth(34);
+        }
         
         // Bonus text effects
         this.bonusTextContainer = this.scene.add.container(0, 0);
@@ -935,6 +958,13 @@ export default class SymbioticPredictionSystem {
     }
     
     renderConnectionLines() {
+        // Use UnifiedGraphicsManager if available
+        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+            this.renderConnectionLinesUnified();
+            return;
+        }
+        
+        // Legacy mode: direct graphics with clear() calls
         this.connectionGraphics.clear();
         
         if (!this.scene.player.active) return;
@@ -956,6 +986,39 @@ export default class SymbioticPredictionSystem {
                 this.connectionGraphics.lineBetween(
                     player.x, player.y,
                     pred.targetX, pred.targetY
+                );
+            }
+        });
+    }
+    
+    /**
+     * Unified rendering for connection lines - no graphics.clear() calls
+     */
+    renderConnectionLinesUnified() {
+        if (!this.scene.player.active) return;
+        
+        const player = this.scene.player;
+        const manager = this.scene.graphicsManager;
+        
+        this.predictions.forEach(pred => {
+            const dist = Phaser.Math.Distance.Between(
+                player.x, player.y,
+                pred.targetX, pred.targetY
+            );
+            
+            // Only draw if reasonably close
+            if (dist < 400) {
+                const alpha = 0.3 * (1 - dist / 400);
+                const color = pred.isCritical ? this.GOLD_COLOR : this.HARMONY_COLOR;
+                
+                // Register draw command with manager (effects layer)
+                manager.drawLine(
+                    'effects',
+                    player.x, player.y,
+                    pred.targetX, pred.targetY,
+                    color,
+                    alpha,
+                    1
                 );
             }
         });
@@ -1015,6 +1078,8 @@ export default class SymbioticPredictionSystem {
         if (this.predictionField) this.predictionField.destroy();
         if (this.symbiosisContainer) this.symbiosisContainer.destroy();
         if (this.echoGraphics) this.echoGraphics.destroy();
+        
+        // Note: connectionGraphics is not used when UnifiedGraphicsManager is active
         if (this.connectionGraphics) this.connectionGraphics.destroy();
     }
 }

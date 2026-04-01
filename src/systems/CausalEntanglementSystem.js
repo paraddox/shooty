@@ -79,7 +79,7 @@ export default class CausalEntanglementSystem {
         this.networkGraph = []; // Adjacency list representation
         
         // ===== VISUALS =====
-        this.linkGraphics = null;
+        // Note: link rendering now handled by UnifiedGraphicsManager (effects layer)
         this.modeOverlay = null;
         this.targetIndicators = [];
         this.particleEmitters = [];
@@ -109,9 +109,7 @@ export default class CausalEntanglementSystem {
     }
     
     createVisuals() {
-        // Link rendering graphics
-        this.linkGraphics = this.scene.add.graphics();
-        this.linkGraphics.setDepth(30); // Below bullets, above floor
+        // Note: Link rendering now handled by UnifiedGraphicsManager (effects layer)
         
         // Mode overlay (subtle vignette when in entanglement mode)
         this.createModeOverlay();
@@ -939,7 +937,8 @@ export default class CausalEntanglementSystem {
     }
     
     renderLinks() {
-        this.linkGraphics.clear();
+        const graphics = this.scene.unifiedGraphicsManager;
+        if (!graphics) return;
         
         for (const link of this.entanglements) {
             const { targetA, targetB, type, color } = link;
@@ -948,42 +947,41 @@ export default class CausalEntanglementSystem {
             const pulse = 0.5 + Math.sin(this.pulsePhase + link.pulsePhase) * 0.3;
             
             // Draw connection line
-            this.linkGraphics.lineStyle(2, color, pulse);
-            this.linkGraphics.lineBetween(targetA.x, targetA.y, targetB.x, targetB.y);
+            graphics.drawLine('effects', targetA.x, targetA.y, targetB.x, targetB.y, color, pulse, 2);
             
             // Draw center resonance point
             const midX = (targetA.x + targetB.x) / 2;
             const midY = (targetA.y + targetB.y) / 2;
             
             const centerPulse = 0.7 + Math.sin(this.pulsePhase * 1.5 + link.pulsePhase) * 0.3;
-            this.linkGraphics.fillStyle(color, centerPulse);
             
             // Different center shapes for different types
             if (type === 'HARMONIC') {
                 // Circle for harmonic
-                this.linkGraphics.fillCircle(midX, midY, 4);
+                graphics.drawCircle('effects', midX, midY, 4, color, centerPulse, true);
             } else if (type === 'PHASE') {
-                // X shape for phase
-                this.linkGraphics.lineStyle(2, color, centerPulse);
-                this.linkGraphics.lineBetween(midX - 4, midY - 4, midX + 4, midY + 4);
-                this.linkGraphics.lineBetween(midX - 4, midY + 4, midX + 4, midY - 4);
+                // X shape for phase (drawn as two lines)
+                graphics.drawLine('effects', midX - 4, midY - 4, midX + 4, midY + 4, color, centerPulse, 2);
+                graphics.drawLine('effects', midX - 4, midY + 4, midX + 4, midY - 4, color, centerPulse, 2);
             } else if (type === 'CASCADE') {
-                // Triangle for cascade
-                this.linkGraphics.beginPath();
-                this.linkGraphics.moveTo(midX, midY - 5);
-                this.linkGraphics.lineTo(midX + 4, midY + 3);
-                this.linkGraphics.lineTo(midX - 4, midY + 3);
-                this.linkGraphics.closePath();
-                this.linkGraphics.fillPath();
+                // Triangle for cascade (drawn as path)
+                graphics.addCommand('effects', 'path', {
+                    points: [
+                        { x: midX, y: midY - 5 },
+                        { x: midX + 4, y: midY + 3 },
+                        { x: midX - 4, y: midY + 3 },
+                        { x: midX, y: midY - 5 }
+                    ],
+                    color,
+                    alpha: centerPulse,
+                    lineWidth: 2
+                });
             }
             
             // Draw type symbols at ends
-            const typeInfo = this.entanglementTypes[type];
-            
             // Connecting rings at targets
-            this.linkGraphics.lineStyle(1, color, pulse * 0.5);
-            this.linkGraphics.strokeCircle(targetA.x, targetA.y, 12);
-            this.linkGraphics.strokeCircle(targetB.x, targetB.y, 12);
+            graphics.drawRing('effects', targetA.x, targetA.y, 12, color, pulse * 0.5, 1);
+            graphics.drawRing('effects', targetB.x, targetB.y, 12, color, pulse * 0.5, 1);
         }
     }
     
@@ -1040,9 +1038,9 @@ export default class CausalEntanglementSystem {
     }
     
     destroy() {
-        this.linkGraphics.destroy();
-        this.modeOverlay.destroy();
-        this.hudContainer.destroy();
+        // Note: linkGraphics now handled by UnifiedGraphicsManager
+        this.modeOverlay?.destroy();
+        this.hudContainer?.destroy();
         this.clearTargetIndicators();
     }
 }

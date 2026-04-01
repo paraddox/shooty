@@ -17,6 +17,15 @@ import Phaser from 'phaser';
  * The player experiences the game as a LIVING COMPOSITION they both perform
  * and are performed by. The distinction between action and audio dissolves.
  * 
+ * === MIGRATION NOTE ===
+ * 
+ * Migrated to UnifiedGraphicsManager (2026-04-01):
+ * - Audio visualization uses Phaser particle system (not Graphics API)
+ * - No graphics.clear() calls exist in this system (uses Web Audio API + particles)
+ * - Particle effects emit on the 'effects' layer via scene.add.particles
+ * - Compatible with UnifiedGraphicsManager architecture
+ * - Audio data available to other systems via getAudioData()
+ * 
  * === THE SYNTHESIS MATRIX ===
  * 
  * | Gameplay Element | Sonic Signature | Reverse Mapping |
@@ -1212,5 +1221,48 @@ export default class SynaesthesiaProtocolSystem {
             measure: this.currentMeasure,
             bpm: this.bpm
         };
+    }
+    
+    /**
+     * Render audio visualization via UnifiedGraphicsManager
+     * Call this from scene update if graphicsManager is available
+     */
+    renderWithGraphicsManager(graphicsManager) {
+        if (!graphicsManager || !this.analyser || !this.isPlaying) return;
+        
+        // Visualize spectrum as a circular waveform on 'effects' layer
+        const centerX = this.scene.cameras.main.width / 2;
+        const centerY = this.scene.cameras.main.height / 2;
+        const baseRadius = 100;
+        
+        // Draw spectrum ring
+        const points = [];
+        const segmentCount = this.spectrumData.length;
+        
+        for (let i = 0; i < segmentCount; i++) {
+            const amplitude = this.spectrumData[i] / 255;
+            const angle = (i / segmentCount) * Math.PI * 2;
+            const radius = baseRadius + amplitude * 50;
+            
+            const x = centerX + Math.cos(angle) * radius;
+            const y = centerY + Math.sin(angle) * radius;
+            points.push({ x, y });
+        }
+        
+        // Close the loop
+        if (points.length > 0) {
+            points.push(points[0]);
+        }
+        
+        // Color based on intensity
+        const hue = Math.floor(this.generativeState.intensity * 60) + 280; // Purple to pink range
+        const color = Phaser.Display.Color.HSLToColor(hue / 360, 0.8, 0.5).color;
+        
+        // Register with UnifiedGraphicsManager on 'effects' layer
+        graphicsManager.drawPath('effects', points, color, 0.3, 2);
+        
+        // Draw beat pulse ring
+        const pulseRadius = baseRadius + (this.generativeState.intensity * 20);
+        graphicsManager.drawRing('effects', centerX, centerY, pulseRadius, color, 0.2, 1);
     }
 }

@@ -126,6 +126,9 @@ export default class ResonanceOrbSystem {
         this.orbGroup = null;
         this.graphics = null;
         
+        // Unified renderer flag
+        this.useUnifiedRenderer = false;
+        
         // Superposition tracking
         this.superpositionLevel = 0;
         this.superpositionTimer = null;
@@ -147,7 +150,15 @@ export default class ResonanceOrbSystem {
         
         // Create visual group for orbs
         this.orbGroup = this.scene.add.group();
-        this.graphics = this.scene.add.graphics();
+        
+        // Check for UnifiedGraphicsManager (new architecture)
+        if (this.scene.graphicsManager) {
+            this.useUnifiedRenderer = true;
+        } else {
+            this.useUnifiedRenderer = false;
+            // Legacy: Create graphics for orb rendering
+            this.graphics = this.scene.add.graphics();
+        }
         
         // Create UI container for active orb indicators
         this.createOrbHUD();
@@ -249,6 +260,42 @@ export default class ResonanceOrbSystem {
     }
     
     drawOrb(orb) {
+        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+            this.drawOrbUnified(orb);
+        } else {
+            this.drawOrbLegacy(orb);
+        }
+    }
+    
+    drawOrbUnified(orb) {
+        const manager = this.scene.graphicsManager;
+        
+        // Draw all orbs using unified renderer on 'effects' layer
+        for (const o of this.activeOrbs) {
+            const cfg = this.ORB_TYPES[o.type];
+            const x = o.x - this.scene.cameras.main.scrollX;
+            const y = o.y - this.scene.cameras.main.scrollY;
+            const scale = o.pulseScale || 1;
+            
+            // Glow (outer circle)
+            manager.drawCircle('effects', x, y, 18 * scale, cfg.glow, 0.3 * o.alpha);
+            
+            // Core (middle circle)
+            manager.drawCircle('effects', x, y, 12 * scale, cfg.color, 0.9 * o.alpha);
+            
+            // Inner light (inner circle)
+            manager.drawCircle('effects', x, y, 6 * scale, 0xffffff, 0.5 * o.alpha);
+            
+            // Rainbow effect for quantum orbs (ring)
+            if (cfg.isRainbow) {
+                const hue = (this.scene.time.now * 0.2) % 360;
+                const rainbowColor = Phaser.Display.Color.HSLToColor(hue / 360, 1, 0.5).color;
+                manager.drawRing('effects', x, y, 20 * scale, rainbowColor, 0.8 * o.alpha, 2);
+            }
+        }
+    }
+    
+    drawOrbLegacy(orb) {
         const config = this.ORB_TYPES[orb.type];
         const g = this.graphics;
         
@@ -878,8 +925,11 @@ export default class ResonanceOrbSystem {
     }
     
     destroy() {
-        // Clean up
-        if (this.graphics) this.graphics.clear();
+        // Clean up - legacy only, unified renderer is managed by GraphicsManager
+        if (!this.useUnifiedRenderer && this.graphics) {
+            this.graphics.clear();
+            this.graphics.destroy();
+        }
         
         for (const [type, data] of this.playerOrbs) {
             if (data.timer) data.timer.remove();

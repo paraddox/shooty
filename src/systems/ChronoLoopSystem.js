@@ -69,20 +69,10 @@ export default class ChronoLoopSystem {
     }
     
     createVisuals() {
-        // Recording indicator ring around player
-        this.recordingRing = this.scene.add.graphics();
-        this.recordingRing.setDepth(60);
-        this.recordingRing.setVisible(false);
+        // Note: Graphics rendering is now handled by UnifiedGraphicsManager
+        // All visual effects are drawn via the 'effects' layer
         
-        // Echo rendering graphics
-        this.echoGraphics = this.scene.add.graphics();
-        this.echoGraphics.setDepth(49);
-        
-        // Trail effects for echoes
-        this.trailGraphics = this.scene.add.graphics();
-        this.trailGraphics.setDepth(48);
-        
-        // UI indicator for available loops
+        // UI indicator for available loops (container-based, not graphics)
         this.createLoopIndicator();
     }
     
@@ -154,12 +144,11 @@ export default class ChronoLoopSystem {
             rotation: this.scene.player.rotation
         });
         
-        // Show recording ring
-        this.recordingRing.setVisible(true);
-        
         // Show progress bar
         this.recordProgressBar.setVisible(true);
         this.recordProgressBar.width = 0;
+        
+        // Note: Recording ring is now drawn via UnifiedGraphicsManager in updateRecordingVisuals()
         
         // Announcement
         this.showRecordingText();
@@ -179,8 +168,8 @@ export default class ChronoLoopSystem {
         if (!this.isRecording) return;
         
         this.isRecording = false;
-        this.recordingRing.setVisible(false);
         this.recordProgressBar.setVisible(false);
+        // Note: Recording ring is now cleared via UnifiedGraphicsManager (no visibility toggle needed)
         
         // Create Past Echo from recording
         if (this.recordedActions.length > 5) { // Minimum actions to be useful
@@ -486,8 +475,9 @@ export default class ChronoLoopSystem {
     }
     
     renderEchoes() {
-        this.echoGraphics.clear();
-        this.trailGraphics.clear();
+        // Note: Graphics clearing is now handled by UnifiedGraphicsManager (single clear per frame per layer)
+        const gm = this.scene.graphicsManager;
+        if (!gm) return;
         
         const now = this.scene.time.now / 1000;
         
@@ -498,9 +488,8 @@ export default class ChronoLoopSystem {
             // Draw trail
             echo.trail.forEach((point, i) => {
                 const trailAlpha = (1 - point.age / 0.5) * 0.3 * lifeRatio;
-                this.trailGraphics.fillStyle(this.TEAL_COLOR, trailAlpha);
                 const size = 4 * (1 - point.age / 0.5);
-                this.trailGraphics.fillCircle(point.x, point.y, size);
+                gm.drawCircle('effects', point.x, point.y, size, this.TEAL_COLOR, trailAlpha);
             });
             
             // Draw echo ship (triangle like player but teal)
@@ -518,26 +507,19 @@ export default class ChronoLoopSystem {
             
             // Glow
             const pulse = 0.5 + Math.sin(this.pulsePhase + index) * 0.2;
-            this.echoGraphics.fillStyle(this.TEAL_COLOR, 0.3 * lifeRatio * pulse);
-            this.echoGraphics.fillCircle(echo.x, echo.y, size * 1.2);
+            gm.drawCircle('effects', echo.x, echo.y, size * 1.2, this.TEAL_COLOR, 0.3 * lifeRatio * pulse);
             
-            // Core triangle
-            this.echoGraphics.fillStyle(this.TEAL_GLOW, 0.8 * lifeRatio);
-            this.echoGraphics.beginPath();
-            this.echoGraphics.moveTo(tipX, tipY);
-            this.echoGraphics.lineTo(leftX, leftY);
-            this.echoGraphics.lineTo(rightX, rightY);
-            this.echoGraphics.closePath();
-            this.echoGraphics.fillPath();
-            
-            // Outline
-            this.echoGraphics.lineStyle(1.5, this.TEAL_COLOR, lifeRatio);
-            this.echoGraphics.strokePath();
+            // Core triangle - drawn as a path
+            gm.drawPath('effects', [
+                { x: tipX, y: tipY },
+                { x: leftX, y: leftY },
+                { x: rightX, y: rightY },
+                { x: tipX, y: tipY } // Close the triangle
+            ], this.TEAL_GLOW, 0.8 * lifeRatio, 1.5);
             
             // Echo number indicator
             if (index > 0) {
-                this.echoGraphics.fillStyle(this.TEAL_COLOR, 0.6 * lifeRatio);
-                this.echoGraphics.fillCircle(echo.x, echo.y - 20, 6);
+                gm.drawCircle('effects', echo.x, echo.y - 20, 6, this.TEAL_COLOR, 0.6 * lifeRatio);
             }
         });
     }
@@ -545,16 +527,19 @@ export default class ChronoLoopSystem {
     updateRecordingVisuals(dt) {
         this.pulsePhase += dt * 4;
         
+        const gm = this.scene.graphicsManager;
+        if (!gm) return;
+        
         if (this.isRecording) {
-            this.recordingRing.clear();
+            // Note: Graphics clearing is handled by UnifiedGraphicsManager
             
             const player = this.scene.player;
             const pulse = 0.7 + Math.sin(this.pulsePhase * 2) * 0.3;
             const radius = 35 + pulse * 5;
             
-            // Pulsing recording ring
-            this.recordingRing.lineStyle(2, this.TEAL_GLOW, 0.8);
-            this.recordingRing.strokeCircle(player.x, player.y, radius);
+            // Pulsing recording ring - drawn as two circles for ring effect
+            gm.drawCircle('effects', player.x, player.y, radius, this.TEAL_GLOW, 0.8);
+            gm.drawCircle('effects', player.x, player.y, radius - 2, 0x000000, 1); // Cutout center for ring
             
             // Recording dots
             const dotCount = 8;
@@ -562,14 +547,13 @@ export default class ChronoLoopSystem {
                 const angle = (Math.PI * 2 / dotCount) * i + this.pulsePhase;
                 const dotX = player.x + Math.cos(angle) * radius;
                 const dotY = player.y + Math.sin(angle) * radius;
+                const dotAlpha = 0.6 + Math.sin(angle * 3) * 0.4;
                 
-                this.recordingRing.fillStyle(this.TEAL_GLOW, 0.6 + Math.sin(angle * 3) * 0.4);
-                this.recordingRing.fillCircle(dotX, dotY, 3);
+                gm.drawCircle('effects', dotX, dotY, 3, this.TEAL_GLOW, dotAlpha);
             }
             
-            // "REC" text
-            this.recordingRing.fillStyle(this.TEAL_GLOW, 1);
-            this.recordingRing.fillCircle(player.x - 25, player.y - 35, 4);
+            // "REC" indicator dot
+            gm.drawCircle('effects', player.x - 25, player.y - 35, 4, this.TEAL_GLOW, 1);
         }
     }
     
@@ -708,9 +692,7 @@ export default class ChronoLoopSystem {
     }
     
     destroy() {
-        this.recordingRing.destroy();
-        this.echoGraphics.destroy();
-        this.trailGraphics.destroy();
+        // Note: UnifiedGraphicsManager handles cleanup of its own graphics objects
         this.loopIndicator.destroy();
         
         // Clean up echoes

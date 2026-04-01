@@ -131,17 +131,23 @@ export default class TemporalRewindSystem {
     }
     
     createVisuals() {
-        // Anchor rendering graphics
-        this.anchorGraphics = this.scene.add.graphics();
-        this.anchorGraphics.setDepth(55);
-        
-        // Rewind effect graphics
-        this.rewindGraphics = this.scene.add.graphics();
-        this.rewindGraphics.setDepth(100);
-        
-        // Afterimage graphics
-        this.afterimageGraphics = this.scene.add.graphics();
-        this.afterimageGraphics.setDepth(48);
+        // Use UnifiedGraphicsManager if available (new architecture)
+        if (this.scene.graphicsManager) {
+            this.useUnifiedRenderer = true;
+        } else {
+            // Legacy: create individual graphics objects
+            // Anchor rendering graphics
+            this.anchorGraphics = this.scene.add.graphics();
+            this.anchorGraphics.setDepth(55);
+            
+            // Rewind effect graphics
+            this.rewindGraphics = this.scene.add.graphics();
+            this.rewindGraphics.setDepth(100);
+            
+            // Afterimage graphics
+            this.afterimageGraphics = this.scene.add.graphics();
+            this.afterimageGraphics.setDepth(48);
+        }
         
         // Instability bar (below resonance cascade)
         this.createInstabilityBar();
@@ -752,6 +758,13 @@ export default class TemporalRewindSystem {
     }
     
     render() {
+        // Use UnifiedGraphicsManager if available (new architecture)
+        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+            this.renderUnified();
+            return;
+        }
+        
+        // Legacy direct graphics rendering
         // Clear all graphics
         this.anchorGraphics.clear();
         this.rewindGraphics.clear();
@@ -767,6 +780,144 @@ export default class TemporalRewindSystem {
         
         // Render afterimages
         this.renderAfterimages();
+    }
+    
+    /**
+     * New unified rendering - registers commands instead of direct drawing
+     */
+    renderUnified() {
+        const manager = this.scene.graphicsManager;
+        
+        // Render anchors using unified renderer
+        this.renderAnchorsUnified(manager);
+        
+        // Render rewind effects using unified renderer
+        if (this.isRewinding) {
+            this.renderRewindEffectsUnified(manager);
+        }
+        
+        // Render afterimages using unified renderer
+        this.renderAfterimagesUnified(manager);
+    }
+    
+    renderAnchorsUnified(manager) {
+        const player = this.scene.player;
+        if (!player) return;
+        
+        for (const anchor of this.anchors) {
+            const dist = Phaser.Math.Distance.Between(player.x, player.y, anchor.x, anchor.y);
+            const isInRange = dist < this.anchorRadius;
+            
+            // Pulsing ring
+            const pulse = Math.sin(anchor.pulsePhase) * 0.3 + 0.7;
+            const alpha = isInRange ? 0.9 : 0.6;
+            
+            // Outer ring (as filled circle with lower alpha + smaller circle for stroke effect)
+            manager.drawCircle('effects', anchor.x, anchor.y, 25 * pulse, this.AMBER_COLOR, alpha * 0.3);
+            
+            // Inner glow
+            manager.drawCircle('effects', anchor.x, anchor.y, 15, this.AMBER_GLOW, alpha * 0.4);
+            
+            // Center dot
+            manager.drawCircle('effects', anchor.x, anchor.y, 6, this.AMBER_COLOR, 1);
+            
+            // Range indicator when in range (as larger circle outline approximated)
+            if (isInRange) {
+                manager.drawCircle('effects', anchor.x, anchor.y, this.anchorRadius, this.AMBER_COLOR, 0.15);
+                
+                // "PRESS R" hint
+                if (!this.isRewinding && this.rewindCooldown <= 0) {
+                    manager.drawCircle('effects', anchor.x, anchor.y - 35, 3, this.AMBER_COLOR, 0.8);
+                }
+            }
+            
+            // Lifespan indicator (arc) - approximate with partial circle
+            const age = (this.scene.time.now / 1000) - anchor.createdAt;
+            const remaining = 1 - (age / this.anchorLifespan);
+            if (remaining > 0) {
+                // Draw arc indicator as a ring segment using multiple small circles
+                const arcRadius = 30;
+                const segments = Math.floor(remaining * 12);
+                for (let i = 0; i < segments; i++) {
+                    const angle = -Math.PI / 2 + (i / 12) * Math.PI * 2;
+                    const arcX = anchor.x + Math.cos(angle) * arcRadius;
+                    const arcY = anchor.y + Math.sin(angle) * arcRadius;
+                    manager.drawCircle('effects', arcX, arcY, 2, this.AMBER_DARK, 0.5);
+                }
+            }
+        }
+    }
+    
+    renderRewindEffectsUnified(manager) {
+        // Time distortion waves
+        const waveCount = 3;
+        const player = this.scene.player;
+        if (!player) return;
+        
+        for (let i = 0; i < waveCount; i++) {
+            const offset = (this.rewindPulse + i * (Math.PI * 2 / waveCount)) % (Math.PI * 2);
+            const radius = 50 + offset * 30;
+            const alpha = 1 - (offset / (Math.PI * 2));
+            
+            manager.drawCircle('effects', player.x, player.y, radius, this.AMBER_COLOR, alpha * 0.3);
+        }
+        
+        // Rewind path line
+        if (this.rewindHistory.length > 1) {
+            manager.drawPath('effects', this.rewindHistory, this.AMBER_GLOW, 0.6, 3);
+        }
+    }
+    
+    renderAfterimagesUnified(manager) {
+        const now = this.scene.time.now / 1000;
+        
+        for (const afterimage of this.afterimages) {
+            const age = now - afterimage.createdAt;
+            const remaining = 1 - (age / afterimage.lifespan);
+            
+            // Fade out as it ages
+            const alpha = remaining * 0.6;
+            const scale = 0.8 + remaining * 0.2;
+            
+            // Translucent player shape (filled triangle approximation)
+            const size = 15 * scale;
+            // Draw player shape as three connected lines forming a triangle
+            this.drawPlayerShapeUnified(manager, afterimage.x, afterimage.y, scale, this.AFTERIMAGE_COLOR, alpha * 0.3, false);
+            
+            // Glow outline
+            this.drawPlayerShapeUnified(manager, afterimage.x, afterimage.y, scale, this.AMBER_GLOW, alpha, true);
+            
+            // Pulse if it has amplified a bullet
+            if (afterimage.hasAmplified) {
+                const pulse = Math.sin(this.scene.time.now / 200) * 0.3 + 0.7;
+                manager.drawCircle('effects', afterimage.x, afterimage.y, 10 * pulse, this.AMBER_COLOR, alpha * 0.5 * pulse);
+            }
+        }
+    }
+    
+    drawPlayerShapeUnified(manager, x, y, scale, color, alpha, strokeOnly) {
+        // Draw triangle like the player ship using lines
+        const size = 15 * scale;
+        
+        // Calculate triangle points
+        const tipX = x;
+        const tipY = y - size;
+        const leftX = x + size * 0.8;
+        const leftY = y + size * 0.6;
+        const rightX = x - size * 0.8;
+        const rightY = y + size * 0.6;
+        
+        if (strokeOnly) {
+            // Draw outline using lines
+            manager.drawLine('effects', tipX, tipY, leftX, leftY, color, alpha, 2);
+            manager.drawLine('effects', leftX, leftY, rightX, rightY, color, alpha, 2);
+            manager.drawLine('effects', rightX, rightY, tipX, tipY, color, alpha, 2);
+        } else {
+            // Draw filled shape using multiple circles for approximation
+            const centerX = x;
+            const centerY = y + size * 0.1;
+            manager.drawCircle('effects', centerX, centerY, size * 0.7, color, alpha);
+        }
     }
     
     renderAnchors() {
@@ -1061,9 +1212,12 @@ export default class TemporalRewindSystem {
     
     // Cleanup
     destroy() {
-        if (this.anchorGraphics) this.anchorGraphics.destroy();
-        if (this.rewindGraphics) this.rewindGraphics.destroy();
-        if (this.afterimageGraphics) this.afterimageGraphics.destroy();
+        // Only destroy legacy graphics objects (unified renderer doesn't create these)
+        if (!this.useUnifiedRenderer) {
+            if (this.anchorGraphics) this.anchorGraphics.destroy();
+            if (this.rewindGraphics) this.rewindGraphics.destroy();
+            if (this.afterimageGraphics) this.afterimageGraphics.destroy();
+        }
         if (this.rewindOverlay) this.rewindOverlay.destroy();
         
         Object.values(this.instabilityBar).forEach(el => el.destroy());

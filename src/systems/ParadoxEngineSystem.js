@@ -105,6 +105,14 @@ export default class ParadoxEngineSystem {
     }
     
     createVisuals() {
+        // Check for UnifiedGraphicsManager
+        this.useUnifiedRenderer = !!(this.scene.graphicsManager);
+        
+        if (this.useUnifiedRenderer) {
+            // Register layer with UnifiedGraphicsManager
+            this.scene.graphicsManager.registerLayer('paradoxEffects', 55);
+        }
+        
         // Future echo graphics
         this.echoGraphics = this.scene.add.graphics();
         this.echoGraphics.setDepth(55);
@@ -448,21 +456,47 @@ export default class ParadoxEngineSystem {
         
         if (this.committedPath.length < 2) return;
         
+        if (this.useUnifiedRenderer) {
+            this.showCommittedPathUnified();
+        } else {
+            // Draw gradient line along path
+            for (let i = 1; i < this.committedPath.length; i++) {
+                const p1 = this.committedPath[i - 1];
+                const p2 = this.committedPath[i];
+                
+                const alpha = 0.6 - (i / this.committedPath.length) * 0.5;
+                this.pathGraphics.lineStyle(3, this.PARADOX_COLOR, alpha);
+                this.pathGraphics.lineBetween(p1.x, p1.y, p2.x, p2.y);
+            }
+            
+            // Add waypoint markers
+            this.committedPath.forEach((point, i) => {
+                if (i % 3 === 0) {
+                    this.pathGraphics.fillStyle(this.PARADOX_COLOR, 0.4);
+                    this.pathGraphics.fillCircle(point.x, point.y, 4);
+                }
+            });
+        }
+    }
+    
+    showCommittedPathUnified() {
+        if (this.committedPath.length < 2) return;
+        
+        const manager = this.scene.graphicsManager;
+        
         // Draw gradient line along path
         for (let i = 1; i < this.committedPath.length; i++) {
             const p1 = this.committedPath[i - 1];
             const p2 = this.committedPath[i];
             
             const alpha = 0.6 - (i / this.committedPath.length) * 0.5;
-            this.pathGraphics.lineStyle(3, this.PARADOX_COLOR, alpha);
-            this.pathGraphics.lineBetween(p1.x, p1.y, p2.x, p2.y);
+            manager.drawLine('paradoxEffects', p1.x, p1.y, p2.x, p2.y, this.PARADOX_COLOR, alpha, 3);
         }
         
         // Add waypoint markers
         this.committedPath.forEach((point, i) => {
             if (i % 3 === 0) {
-                this.pathGraphics.fillStyle(this.PARADOX_COLOR, 0.4);
-                this.pathGraphics.fillCircle(point.x, point.y, 4);
+                manager.drawCircle('paradoxEffects', point.x, point.y, 4, this.PARADOX_COLOR, 0.4);
             }
         });
     }
@@ -738,6 +772,9 @@ export default class ParadoxEngineSystem {
         this.projectionCooldown = this.projectionCooldownMax;
         
         // Clear visuals
+        if (this.useUnifiedRenderer && this.scene.graphicsManager) {
+            this.scene.graphicsManager.clearLayer('paradoxEffects');
+        }
         this.pathGraphics.clear();
         this.safeZoneGraphics.clear();
         this.paradoxOverlay.setVisible(false);
@@ -745,6 +782,27 @@ export default class ParadoxEngineSystem {
     }
     
     render() {
+        if (this.useUnifiedRenderer) {
+            this.renderUnified();
+        } else {
+            this.renderLegacy();
+        }
+    }
+    
+    renderUnified() {
+        const manager = this.scene.graphicsManager;
+        
+        if (this.isProjecting && this.futureEcho.active) {
+            this.renderFutureEchoUnified(manager);
+            this.renderBulletPredictionsUnified(manager);
+            this.renderSafeZonesUnified(manager);
+        }
+        
+        // Render charge bar (UI element, use legacy)
+        this.renderChargeBar();
+    }
+    
+    renderLegacy() {
         this.echoGraphics.clear();
         
         if (this.isProjecting && this.futureEcho.active) {
@@ -808,6 +866,54 @@ export default class ParadoxEngineSystem {
         }
     }
     
+    renderFutureEchoUnified(manager) {
+        // Draw future echo silhouette
+        const lastPoint = this.futureEcho.path[this.futureEcho.path.length - 1];
+        if (!lastPoint) return;
+        
+        // Draw translucent echo at end of path
+        manager.drawCircle('paradoxEffects', lastPoint.x, lastPoint.y, 15, this.ECHO_COLOR, 0.3);
+        
+        // Draw echo outline (stroke circle)
+        manager.drawCircle('paradoxEffects', lastPoint.x, lastPoint.y, 15, this.ECHO_COLOR, 0.6, 2, true);
+        
+        // Draw path line
+        for (let i = 1; i < this.futureEcho.path.length; i++) {
+            const p1 = this.futureEcho.path[i - 1];
+            const p2 = this.futureEcho.path[i];
+            manager.drawLine('paradoxEffects', p1.x, p1.y, p2.x, p2.y, this.ECHO_COLOR, 0.4, 2);
+        }
+        
+        // Draw velocity indicator
+        const vx = this.futureEcho.vx;
+        const vy = this.futureEcho.vy;
+        const speed = Math.sqrt(vx * vx + vy * vy);
+        
+        if (speed > 10) {
+            const angle = Math.atan2(vy, vx);
+            const arrowLen = 30;
+            const endX = lastPoint.x + Math.cos(angle) * arrowLen;
+            const endY = lastPoint.y + Math.sin(angle) * arrowLen;
+            
+            manager.drawLine('paradoxEffects', lastPoint.x, lastPoint.y, endX, endY, this.ECHO_COLOR, 0.8, 2);
+            
+            // Arrowhead (two lines)
+            const headSize = 8;
+            manager.drawLine('paradoxEffects', 
+                endX, endY,
+                endX - Math.cos(angle - 0.5) * headSize,
+                endY - Math.sin(angle - 0.5) * headSize,
+                this.ECHO_COLOR, 0.8, 2
+            );
+            manager.drawLine('paradoxEffects',
+                endX, endY,
+                endX - Math.cos(angle + 0.5) * headSize,
+                endY - Math.sin(angle + 0.5) * headSize,
+                this.ECHO_COLOR, 0.8, 2
+            );
+        }
+    }
+    
     renderBulletPredictions() {
         this.predictionGraphics.clear();
         
@@ -825,6 +931,21 @@ export default class ParadoxEngineSystem {
             const end = pred.path[pred.path.length - 1];
             this.predictionGraphics.fillStyle(this.PREDICTION_COLOR, 0.2);
             this.predictionGraphics.fillCircle(end.x, end.y, 3);
+        });
+    }
+    
+    renderBulletPredictionsUnified(manager) {
+        this.bulletPredictions.forEach(pred => {
+            // Draw prediction line
+            for (let i = 1; i < pred.path.length; i++) {
+                const p1 = pred.path[i - 1];
+                const p2 = pred.path[i];
+                manager.drawLine('paradoxEffects', p1.x, p1.y, p2.x, p2.y, this.PREDICTION_COLOR, 0.3, 1);
+            }
+            
+            // Draw endpoint marker
+            const end = pred.path[pred.path.length - 1];
+            manager.drawCircle('paradoxEffects', end.x, end.y, 3, this.PREDICTION_COLOR, 0.2);
         });
     }
     
@@ -861,6 +982,37 @@ export default class ParadoxEngineSystem {
             const alpha = Math.min(0.3, (point.safety - 80) / 100 * 0.3);
             this.safeZoneGraphics.fillStyle(this.SAFE_COLOR, alpha);
             this.safeZoneGraphics.fillCircle(point.x, point.y, 8);
+        });
+    }
+    
+    renderSafeZonesUnified(manager) {
+        // Calculate safe corridors between bullet predictions
+        const safePoints = [];
+        
+        this.futureEcho.path.forEach(point => {
+            let minBulletDist = Infinity;
+            
+            this.bulletPredictions.forEach(pred => {
+                // Find closest bullet prediction point
+                pred.path.forEach(bulletPoint => {
+                    const dist = Phaser.Math.Distance.Between(
+                        point.x, point.y,
+                        bulletPoint.x, bulletPoint.y
+                    );
+                    minBulletDist = Math.min(minBulletDist, dist);
+                });
+            });
+            
+            // If far from bullets, mark as safe
+            if (minBulletDist > 80) {
+                safePoints.push({ ...point, safety: minBulletDist });
+            }
+        });
+        
+        // Draw safe zone indicators
+        safePoints.forEach(point => {
+            const alpha = Math.min(0.3, (point.safety - 80) / 100 * 0.3);
+            manager.drawCircle('paradoxEffects', point.x, point.y, 8, this.SAFE_COLOR, alpha);
         });
     }
     

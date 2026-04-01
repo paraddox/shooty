@@ -44,9 +44,9 @@ export default class ResonanceCascadeSystem {
         // Visuals
         this.chainDisplay = null;
         this.multiplierText = null;
-        this.resonanceRing = null;
         this.sequenceDots = [];
         this.cascadeFlash = null;
+        // Note: resonance ring and chain glow now rendered via UnifiedGraphicsManager
         
         // Damage tracking for multiplier
         this.pendingDamageBonus = 1.0;
@@ -65,11 +65,8 @@ export default class ResonanceCascadeSystem {
         this.chainContainer.setDepth(100);
         this.chainContainer.setVisible(false);
         
-        // Background glow
-        this.chainGlow = this.scene.add.graphics();
-        this.chainGlow.setScrollFactor(0);
-        this.chainGlow.setDepth(99);
-        this.chainGlow.setVisible(false);
+        // Note: Background glow and resonance ring now rendered via UnifiedGraphicsManager
+        // on the 'effects' layer for better performance (batched rendering, single clear per frame)
         
         // Multiplier text (large, central)
         this.multiplierText = this.scene.add.text(0, 0, '', {
@@ -82,11 +79,6 @@ export default class ResonanceCascadeSystem {
         this.multiplierText.setScrollFactor(0);
         this.multiplierText.setDepth(101);
         this.multiplierText.setVisible(false);
-        
-        // Resonance ring around player
-        this.resonanceRing = this.scene.add.graphics();
-        this.resonanceRing.setDepth(48);
-        this.resonanceRing.setVisible(false);
         
         // Sequence dot pool
         for (let i = 0; i < 6; i++) {
@@ -232,7 +224,7 @@ export default class ResonanceCascadeSystem {
     onChainStart() {
         this.chainContainer.setVisible(true);
         this.multiplierText.setVisible(true);
-        this.resonanceRing.setVisible(true);
+        // Note: Resonance ring now rendered via UnifiedGraphicsManager on 'effects' layer
         
         // Initial pulse effect
         const player = this.scene.player;
@@ -576,41 +568,32 @@ export default class ResonanceCascadeSystem {
         const player = this.scene.player;
         if (!player.active) return;
         
-        // Update resonance ring
-        this.resonanceRing.clear();
+        // Use UnifiedGraphicsManager for effects layer
+        const manager = this.scene.graphicsManager;
         
         const state = this.resonanceStates[this.resonanceState];
         const color = state ? state.color : 0x00f0ff;
         const pulse = 0.5 + Math.sin(this.scene.time.now / 100) * 0.3;
         const radius = 45 + Math.sin(this.scene.time.now / 80) * 5;
         
-        if (this.resonanceState !== 'NONE') {
-            this.resonanceRing.lineStyle(2, color, pulse);
-            this.resonanceRing.strokeCircle(player.x, player.y, radius);
+        // Render resonance ring via UnifiedGraphicsManager
+        if (this.resonanceState !== 'NONE' && manager) {
+            // Primary ring
+            manager.drawRing('effects', player.x, player.y, radius, color, pulse, 2);
             
             // Secondary ring for higher states
             if (this.resonanceState === 'TRANSCENDENT') {
-                this.resonanceRing.lineStyle(1, color, pulse * 0.5);
-                this.resonanceRing.strokeCircle(player.x, player.y, radius + 15);
+                manager.drawRing('effects', player.x, player.y, radius + 15, color, pulse * 0.5, 1);
             }
         }
         
-        // Update chain glow
-        if (this.activeChain.length > 0) {
+        // Render chain glow via UnifiedGraphicsManager
+        if (this.activeChain.length > 0 && manager) {
             const chainProgress = this.chainTimer / this.getCurrentWindow();
-            this.chainGlow.clear();
-            
-            // Draw connecting glow under the chain display
             const alpha = (1 - chainProgress) * 0.3;
-            this.chainGlow.fillStyle(color, alpha);
-            this.chainGlow.fillCircle(
-                this.scene.scale.width / 2,
-                80,
-                50 + this.activeChain.length * 10
-            );
-            this.chainGlow.setVisible(true);
-        } else {
-            this.chainGlow.setVisible(false);
+            const glowRadius = 50 + this.activeChain.length * 10;
+            // Draw filled circle for glow effect
+            manager.drawCircle('effects', this.scene.scale.width / 2, 80, glowRadius, color, alpha, true);
         }
         
         // Update multiplier position (follow screen center)
@@ -830,10 +813,8 @@ export default class ResonanceCascadeSystem {
         this.chainContainer.setVisible(false);
         this.chainContainer.removeAll(true);
         this.multiplierText.setVisible(false);
-        this.resonanceRing.clear();
-        this.resonanceRing.setVisible(false);
-        this.chainGlow.clear();
-        this.chainGlow.setVisible(false);
+        // Note: Graphics now rendered via UnifiedGraphicsManager on 'effects' layer
+        // No need to clear individual graphics - manager clears once per frame
     }
     
     /**

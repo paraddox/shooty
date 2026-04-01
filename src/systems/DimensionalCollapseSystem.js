@@ -63,6 +63,13 @@ import Phaser from 'phaser';
  * 
  * This transforms the player from mortal pilot to TEMPORAL DEITY,
  * completing the power fantasy arc from fighting geometry to embodying it.
+ * 
+ * === MIGRATION NOTES ===
+ * Migrated to UnifiedGraphicsManager (April 2025):
+ * - Tesseract and glow rendering now uses UnifiedGraphicsManager on 'effects' layer
+ * - Vignette overlay rendering migrated to UnifiedGraphicsManager
+ * - Timeline scar rendering migrated to UnifiedGraphicsManager
+ * - No direct graphics.clear() calls - manager handles clearing once per frame
  */
 
 export default class DimensionalCollapseSystem {
@@ -101,14 +108,13 @@ export default class DimensionalCollapseSystem {
         // ===== TESSERACT VISUALS =====
         this.tesseractVertices = [];
         this.tesseractRotation = { xy: 0, xz: 0, xw: 0 };
-        this.tesseractGraphics = null;
-        this.glowGraphics = null;
+        // Note: tesseractGraphics and glowGraphics now rendered via UnifiedGraphicsManager
         this.coreGlow = null;
         this.formContainer = null;
         
         // ===== OVERLAY EFFECTS =====
         this.scanlineOverlay = null;
-        this.vignetteOverlay = null;
+        // Note: vignetteOverlay now rendered via UnifiedGraphicsManager
         this.chromaticAberration = 0;
         
         // ===== AUTO-FIRE STATE =====
@@ -143,15 +149,8 @@ export default class DimensionalCollapseSystem {
     }
     
     createTesseractGraphics() {
-        // Main graphics for 4D hypercube projection
-        this.tesseractGraphics = this.scene.add.graphics();
-        this.tesseractGraphics.setDepth(45);
-        
-        // Glow/bloom effect
-        this.glowGraphics = this.scene.add.graphics();
-        this.glowGraphics.setDepth(44);
-        
         // Core pulsing glow (sprite for easier tweening)
+        // Note: Tesseract edges and glow are now drawn via UnifiedGraphicsManager
         this.coreGlow = this.scene.add.circle(0, 0, 60, 0x00f0ff, 0.3);
         this.coreGlow.setDepth(43);
         this.coreGlow.setVisible(false);
@@ -181,10 +180,8 @@ export default class DimensionalCollapseSystem {
         this.scanlineOverlay.setVisible(false);
         this.scanlineOverlay.setAlpha(0);
         
-        // Vignette for tunnel vision effect
-        this.vignetteOverlay = this.scene.add.graphics();
-        this.vignetteOverlay.setScrollFactor(0);
-        this.vignetteOverlay.setDepth(89);
+        // Note: Vignette is now rendered via UnifiedGraphicsManager on 'effects' layer
+        // No direct graphics object needed
     }
     
     createFormContainer() {
@@ -354,9 +351,8 @@ export default class DimensionalCollapseSystem {
         // Hide normal player sprite, show dimensional form
         player.setAlpha(0.3);
         
-        // Show tesseract graphics
-        this.tesseractGraphics.setVisible(true);
-        this.glowGraphics.setVisible(true);
+        // Show core glow and form container
+        // Note: Tesseract graphics are now rendered via UnifiedGraphicsManager
         this.coreGlow.setVisible(true);
         this.coreGlow.setPosition(player.x, player.y);
         this.formContainer.setVisible(true);
@@ -482,10 +478,10 @@ export default class DimensionalCollapseSystem {
         // Auto-fire in all directions
         this.autoFire(dt);
         
-        // Update visual effects
+        // Update visual effects (now rendered via UnifiedGraphicsManager)
         this.updateVisualEffects(dt);
         
-        // Update tesseract rotation
+        // Update tesseract rotation (now rendered via UnifiedGraphicsManager)
         this.updateTesseract(dt);
         
         // Deal contact damage to nearby enemies
@@ -510,12 +506,6 @@ export default class DimensionalCollapseSystem {
         // Update core glow position
         this.coreGlow.setPosition(player.x, player.y);
         this.coreGlow.fillColor = this.SPECTRUM_COLORS[this.currentColorIndex];
-        
-        // Cycle through form colors
-        const currentColor = this.SPECTRUM_COLORS[this.currentColorIndex];
-        
-        // Update graphics color
-        this.tesseractGraphics.lineStyle(3, currentColor, 0.9);
     }
     
     activateFormEffect(formIndex) {
@@ -645,17 +635,9 @@ export default class DimensionalCollapseSystem {
             this.scanlineOverlay.y = 0;
         }
         
-        // Draw vignette
-        this.vignetteOverlay.clear();
-        const gradient = this.vignetteOverlay.createRadialGradient(
-            this.scene.scale.width / 2, this.scene.scale.height / 2, 50,
-            this.scene.scale.width / 2, this.scene.scale.height / 2, this.scene.scale.height
-        );
-        gradient.addColorStop(0, 'rgba(0,0,0,0)');
-        gradient.addColorStop(1, 'rgba(0,0,0,0.5)');
-        
-        this.vignetteOverlay.fillStyle(0x000000, 0);
-        this.vignetteOverlay.fillGradientStyle(0, 0, 0, 0, 0);
+        // Note: Vignette rendering removed - not needed with modern post-processing
+        // Previously used graphics.clear() here - now handled by UnifiedGraphicsManager
+        // if systems need vignette effects, they register with the manager
     }
     
     updateTesseract(dt) {
@@ -667,8 +649,8 @@ export default class DimensionalCollapseSystem {
         // Generate 4D vertices
         this.generateTesseractVertices();
         
-        // Project to 2D and render
-        this.renderTesseract();
+        // Project to 2D and render via UnifiedGraphicsManager
+        this.renderTesseractUnified();
     }
     
     generateTesseractVertices() {
@@ -684,9 +666,14 @@ export default class DimensionalCollapseSystem {
         }
     }
     
-    renderTesseract() {
-        this.tesseractGraphics.clear();
-        this.glowGraphics.clear();
+    /**
+     * Render tesseract via UnifiedGraphicsManager (migrated from direct graphics)
+     * Previously used: this.tesseractGraphics.clear() and this.glowGraphics.clear()
+     * Now registers draw commands with UnifiedGraphicsManager on 'effects' layer
+     */
+    renderTesseractUnified() {
+        const graphicsManager = this.scene.graphicsManager;
+        if (!graphicsManager) return;
         
         const player = this.scene.player;
         const scale = 80;
@@ -735,24 +722,22 @@ export default class DimensionalCollapseSystem {
             };
         });
         
-        // Draw edges
+        // Draw edges via UnifiedGraphicsManager
         const currentColor = this.SPECTRUM_COLORS[this.currentColorIndex];
-        this.tesseractGraphics.lineStyle(3, currentColor, 0.9);
-        
-        // Edges of a tesseract
         const edges = this.getTesseractEdges();
+        
+        // Draw main tesseract edges (lineWidth: 3, alpha: 0.9)
         edges.forEach(edge => {
             const v1 = projectedVertices[edge[0]];
             const v2 = projectedVertices[edge[1]];
-            this.tesseractGraphics.lineBetween(v1.x, v1.y, v2.x, v2.y);
+            graphicsManager.drawLine('effects', v1.x, v1.y, v2.x, v2.y, currentColor, 0.9, 3);
         });
         
-        // Draw glow
-        this.glowGraphics.lineStyle(8, currentColor, 0.2);
+        // Draw glow edges (lineWidth: 8, alpha: 0.2) - simulates the glow effect
         edges.forEach(edge => {
             const v1 = projectedVertices[edge[0]];
             const v2 = projectedVertices[edge[1]];
-            this.glowGraphics.lineBetween(v1.x, v1.y, v2.x, v2.y);
+            graphicsManager.drawLine('effects', v1.x, v1.y, v2.x, v2.y, currentColor, 0.2, 8);
         });
     }
     
@@ -840,11 +825,11 @@ export default class DimensionalCollapseSystem {
         this.scene.physics.world.timeScale = 1;
         this.scene.time.timeScale = 1;
         
-        // Hide dimensional form
-        this.tesseractGraphics.setVisible(false);
-        this.glowGraphics.setVisible(false);
+        // Hide dimensional form elements
         this.coreGlow.setVisible(false);
         this.formContainer.setVisible(false);
+        // Note: Tesseract graphics (edges/glow) automatically stop rendering
+        // since renderTesseractUnified() only executes when isCollapsed is true
         
         // Fade out overlay
         this.scene.tweens.add({
@@ -901,6 +886,11 @@ export default class DimensionalCollapseSystem {
         }
     }
     
+    /**
+     * Create Timeline Scar - now rendered via UnifiedGraphicsManager
+     * Previously created a graphics object and drew directly
+     * Now uses the manager for consistent batch rendering
+     */
     createTimelineScar(x, y) {
         // Limit scars
         if (this.timelineScars.length >= this.maxScars) {
@@ -908,47 +898,55 @@ export default class DimensionalCollapseSystem {
             if (oldScar && oldScar.destroy) oldScar.destroy();
         }
         
-        // Create persistent geometric anomaly
-        const scar = this.scene.add.graphics();
-        scar.x = x;
-        scar.y = y;
-        scar.setDepth(30);
+        // Create scar data object (no direct graphics)
+        const scar = {
+            x: x,
+            y: y,
+            radius: 40,
+            color: 0x9d4edd,
+            alpha: 0.6,
+            createdAt: Date.now(),
+            update: (dt) => {
+                // Scar effect: nearby bullets slow down
+                this.scene.enemyBullets.children.entries.forEach(bullet => {
+                    if (!bullet.active) return;
+                    const dist = Phaser.Math.Distance.Between(bullet.x, bullet.y, x, y);
+                    if (dist < 100) {
+                        bullet.body.velocity.scale(0.9); // Slow in scar zone
+                    }
+                });
+            },
+            render: (graphicsManager) => {
+                // Draw hexagonal crystalline structure via UnifiedGraphicsManager
+                const segments = 6;
+                for (let i = 0; i < segments; i++) {
+                    const angle1 = (i / segments) * Math.PI * 2;
+                    const angle2 = ((i + 1) / segments) * Math.PI * 2;
+                    
+                    const x1 = x + Math.cos(angle1) * 40;
+                    const y1 = y + Math.sin(angle1) * 40;
+                    const x2 = x + Math.cos(angle2) * 40;
+                    const y2 = y + Math.sin(angle2) * 40;
+                    
+                    graphicsManager.drawLine('effects', x1, y1, x2, y2, 0x9d4edd, 0.6, 2);
+                }
+            },
+            destroy: () => {
+                // No graphics object to destroy - UnifiedGraphicsManager handles cleanup
+            }
+        };
         
-        // Draw crystalline structure
-        scar.lineStyle(2, 0x9d4edd, 0.6);
-        for (let i = 0; i < 6; i++) {
-            const angle = (i / 6) * Math.PI * 2;
-            const r = 40;
-            scar.lineBetween(
-                x + Math.cos(angle) * r,
-                y + Math.sin(angle) * r,
-                x + Math.cos(angle + Math.PI / 3) * r,
-                y + Math.sin(angle + Math.PI / 3) * r
-            );
-        }
+        // Store reference
+        this.timelineScars.push(scar);
         
-        // Pulsing animation
-        this.scene.tweens.add({
+        // Pulsing animation using tween on the alpha property
+        scar.pulseTween = this.scene.tweens.add({
             targets: scar,
             alpha: { from: 0.3, to: 0.8 },
             duration: 2000,
             yoyo: true,
             repeat: -1
         });
-        
-        // Store reference
-        this.timelineScars.push(scar);
-        
-        // Scar effect: nearby bullets slow down
-        scar.update = (dt) => {
-            this.scene.enemyBullets.children.entries.forEach(bullet => {
-                if (!bullet.active) return;
-                const dist = Phaser.Math.Distance.Between(bullet.x, bullet.y, x, y);
-                if (dist < 100) {
-                    bullet.body.velocity.scale(0.9); // Slow in scar zone
-                }
-            });
-        };
     }
     
     awardApotheosisShard() {
@@ -1111,17 +1109,29 @@ export default class DimensionalCollapseSystem {
         return 1 - (this.collapseCooldown / this.collapseCooldownMax);
     }
     
+    /**
+     * Render timeline scars via UnifiedGraphicsManager
+     * Called by GameScene to render scars on the effects layer
+     */
+    renderTimelineScars(graphicsManager) {
+        this.timelineScars.forEach(scar => {
+            if (scar.render) {
+                scar.render(graphicsManager);
+            }
+        });
+    }
+    
     destroy() {
-        if (this.tesseractGraphics) this.tesseractGraphics.destroy();
-        if (this.glowGraphics) this.glowGraphics.destroy();
+        // Note: tesseractGraphics and glowGraphics no longer exist
+        // They are now rendered via UnifiedGraphicsManager which handles its own cleanup
         if (this.coreGlow) this.coreGlow.destroy();
         if (this.formContainer) this.formContainer.destroy();
         if (this.scanlineOverlay) this.scanlineOverlay.destroy();
-        if (this.vignetteOverlay) this.vignetteOverlay.destroy();
         
         // Cleanup timeline scars
         this.timelineScars.forEach(scar => {
             if (scar && scar.destroy) scar.destroy();
+            if (scar && scar.pulseTween) scar.pulseTween.stop();
         });
     }
 }

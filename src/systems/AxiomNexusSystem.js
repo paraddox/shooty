@@ -104,8 +104,7 @@ export default class AxiomNexusSystem {
         this.lastSynthesisTime = 0;
         
         // Visual elements
-        this.nexusOverlay = null;
-        this.connectionLines = null;
+        // Note: Graphics rendering handled by UnifiedGraphicsManager - no direct graphics objects needed
         this.illuminationText = null;
         this.synthesisPanel = null;
         
@@ -296,13 +295,8 @@ export default class AxiomNexusSystem {
     // === INITIALIZATION METHODS ===
     
     createVisualElements() {
-        // Main overlay for illumination effects
-        this.nexusOverlay = this.scene.add.graphics();
-        this.nexusOverlay.setDepth(90);
-        
-        // Connection lines between active systems
-        this.connectionLines = this.scene.add.graphics();
-        this.connectionLines.setDepth(89);
+        // Note: Graphics rendering is now handled by UnifiedGraphicsManager on 'effects' layer
+        // Connection lines and overlay are drawn via registerCommandsToGraphicsManager()
         
         // Illumination text for "aha moments"
         this.illuminationText = this.scene.add.text(
@@ -631,16 +625,14 @@ export default class AxiomNexusSystem {
     }
     
     drawSynthesisConnections(synth) {
-        // Visual representation of the connection
-        this.connectionLines.clear();
+        // Visual representation of the connection using UnifiedGraphicsManager
+        if (!this.scene.graphicsManager) return;
         
         const player = this.scene.player;
         const centerX = player.x;
         const centerY = player.y;
         
-        // Draw golden web
-        this.connectionLines.lineStyle(2, this.NEXUS_COLOR, 0.8);
-        
+        // Draw golden web - register commands with UnifiedGraphicsManager
         // Radiating lines
         for (let i = 0; i < 8; i++) {
             const angle = (i / 8) * Math.PI * 2;
@@ -648,34 +640,36 @@ export default class AxiomNexusSystem {
             const endX = centerX + Math.cos(angle) * length;
             const endY = centerY + Math.sin(angle) * length;
             
-            this.connectionLines.lineBetween(centerX, centerY, endX, endY);
+            // Draw line using UnifiedGraphicsManager
+            this.scene.graphicsManager.drawLine('effects', centerX, centerY, endX, endY, this.NEXUS_COLOR, 0.8, 2);
             
-            // Node at end
-            this.connectionLines.fillStyle(this.NEXUS_GLOW, 0.6);
-            this.connectionLines.fillCircle(endX, endY, 5);
+            // Node at end (draw as filled circle)
+            this.scene.graphicsManager.drawCircle('effects', endX, endY, 5, this.NEXUS_GLOW, 0.6, true);
         }
         
-        // Fade out
-        this.scene.time.delayedCall(2000, () => {
-            this.connectionLines.clear();
-        });
+        // Note: UnifiedGraphicsManager clears once per frame automatically
+        // The visual fades out on the next frame when no new commands are registered
     }
     
     updateVisuals() {
         // Subtle ambient glow when many systems active
         const activeCount = this.activeSystems.size;
-        if (activeCount >= 5) {
+        if (activeCount >= 5 && this.scene.graphicsManager) {
             const alpha = (activeCount - 5) / 5 * 0.1; // 0 to 0.1
             
-            this.nexusOverlay.clear();
-            this.nexusOverlay.fillStyle(this.NEXUS_COLOR, alpha);
-            this.nexusOverlay.fillRect(
+            // Draw overlay rect using UnifiedGraphicsManager on 'effects' layer
+            this.scene.graphicsManager.drawRect(
+                'effects',
                 this.scene.cameras.main.scrollX,
                 this.scene.cameras.main.scrollY,
                 this.scene.scale.width,
-                this.scene.scale.height
+                this.scene.scale.height,
+                this.NEXUS_COLOR,
+                alpha,
+                true
             );
         }
+        // Note: UnifiedGraphicsManager clears once per frame - we re-register each frame
     }
     
     // === NUDGE SYSTEM (Subtle Hints) ===
@@ -836,8 +830,8 @@ export default class AxiomNexusSystem {
     }
     
     destroy() {
-        this.nexusOverlay?.destroy();
-        this.connectionLines?.destroy();
+        // Note: UnifiedGraphicsManager handles cleanup of its own graphics objects
+        // Text and container elements still need manual cleanup
         this.illuminationText?.destroy();
         this.synthesisPanel?.destroy();
     }

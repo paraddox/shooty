@@ -3,6 +3,11 @@ import Phaser from 'phaser';
 /**
  * THE ARCHITECT SYSTEM — The Apotheosis of Player Authorship
  * 
+ * MIGRATED to UnifiedGraphicsManager (2026-04-01):
+ * - Discovery visual effects now use UnifiedGraphicsManager on 'effects' layer
+ * - graphics.clear() calls removed for UnifiedGraphicsManager compatibility
+ * - Pulsing discovery ring rendered via drawRing() API
+ * 
  * The ultimate evolution: Players become game designers. Through natural play,
  * players discover novel combinations of existing systems. The Architect detects
  * these innovations, formalizes them into new named mechanics, and shares them
@@ -151,7 +156,7 @@ export default class ArchitectSystem {
         this.recentCombinations = new Set(); // Prevent duplicate discoveries
         
         // ===== VISUALS =====
-        this.graphics = null;
+        // Note: Graphics rendering now handled by UnifiedGraphicsManager on 'effects' layer
         this.discoveryUI = null;
         this.commonsUI = null;
         
@@ -166,7 +171,7 @@ export default class ArchitectSystem {
     }
     
     init() {
-        this.createVisuals();
+        // Note: Visuals now rendered via UnifiedGraphicsManager on 'effects' layer
         this.loadCommonsIntoGame();
     }
     
@@ -859,23 +864,29 @@ export default class ArchitectSystem {
     
     // ===== VISUALS =====
     
-    createVisuals() {
-        this.graphics = this.scene.add.graphics();
-        this.graphics.setDepth(100);
-    }
-    
+    /**
+     * Update discovery visuals via UnifiedGraphicsManager (migrated from direct graphics)
+     * Now registers draw commands with UnifiedGraphicsManager on 'effects' layer
+     */
     updateVisuals(dt) {
-        // Draw any active discovery effects
-        this.graphics.clear();
+        // Note: UnifiedGraphicsManager clears automatically each frame
         
-        if (this.pendingDiscovery) {
+        if (this.pendingDiscovery && this.scene.graphicsManager) {
             // Draw pulsing indicator around player
             const player = this.scene.player;
             const time = this.scene.time.now / 1000;
             const radius = 60 + Math.sin(time * 3) * 10;
+            const alpha = 0.5 + Math.sin(time * 5) * 0.3;
             
-            this.graphics.lineStyle(2, this.ARCHITECT_COLOR, 0.5 + Math.sin(time * 5) * 0.3);
-            this.graphics.strokeCircle(player.x, player.y, radius);
+            this.scene.graphicsManager.drawRing(
+                'effects', 
+                player.x, 
+                player.y, 
+                radius, 
+                this.ARCHITECT_COLOR, 
+                alpha, 
+                2
+            );
         }
     }
     
@@ -913,9 +924,8 @@ export default class ArchitectSystem {
         this.saveArchitectData();
         this.saveTemporalCommons();
         
-        if (this.graphics) {
-            this.graphics.destroy();
-        }
+        // Note: Graphics cleanup is now handled by UnifiedGraphicsManager
+        
         if (this.discoveryUI) {
             Object.values(this.discoveryUI).forEach(el => el.destroy());
         }

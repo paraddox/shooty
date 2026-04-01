@@ -8,6 +8,11 @@ import Phaser from 'phaser';
  * Creates risk/reward decisions that span the entire run.
  * 
  * Core Innovation: The game becomes a market simulation where time itself is currency.
+ * 
+ * MIGRATED to UnifiedGraphicsManager (April 2025):
+ * - Price chart rendering now uses UnifiedGraphicsManager on 'effects' layer
+ * - Market aura (pulsing rings) rendering migrated to UnifiedGraphicsManager
+ * - Removed graphics.clear() calls - now handled by UnifiedGraphicsManager
  */
 
 export default class VoidExchangeSystem {
@@ -132,9 +137,8 @@ export default class VoidExchangeSystem {
     }
     
     createVisuals() {
-        // Market aura around player when trading
-        this.marketAura = this.scene.add.graphics();
-        this.marketAura.setDepth(45);
+        // Note: Market aura graphics removed - now rendered via UnifiedGraphicsManager on 'effects' layer
+        // Previously: this.marketAura = this.scene.add.graphics();
         
         // Trading floor particle emitter
         const particles = this.scene.add.particles(0, 0, 'bullet', {
@@ -306,10 +310,9 @@ export default class VoidExchangeSystem {
         closeBtn.on('pointerdown', () => this.toggleExchange());
         this.ui.container.add(closeBtn);
         
-        // Mini price chart
-        this.ui.chartGraphics = this.scene.add.graphics();
-        this.ui.chartGraphics.setDepth(101);
-        this.ui.container.add(this.ui.chartGraphics);
+        // Note: Mini price chart graphics removed - now rendered via UnifiedGraphicsManager
+        // Previously: this.ui.chartGraphics = this.scene.add.graphics();
+        this.ui.chartGraphics = null; // Placeholder for compatibility
     }
     
     updateMarketInventoryDisplay(baseY) {
@@ -457,9 +460,14 @@ export default class VoidExchangeSystem {
         }
     }
     
+    /**
+     * Draw price chart via UnifiedGraphicsManager (migrated from direct graphics)
+     * Previously used: this.ui.chartGraphics.clear() and direct graphics drawing
+     * Now registers draw commands with UnifiedGraphicsManager on 'effects' layer
+     */
     drawPriceChart() {
-        const graphics = this.ui.chartGraphics;
-        graphics.clear();
+        const graphicsManager = this.scene.graphicsManager;
+        if (!graphicsManager) return;
         
         const chartX = 50;
         const chartY = -160;
@@ -470,17 +478,16 @@ export default class VoidExchangeSystem {
         const history = this.priceHistory.SCORE;
         if (history.length < 2) return;
         
-        graphics.lineStyle(1, this.MARKET_COLOR, 0.6);
-        graphics.beginPath();
-        
+        // Build path points for the price line
+        const points = [];
         history.forEach((price, index) => {
             const x = chartX + (index / this.maxHistoryPoints) * width;
             const y = chartY + height - ((price - 0.5) / 1.5) * height;
-            if (index === 0) graphics.moveTo(x, y);
-            else graphics.lineTo(x, y);
+            points.push({ x, y });
         });
         
-        graphics.strokePath();
+        // Draw via UnifiedGraphicsManager on 'effects' layer
+        graphicsManager.drawPath('effects', points, this.MARKET_COLOR, 0.6, 1);
     }
     
     executeTrade(commodity, type) {
@@ -915,20 +922,23 @@ export default class VoidExchangeSystem {
         }
     }
     
+    /**
+     * Update market visuals (migrated to UnifiedGraphicsManager)
+     * Previously used: this.marketAura.clear() and direct graphics drawing
+     * Now registers draw commands with UnifiedGraphicsManager on 'effects' layer
+     */
     update(dt, player) {
-        // Update market aura visual
-        if (this.marketAura) {
-            this.marketAura.clear();
-            
+        // Update market aura visual via UnifiedGraphicsManager
+        const graphicsManager = this.scene.graphicsManager;
+        if (graphicsManager) {
             // Pulsing aura based on market volatility
             const pulse = 1 + Math.sin(this.scene.time.now / 500) * 0.1 * this.marketState.volatility;
             const radius = 60 * pulse;
             
-            // Draw concentric rings
+            // Draw concentric rings via UnifiedGraphicsManager
             for (let i = 0; i < 3; i++) {
                 const alpha = 0.1 - i * 0.03;
-                this.marketAura.lineStyle(1, this.MARKET_COLOR, alpha);
-                this.marketAura.strokeCircle(player.x, player.y, radius + i * 15);
+                graphicsManager.drawRing('effects', player.x, player.y, radius + i * 15, this.MARKET_COLOR, alpha, 1);
             }
         }
         

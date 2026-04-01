@@ -72,11 +72,11 @@ export default class MetaSystemOperator {
         this.maxPatches = 3; // Limited patching slots
         
         // Visuals
-        this.patchGraphics = null;
         this.nodeGraphics = [];
         this.flowLines = [];
         this.patchMenuContainer = null;
         this.patchHUD = null;
+        // Note: Graphics rendering is now handled by UnifiedGraphicsManager
         
         // Patch history (for learning)
         this.patchHistory = [];
@@ -93,9 +93,8 @@ export default class MetaSystemOperator {
     }
     
     createPatchGraphics() {
-        this.patchGraphics = this.scene.add.graphics();
-        this.patchGraphics.setDepth(90);
-        this.patchGraphics.setVisible(false);
+        // Note: Graphics rendering is now handled by UnifiedGraphicsManager on 'effects' layer
+        // Node containers remain as they use interactive GameObjects (circles, text)
         
         // Create node graphics for each system
         this.systemNodes.forEach((node, index) => {
@@ -219,9 +218,7 @@ export default class MetaSystemOperator {
         // Pause game time (not completely - systems still run)
         this.scene.physics.world.timeScale = 0.1;
         
-        // Show patch graphics
-        this.patchGraphics.setVisible(true);
-        this.patchGraphics.clear();
+        // Note: Graphics rendering is now handled by UnifiedGraphicsManager on 'effects' layer
         
         // Position nodes around player
         const centerX = this.scene.cameras.main.scrollX + this.scene.scale.width / 2;
@@ -261,8 +258,7 @@ export default class MetaSystemOperator {
         // Resume game time
         this.scene.physics.world.timeScale = 1;
         
-        // Hide patch graphics
-        this.patchGraphics.setVisible(false);
+        // Note: Graphics clearing is now handled by UnifiedGraphicsManager (no visibility toggle needed)
         
         // Hide nodes
         this.nodeGraphics.forEach(ng => {
@@ -780,7 +776,9 @@ export default class MetaSystemOperator {
     }
     
     renderActivePatches() {
-        this.patchGraphics.clear();
+        // Use UnifiedGraphicsManager on 'effects' layer
+        const manager = this.scene.graphicsManager;
+        if (!manager) return;
         
         this.activePatches.forEach((patch, key) => {
             const sourceIndex = this.systemNodes.indexOf(patch.source);
@@ -796,7 +794,7 @@ export default class MetaSystemOperator {
             const tx = targetPos.x;
             const ty = targetPos.y;
             
-            // Calculate curve control point
+            // Calculate curve control point (quadratic bezier)
             const midX = (sx + tx) / 2;
             const midY = (sy + ty) / 2;
             const perpX = -(ty - sy);
@@ -806,37 +804,44 @@ export default class MetaSystemOperator {
             const cx = midX + (perpX / len) * curve;
             const cy = midY + (perpY / len) * curve;
             
-            // Draw flowing line
+            // Convert quadratic bezier to points for drawPath
+            const points = this.calculateBezierPoints(sx, sy, cx, cy, tx, ty, 20);
             const color = patch.type.color;
             
-            // Outer glow
-            this.patchGraphics.lineStyle(6, color, 0.2);
-            this.patchGraphics.beginPath();
-            this.patchGraphics.moveTo(sx, sy);
-            this.patchGraphics.quadraticCurveTo(cx, cy, tx, ty);
-            this.patchGraphics.strokePath();
+            // Outer glow (thicker, lower alpha)
+            manager.drawPath('effects', points, color, 0.2, 6);
             
-            // Inner bright line
-            this.patchGraphics.lineStyle(2, color, 0.9);
-            this.patchGraphics.beginPath();
-            this.patchGraphics.moveTo(sx, sy);
-            this.patchGraphics.quadraticCurveTo(cx, cy, tx, ty);
-            this.patchGraphics.strokePath();
+            // Inner bright line (thinner, higher alpha)
+            manager.drawPath('effects', points, color, 0.9, 2);
             
             // Animated flow particles
             const time = this.scene.time.now / 1000;
             const flowPos = (time % 1);
             
-            // Bezier interpolation
+            // Bezier interpolation for particle position
             const t = flowPos;
             const mt = 1 - t;
             const px = mt * mt * sx + 2 * mt * t * cx + t * t * tx;
             const py = mt * mt * sy + 2 * mt * t * cy + t * t * ty;
             
             // Draw flowing particle
-            this.patchGraphics.fillStyle(color, 1);
-            this.patchGraphics.fillCircle(px, py, 4);
+            manager.drawCircle('effects', px, py, 4, color, 1);
         });
+    }
+    
+    /**
+     * Calculate points along a quadratic bezier curve for drawPath
+     */
+    calculateBezierPoints(sx, sy, cx, cy, ex, ey, segments = 20) {
+        const points = [];
+        for (let i = 0; i <= segments; i++) {
+            const t = i / segments;
+            const mt = 1 - t;
+            const x = mt * mt * sx + 2 * mt * t * cx + t * t * ex;
+            const y = mt * mt * sy + 2 * mt * t * cy + t * t * ey;
+            points.push({ x, y });
+        }
+        return points;
     }
     
     showPatchCreatedEffect(source, target, patch) {
@@ -1218,9 +1223,7 @@ export default class MetaSystemOperator {
         });
         this.activePatches.clear();
         
-        if (this.patchGraphics) {
-            this.patchGraphics.destroy();
-        }
+        // Note: Graphics objects are now managed by UnifiedGraphicsManager (no manual cleanup needed)
         
         this.nodeGraphics.forEach(ng => {
             ng.container.destroy();

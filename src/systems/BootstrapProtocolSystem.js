@@ -3,6 +3,11 @@ import Phaser from 'phaser';
 /**
  * Bootstrap Protocol — The Retrocausal Discovery Engine
  * 
+ * MIGRATED to UnifiedGraphicsManager (2026-04-01):
+ * - momentumArc rendering now uses UnifiedGraphicsManager on 'effects' layer
+ * - Removed echoGraphics graphics object (not needed, uses containers)
+ * - graphics.clear() calls removed for UnifiedGraphicsManager compatibility
+ * 
  * THE MISSING DIMENSION: Effects that manifest BEFORE their causes.
  * 
  * Core Mechanic: The game generates "Future Echoes" — ghostly fragments 
@@ -76,9 +81,8 @@ export default class BootstrapProtocolSystem {
     }
     
     createVisuals() {
-        // Main graphics object for echo rendering
-        this.echoGraphics = this.scene.add.graphics();
-        this.echoGraphics.setDepth(25);  // Above background, below active gameplay
+        // Note: Echo rendering uses container-based visuals (not graphics objects)
+        // Graphics rendering handled by UnifiedGraphicsManager for UI elements
         
         // Echo particle texture
         const canvas = document.createElement('canvas');
@@ -124,9 +128,9 @@ export default class BootstrapProtocolSystem {
         bgRing.setStrokeStyle(2, 0x444455);
         this.bootstrapIndicator.add(bgRing);
         
-        // Fill arc (paradox momentum)
-        this.momentumArc = this.scene.add.graphics();
-        this.bootstrapIndicator.add(this.momentumArc);
+        // Note: momentumArc now rendered via UnifiedGraphicsManager (see updateUI)
+        // Store position for UnifiedGraphicsManager rendering
+        this.indicatorPos = { x, y };
         
         // Center icon
         const icon = this.scene.add.text(0, 0, '⟲', {
@@ -763,18 +767,22 @@ export default class BootstrapProtocolSystem {
     }
     
     updateUI() {
-        // Update momentum arc
-        this.momentumArc.clear();
-        
-        if (this.paradoxMomentum > 0) {
-            const radius = 18;
-            const startAngle = -Math.PI / 2;
-            const endAngle = startAngle + (this.paradoxMomentum / 100) * Math.PI * 2;
+        // Update momentum arc via UnifiedGraphicsManager
+        const manager = this.scene.graphicsManager;
+        if (manager && this.indicatorPos) {
+            // Clear previous frame's arc for this system
+            manager.clearLayer('bootstrap_momentum');
             
-            this.momentumArc.lineStyle(3, this.BOOTSTRAP_COLOR, 0.9);
-            this.momentumArc.beginPath();
-            this.momentumArc.arc(0, 0, radius, startAngle, endAngle);
-            this.momentumArc.strokePath();
+            if (this.paradoxMomentum > 0) {
+                const radius = 18;
+                const startAngle = -Math.PI / 2;
+                const endAngle = startAngle + (this.paradoxMomentum / 100) * Math.PI * 2;
+                
+                // Draw arc using UnifiedGraphicsManager
+                manager.drawArc('effects', this.indicatorPos.x, this.indicatorPos.y, radius, startAngle, endAngle, {
+                    lineStyle: { width: 3, color: this.BOOTSTRAP_COLOR, alpha: 0.9 }
+                });
+            }
         }
         
         // Update level text
@@ -857,9 +865,10 @@ export default class BootstrapProtocolSystem {
         });
         this.futureEchoes = [];
         
-        // Cleanup graphics
-        if (this.echoGraphics && this.echoGraphics.active) {
-            this.echoGraphics.destroy();
+        // Note: echoGraphics removed - now rendered via UnifiedGraphicsManager
+        // Cleanup UnifiedGraphicsManager layers
+        if (this.scene.graphicsManager) {
+            this.scene.graphicsManager.clearLayer('bootstrap_momentum');
         }
         
         // Cleanup UI

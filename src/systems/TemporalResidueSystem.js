@@ -12,6 +12,10 @@ import Phaser from 'phaser';
  * This transforms your movement patterns into strategic resources. Players
  * will intentionally move in "useful" patterns knowing they'll weaponize.
  * Creates emergent phalanx formations and rewards predictive play.
+ * 
+ * MIGRATED to UnifiedGraphicsManager (April 2025):
+ * - Node and connection rendering now uses UnifiedGraphicsManager on 'effects' layer
+ * - Removed direct graphics.clear() calls for performance
  */
 
 export default class TemporalResidueSystem {
@@ -39,25 +43,11 @@ export default class TemporalResidueSystem {
         // Shooting sync
         this.lastPlayerShotTime = 0;
         
-        // Visuals
-        this.nodeGraphics = null;
-        this.connectionGraphics = null;
-        
-        this.init();
+        // Note: Graphics rendering handled by UnifiedGraphicsManager - no direct graphics objects needed
     }
     
     init() {
-        this.createVisuals();
-    }
-    
-    createVisuals() {
-        // Connection lines between nodes and player
-        this.connectionGraphics = this.scene.add.graphics();
-        this.connectionGraphics.setDepth(48);
-        
-        // Node container graphics
-        this.nodeGraphics = this.scene.add.graphics();
-        this.nodeGraphics.setDepth(49);
+        // Note: Visuals now rendered via UnifiedGraphicsManager on 'effects' layer
     }
     
     /**
@@ -238,15 +228,16 @@ export default class TemporalResidueSystem {
     }
     
     renderNodes(player) {
-        this.nodeGraphics.clear();
-        this.connectionGraphics.clear();
+        // Note: UnifiedGraphicsManager handles clear() once per frame - no direct clear() needed
+        
+        const manager = this.scene.graphicsManager;
+        if (!manager) return;
         
         const now = this.scene.time.now;
         
         this.nodes.forEach((node, index) => {
             const age = (now - node.spawnTime) / 1000;
             const lifeRatio = 1 - (age / this.residueLifespan);
-            const healthRatio = node.health / node.maxHealth;
             
             // Pulsing alpha
             const pulse = 0.6 + Math.sin(node.pulsePhase) * 0.2;
@@ -259,20 +250,17 @@ export default class TemporalResidueSystem {
             
             if (distToPlayer <= this.ORBIT_RADIUS + 50 && player.active) {
                 const lineAlpha = Math.max(0, 1 - distToPlayer / this.ORBIT_RADIUS) * 0.3;
-                this.connectionGraphics.lineStyle(1, this.NODE_COLOR, lineAlpha);
-                this.connectionGraphics.lineBetween(player.x, player.y, node.x, node.y);
+                manager.drawLine('effects', player.x, player.y, node.x, node.y, this.NODE_COLOR, lineAlpha, 1);
             }
             
             // Node core glow
             const glowRadius = 12 + Math.sin(node.pulsePhase) * 3;
             
-            // Outer glow
-            this.nodeGraphics.fillStyle(this.NODE_COLOR, alpha * 0.3);
-            this.nodeGraphics.fillCircle(node.x, node.y, glowRadius * 1.5);
+            // Outer glow (filled circle with low alpha)
+            manager.drawCircle('effects', node.x, node.y, glowRadius * 1.5, this.NODE_COLOR, alpha * 0.3, true);
             
             // Core
-            this.nodeGraphics.fillStyle(this.NODE_CORE_COLOR, alpha);
-            this.nodeGraphics.fillCircle(node.x, node.y, 8);
+            manager.drawCircle('effects', node.x, node.y, 8, this.NODE_CORE_COLOR, alpha, true);
             
             // Health indicator (small dots around node)
             const dotRadius = 14;
@@ -282,32 +270,27 @@ export default class TemporalResidueSystem {
                 const dotY = node.y + Math.sin(dotAngle) * dotRadius;
                 
                 if (i < node.health) {
-                    this.nodeGraphics.fillStyle(this.NODE_CORE_COLOR, alpha);
-                    this.nodeGraphics.fillCircle(dotX, dotY, 2);
+                    manager.drawCircle('effects', dotX, dotY, 2, this.NODE_CORE_COLOR, alpha, true);
                 } else {
-                    this.nodeGraphics.fillStyle(0x333344, alpha * 0.5);
-                    this.nodeGraphics.fillCircle(dotX, dotY, 2);
+                    manager.drawCircle('effects', dotX, dotY, 2, 0x333344, alpha * 0.5, true);
                 }
             }
             
             // Damage flash
             if (node.recentDamage) {
-                this.nodeGraphics.fillStyle(0xffffff, 0.6);
-                this.nodeGraphics.fillCircle(node.x, node.y, 10);
+                manager.drawCircle('effects', node.x, node.y, 10, 0xffffff, 0.6, true);
             }
             
-            // Orbit indicator when active
+            // Orbit indicator when active (ring)
             if (node.orbiting) {
-                this.nodeGraphics.lineStyle(1, this.NODE_COLOR, alpha * 0.5);
-                this.nodeGraphics.strokeCircle(node.x, node.y, 16);
+                manager.drawRing('effects', node.x, node.y, 16, this.NODE_COLOR, alpha * 0.5, 1);
             }
         });
         
         // Draw count indicator near player
         if (this.nodes.length > 0 && player.active) {
             const offsetY = -50;
-            this.nodeGraphics.fillStyle(this.NODE_COLOR, 0.8);
-            this.nodeGraphics.fillCircle(player.x - 20, player.y + offsetY, 4);
+            manager.drawCircle('effects', player.x - 20, player.y + offsetY, 4, this.NODE_COLOR, 0.8, true);
             
             // Node count text
             this.scene.residueCountText = this.scene.residueCountText || 
@@ -537,8 +520,7 @@ export default class TemporalResidueSystem {
     }
     
     destroy() {
-        this.nodeGraphics.destroy();
-        this.connectionGraphics.destroy();
+        // Note: UnifiedGraphicsManager handles cleanup of its own graphics objects
         
         if (this.scene.residueCountText) {
             this.scene.residueCountText.destroy();

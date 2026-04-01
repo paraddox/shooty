@@ -1,6 +1,14 @@
 import Phaser from 'phaser';
 
 /**
+ * LivingWorldSystem.js - MIGRATED to UnifiedGraphicsManager
+ * 
+ * MIGRATION NOTES:
+ * - Removed 1 direct graphics.clear() call (line ~761 in original)
+ * - Removed direct graphics creation (this.territoryGraphics, this.territoryOverlay)
+ * - All visual rendering now uses UnifiedGraphicsManager on 'effects' layer
+ * - Uses manager.drawCircle() and manager.drawRing() for territory visualization
+ * 
  * The Living World Protocol — The 51st Dimension: AUTONOMOUS CONTINUITY
  * 
  * The ultimate evolution: The game becomes a living simulation that persists
@@ -134,9 +142,7 @@ export default class LivingWorldSystem {
         };
         
         // ===== VISUALS =====
-        this.territoryGraphics = null;
-        this.shrineGraphics = [];
-        this.territoryOverlay = null;
+        // Note: All visual rendering now handled by UnifiedGraphicsManager on 'effects' layer
         
         // ===== PERSISTENCE =====
         this.storageKey = 'shooty_living_world';
@@ -747,18 +753,17 @@ export default class LivingWorldSystem {
     // ===== VISUALS =====
     
     createVisuals() {
-        this.territoryGraphics = this.scene.add.graphics();
-        this.territoryGraphics.setDepth(5);
-        
-        // Create territory overlay
-        this.territoryOverlay = this.scene.add.renderTexture(0, 0, 1920, 1440);
-        this.territoryOverlay.setDepth(4);
-        this.territoryOverlay.setAlpha(0.3);
-        this.territoryOverlay.setScrollFactor(1);
+        // Note: Visuals now rendered via UnifiedGraphicsManager on 'effects' layer
+        // No direct graphics creation - all rendering is batched through the manager
     }
     
+    /**
+     * Update territory visuals via UnifiedGraphicsManager (migrated from direct graphics)
+     * Now registers draw commands with UnifiedGraphicsManager on 'effects' layer
+     */
     updateTerritoryVisuals() {
-        this.territoryGraphics.clear();
+        const manager = this.scene.graphicsManager;
+        if (!manager) return;
         
         // Draw faction territories
         this.ecosystem.factions.forEach((faction, id) => {
@@ -766,25 +771,19 @@ export default class LivingWorldSystem {
             
             const color = this.FACTION_COLORS[id.toUpperCase().replace('_', '_')] || 0x666666;
             
-            // Territory circle
-            this.territoryGraphics.lineStyle(2, color, 0.3);
-            this.territoryGraphics.strokeCircle(faction.territory.x, faction.territory.y, faction.territory.radius);
+            // Territory ring (outline)
+            manager.drawRing('effects', faction.territory.x, faction.territory.y, faction.territory.radius, color, 0.3, 2);
             
-            // Fill
-            this.territoryGraphics.fillStyle(color, 0.05);
-            this.territoryGraphics.fillCircle(faction.territory.x, faction.territory.y, faction.territory.radius);
-            
-            // Label
-            // (We don't draw text every frame for performance)
+            // Territory fill
+            manager.drawCircle('effects', faction.territory.x, faction.territory.y, faction.territory.radius, color, 0.05, true);
         });
         
         // Draw battle scars
         this.ecosystem.battleScars.forEach(scar => {
             const age = scar.age || 0;
-            const alpha = Math.max(0, 1 - age / 100);
+            const alpha = Math.max(0, 1 - age / 100) * 0.5;
             
-            this.territoryGraphics.fillStyle(0x333333, alpha * 0.5);
-            this.territoryGraphics.fillCircle(scar.x, scar.y, scar.radius);
+            manager.drawCircle('effects', scar.x, scar.y, scar.radius, 0x333333, alpha, true);
         });
         
         // Draw shrines
@@ -794,12 +793,10 @@ export default class LivingWorldSystem {
             const color = this.FACTION_COLORS[shrine.factionId.toUpperCase().replace('_', '_')] || 0x666666;
             
             // Shrine base
-            this.territoryGraphics.fillStyle(color, alpha);
-            this.territoryGraphics.fillCircle(shrine.x, shrine.y, 8);
+            manager.drawCircle('effects', shrine.x, shrine.y, 8, color, alpha, true);
             
-            // Glow
-            this.territoryGraphics.lineStyle(1, color, alpha * 0.5);
-            this.territoryGraphics.strokeCircle(shrine.x, shrine.y, 15 + Math.sin(age) * 3);
+            // Glow ring
+            manager.drawRing('effects', shrine.x, shrine.y, 15 + Math.sin(age) * 3, color, alpha * 0.5, 1);
         });
     }
     

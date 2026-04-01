@@ -71,19 +71,12 @@ export default class SynchronicityCascadeSystem {
     }
     
     createVisuals() {
-        // Main synchronicity glow overlay
-        this.synchroGlow = this.scene.add.graphics();
-        this.synchroGlow.setScrollFactor(0);
-        this.synchroGlow.setDepth(90);
-        this.synchroGlow.setVisible(false);
+        // Note: Graphics now rendered via UnifiedGraphicsManager on 'effects' layer
+        // this.synchroGlow, this.chargeBar, and aura ring graphics removed - using graphicsManager instead
         
-        // Prismatic aura rings (5 rings for 5 levels)
+        // Prismatic aura rings (5 rings for 5 levels) - data only, no graphics objects
         for (let i = 0; i < 5; i++) {
-            const ring = this.scene.add.graphics();
-            ring.setDepth(49 + i);
-            ring.setVisible(false);
             this.auraRings.push({
-                graphics: ring,
                 radius: 40 + i * 15,
                 speed: 0.5 + i * 0.3,
                 phase: i * Math.PI / 3,
@@ -102,11 +95,6 @@ export default class SynchronicityCascadeSystem {
         this.synchroText.setScrollFactor(0);
         this.synchroText.setDepth(200);
         this.synchroText.setVisible(false);
-        
-        // Charge bar (shown when building toward synchronicity)
-        this.chargeBar = this.scene.add.graphics();
-        this.chargeBar.setScrollFactor(0);
-        this.chargeBar.setDepth(100);
         
         // Active system indicators
         this.systemIndicators = [];
@@ -265,7 +253,6 @@ export default class SynchronicityCascadeSystem {
         // Enable all aura rings up to current level
         this.auraRings.forEach((ring, i) => {
             ring.active = i < this.synchronicityLevel;
-            ring.graphics.setVisible(ring.active);
         });
         
         // Start particle stream
@@ -307,7 +294,6 @@ export default class SynchronicityCascadeSystem {
         // Enable more rings
         this.auraRings.forEach((ring, i) => {
             ring.active = i < this.synchronicityLevel;
-            ring.graphics.setVisible(ring.active);
         });
         
         // Announce level up
@@ -359,18 +345,15 @@ export default class SynchronicityCascadeSystem {
         // Reset time
         this.scene.physics.world.timeScale = 1.0;
         
-        // Hide auras
+        // Hide auras - graphics managed by UnifiedGraphicsManager
         this.auraRings.forEach(ring => {
             ring.active = false;
-            ring.graphics.setVisible(false);
-            ring.graphics.clear();
         });
         
         // Stop particles
         this.particleStream.stop();
         
         // Hide UI
-        this.synchroGlow.setVisible(false);
         this.synchroText.setVisible(false);
         
         // Clear system indicators
@@ -648,10 +631,11 @@ export default class SynchronicityCascadeSystem {
     }
     
     /**
-     * Render the charge bar
+     * Render the charge bar via UnifiedGraphicsManager
      */
     renderChargeBar() {
-        this.chargeBar.clear();
+        const manager = this.scene.graphicsManager;
+        if (!manager) return;
         
         const width = 200;
         const height = 6;
@@ -659,23 +643,22 @@ export default class SynchronicityCascadeSystem {
         const y = 60;
         
         // Background
-        this.chargeBar.fillStyle(0x333333, 0.5);
-        this.chargeBar.fillRect(x, y, width, height);
+        manager.drawRect('effects', x, y, width, height, 0x333333, 0.5);
         
         // Fill
         const fillWidth = (this.synchronicityCharge / 100) * width;
         const color = this.synchronicityCharge >= 100 ? 0xffd700 : 0x00f0ff;
-        this.chargeBar.fillStyle(color, 0.8);
-        this.chargeBar.fillRect(x, y, fillWidth, height);
+        manager.drawRect('effects', x, y, fillWidth, height, color, 0.8);
     }
     
     /**
-     * Render the synchronicity glow overlay
+     * Render the synchronicity glow overlay via UnifiedGraphicsManager
      */
     renderSynchroGlow(now) {
-        this.synchroGlow.clear();
-        
         if (!this.synchronicityActive) return;
+        
+        const manager = this.scene.graphicsManager;
+        if (!manager) return;
         
         const prismaticColor = this.getPrismaticColor(now);
         const alpha = 0.1 + (this.synchronicityLevel * 0.03);
@@ -684,28 +667,25 @@ export default class SynchronicityCascadeSystem {
         const w = this.scene.scale.width;
         const h = this.scene.scale.height;
         
-        this.synchroGlow.fillStyle(prismaticColor, alpha);
-        
         // Top glow
-        this.synchroGlow.fillRect(0, 0, w, 20);
+        manager.drawRect('effects', 0, 0, w, 20, prismaticColor, alpha);
         // Bottom glow
-        this.synchroGlow.fillRect(0, h - 20, w, 20);
+        manager.drawRect('effects', 0, h - 20, w, 20, prismaticColor, alpha);
         // Left glow
-        this.synchroGlow.fillRect(0, 0, 20, h);
+        manager.drawRect('effects', 0, 0, 20, h, prismaticColor, alpha);
         // Right glow
-        this.synchroGlow.fillRect(w - 20, 0, 20, h);
-        
-        this.synchroGlow.setVisible(true);
+        manager.drawRect('effects', w - 20, 0, 20, h, prismaticColor, alpha);
     }
     
     /**
-     * Render aura rings around player
+     * Render aura rings around player via UnifiedGraphicsManager
      */
     renderAuraRings(now) {
+        const manager = this.scene.graphicsManager;
+        if (!manager) return;
+        
         this.auraRings.forEach((ring, i) => {
             if (!ring.active) return;
-            
-            ring.graphics.clear();
             
             const prismaticColor = this.getPrismaticColor(now + i * 0.2);
             const alpha = 0.3 + Math.sin(now * 3 + ring.phase) * 0.2;
@@ -724,11 +704,7 @@ export default class SynchronicityCascadeSystem {
                 const x2 = this.scene.player.x + Math.cos(angle2) * radius;
                 const y2 = this.scene.player.y + Math.sin(angle2) * radius;
                 
-                ring.graphics.lineStyle(2, prismaticColor, alpha);
-                ring.graphics.beginPath();
-                ring.graphics.moveTo(x1, y1);
-                ring.graphics.lineTo(x2, y2);
-                ring.graphics.strokePath();
+                manager.drawLine('effects', x1, y1, x2, y2, prismaticColor, alpha, 2);
             }
         });
     }
@@ -778,12 +754,9 @@ export default class SynchronicityCascadeSystem {
     destroy() {
         this.forceEnd();
         
-        this.synchroGlow.destroy();
         this.synchroText.destroy();
-        this.chargeBar.destroy();
         this.particleStream.destroy();
         
-        this.auraRings.forEach(ring => ring.graphics.destroy());
         this.systemIndicators.forEach(ind => ind.sprite.destroy());
     }
 }

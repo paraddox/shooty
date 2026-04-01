@@ -98,13 +98,9 @@ export default class AthenaeumProtocolSystem {
     }
     
     createVisuals() {
-        // Main graphics for region overlays
-        this.regionGraphics = this.scene.add.graphics();
-        this.regionGraphics.setDepth(5); // Below player, above floor
-        
-        // Connection lines between related regions
-        this.connectionLines = this.scene.add.graphics();
-        this.connectionLines.setDepth(4);
+        // Graphics are now rendered via UnifiedGraphicsManager on 'effects' layer
+        // No direct graphics objects needed - reduces GPU clear() calls
+        this.useUnifiedGraphics = !!this.scene.graphicsManager;
     }
     
     createUI() {
@@ -510,7 +506,10 @@ export default class AthenaeumProtocolSystem {
     }
     
     renderRegions() {
-        this.regionGraphics.clear();
+        // Use UnifiedGraphicsManager on 'effects' layer
+        if (!this.useUnifiedGraphics || !this.scene.graphicsManager) return;
+        
+        const gm = this.scene.graphicsManager;
         
         this.atlas.forEach(region => {
             if (region.intensity < 0.15 && !region.discovered) return;
@@ -519,37 +518,80 @@ export default class AthenaeumProtocolSystem {
             const alpha = region.discovered ? 0.3 + region.intensity * 0.4 : 0.1;
             const size = this.REGION_SIZE * 0.9;
             
-            // Draw region cell
-            this.regionGraphics.fillStyle(typeInfo.color, alpha * 0.3);
-            this.regionGraphics.fillRect(
+            // Draw region cell (filled rect)
+            gm.drawRect(
+                'effects',
                 region.x - size / 2,
                 region.y - size / 2,
                 size,
-                size
+                size,
+                typeInfo.color,
+                alpha * 0.3
             );
             
-            // Draw border for discovered regions
+            // Draw border for discovered regions (stroked rect)
             if (region.discovered) {
                 const borderAlpha = 0.2 + region.intensity * 0.5;
-                this.regionGraphics.lineStyle(2, typeInfo.glowColor, borderAlpha);
-                this.regionGraphics.strokeRect(
+                // Note: UnifiedGraphicsManager doesn't have direct strokeRect with custom line width
+                // We use a filled rect approach for border (thinner inner rect)
+                const borderWidth = 2;
+                gm.drawRect(
+                    'effects',
                     region.x - size / 2,
                     region.y - size / 2,
                     size,
-                    size
+                    borderWidth,
+                    typeInfo.glowColor,
+                    borderAlpha
+                );
+                gm.drawRect(
+                    'effects',
+                    region.x - size / 2,
+                    region.y + size / 2 - borderWidth,
+                    size,
+                    borderWidth,
+                    typeInfo.glowColor,
+                    borderAlpha
+                );
+                gm.drawRect(
+                    'effects',
+                    region.x - size / 2,
+                    region.y - size / 2,
+                    borderWidth,
+                    size,
+                    typeInfo.glowColor,
+                    borderAlpha
+                );
+                gm.drawRect(
+                    'effects',
+                    region.x + size / 2 - borderWidth,
+                    region.y - size / 2,
+                    borderWidth,
+                    size,
+                    typeInfo.glowColor,
+                    borderAlpha
                 );
                 
-                // Draw symbol in center
+                // Draw symbol in center (circle)
                 if (region.intensity > 0.5) {
-                    this.regionGraphics.fillStyle(typeInfo.color, alpha);
-                    this.regionGraphics.fillCircle(region.x, region.y, 8 + region.intensity * 12);
+                    gm.drawCircle(
+                        'effects',
+                        region.x,
+                        region.y,
+                        8 + region.intensity * 12,
+                        typeInfo.color,
+                        alpha
+                    );
                 }
             }
         });
     }
     
     renderConnections() {
-        this.connectionLines.clear();
+        // Use UnifiedGraphicsManager on 'effects' layer
+        if (!this.useUnifiedGraphics || !this.scene.graphicsManager) return;
+        
+        const gm = this.scene.graphicsManager;
         
         // Connect adjacent regions of the same type
         const connected = new Set();
@@ -575,13 +617,19 @@ export default class AthenaeumProtocolSystem {
                 if (region.type === neighbor.type) {
                     const typeInfo = this.REGION_TYPES[region.type];
                     const avgIntensity = (region.intensity + neighbor.intensity) / 2;
+                    const lineWidth = 2 + avgIntensity * 4;
+                    const alpha = 0.3 + avgIntensity * 0.4;
                     
-                    this.connectionLines.lineStyle(
-                        2 + avgIntensity * 4,
+                    gm.drawLine(
+                        'effects',
+                        region.x,
+                        region.y,
+                        neighbor.x,
+                        neighbor.y,
                         typeInfo.color,
-                        0.3 + avgIntensity * 0.4
+                        alpha,
+                        lineWidth
                     );
-                    this.connectionLines.lineBetween(region.x, region.y, neighbor.x, neighbor.y);
                     
                     connected.add(connKey);
                 }
@@ -649,8 +697,8 @@ export default class AthenaeumProtocolSystem {
     }
     
     destroy() {
-        if (this.regionGraphics) this.regionGraphics.destroy();
-        if (this.connectionLines) this.connectionLines.destroy();
+        // Note: Graphics objects are now managed by UnifiedGraphicsManager
+        // Only destroy UI elements created by this system
         if (this.regionIndicator) this.regionIndicator.destroy();
     }
 }

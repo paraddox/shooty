@@ -175,7 +175,7 @@ export default class SyntropyEngineSystem {
         this.echoAmpDuration = 12000;
         
         // ===== VISUAL EFFECTS =====
-        this.syntropyGlow = null;
+        // this.syntropyGlow - now rendered via UnifiedGraphicsManager 'effects' layer
         this.cascadeVignette = null;
         this.harmonicParticles = null;
         
@@ -221,8 +221,8 @@ export default class SyntropyEngineSystem {
     
     createSyntropyGlow() {
         // Player glow that intensifies with syntropy
-        this.syntropyGlow = this.scene.add.graphics();
-        this.syntropyGlow.setDepth(-1);
+        // NOTE: Now rendered via UnifiedGraphicsManager 'effects' layer
+        // No direct graphics object needed - commands registered in updateSyntropyGlow()
     }
     
     createHarmonicParticles() {
@@ -1021,10 +1021,6 @@ export default class SyntropyEngineSystem {
     }
     
     updateSyntropyGlow() {
-        if (!this.syntropyGlow) return;
-        
-        this.syntropyGlow.clear();
-        
         // Glow intensity based on syntropy level
         const intensity = Math.min(this.syntropy / 1000, 1);
         if (intensity > 0.1) {
@@ -1040,8 +1036,11 @@ export default class SyntropyEngineSystem {
             );
             const hex = Phaser.Display.Color.GetColor(color.r, color.g, color.b);
             
-            this.syntropyGlow.fillStyle(hex, alpha);
-            this.syntropyGlow.fillCircle(this.scene.player.x, this.scene.player.y, radius);
+            // Register with UnifiedGraphicsManager 'effects' layer
+            const gm = this.scene.graphicsManager;
+            if (gm) {
+                gm.drawCircle('effects', this.scene.player.x, this.scene.player.y, radius, hex, alpha);
+            }
         }
     }
     
