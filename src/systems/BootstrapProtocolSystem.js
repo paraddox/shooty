@@ -765,6 +765,9 @@ export default class BootstrapProtocolSystem {
     }
     
     updateUI() {
+        // Guard: panel elements may not be initialized yet
+        if (!this.levelText) return;
+        
         // Update momentum arc via UnifiedGraphicsManager
         // Note: UnifiedGraphicsManager clears layers automatically each frame
         const manager = this.scene.graphicsManager;
