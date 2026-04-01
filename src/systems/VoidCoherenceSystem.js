@@ -344,6 +344,11 @@ export default class VoidCoherenceSystem {
     }
     
     updateCoherenceUI() {
+        // Guard: panel elements may not be initialized yet
+        if (!this.coherenceFill || !this.coherenceText || !this.structureIndicator) {
+            return;
+        }
+        
         const percent = this.coherenceLevel / this.maxCoherence;
         this.coherenceFill.width = 200 * percent;
         
