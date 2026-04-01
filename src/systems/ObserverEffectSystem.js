@@ -752,6 +752,9 @@ export default class ObserverEffectSystem {
     }
     
     updateAnalysisDisplay() {
+        // Guard: panel elements may not be initialized yet
+        if (!this.observerIcon) return;
+        
         // Subtle pulse on observer icon when observing
         this.scene.tweens.add({
             targets: this.observerIcon,
