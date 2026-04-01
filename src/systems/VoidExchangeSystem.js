@@ -866,6 +866,9 @@ export default class VoidExchangeSystem {
     }
     
     showFloatingText(text) {
+        // Don't show text while paused
+        if (this.scene.pauseSystem?.paused) return;
+        
         const player = this.scene.player;
         const floating = this.scene.add.text(player.x, player.y - 40, text, {
             fontFamily: 'monospace',
@@ -885,6 +888,9 @@ export default class VoidExchangeSystem {
     }
     
     createTradeEffect(type) {
+        // Don't create effects while paused (except UI own effects)
+        if (this.scene.pauseSystem?.paused) return;
+        
         const player = this.scene.player;
         const color = type === 'BUY' ? 0x00ff00 : 0xff4444;
         
