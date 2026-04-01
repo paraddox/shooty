@@ -796,6 +796,11 @@ export default class SymbioticPredictionSystem {
     updateSymbiosisDepth(amount) {
         this.aiState.symbiosisDepth = Math.min(100, this.aiState.symbiosisDepth + amount);
         
+        // Guard: panel elements may not be initialized yet
+        if (!this.depthText || !this.harmonyBar || !this.chaosBar || !this.statusText || !this.predictionField) {
+            return;
+        }
+        
         // Update visual indicator
         this.depthText.setText(`${Math.floor(this.aiState.symbiosisDepth)}%`);
         
