@@ -2775,8 +2775,10 @@ export default class GameScene extends Phaser.Scene {
             onComplete: () => respawnRing.destroy()
         });
         
-        // Reset player velocity
-        player.body.setVelocity(0, 0);
+        // Reset player velocity (safely)
+        if (player.body?.setVelocity) {
+            player.body.setVelocity(0, 0);
+        }
         
         // Clear any damage sources temporarily (1 second invulnerability)
         player.isInvulnerable = true;
