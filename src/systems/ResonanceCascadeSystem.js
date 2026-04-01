@@ -57,49 +57,49 @@ export default class ResonanceCascadeSystem {
     }
     
     createVisuals() {
-        // Chain sequence display (center-top) - registered with HUDLayoutManager
-        const pos = this.scene.hudLayout.getSlotPosition('RESONANCE_CASCADE', 'TOP_CENTER');
-        this.chainContainer = this.scene.add.container(pos.x, pos.y);
-        this.chainContainer.setScrollFactor(0);
-        this.chainContainer.setDepth(100);
-        this.chainContainer.setVisible(false);
-        this.scene.hudLayout.registerSlot('RESONANCE_CASCADE', this.chainContainer, 'TOP_CENTER');
-        
-        // Multiplier text (large, central)
-        this.multiplierText = this.scene.add.text(0, 0, '', {
-            fontFamily: 'monospace',
-            fontSize: '36px',
-            fontStyle: 'bold',
-            fill: '#ffffff'
-        });
-        this.multiplierText.setOrigin(0.5);
-        this.multiplierText.setScrollFactor(0);
-        this.multiplierText.setDepth(101);
-        this.multiplierText.setVisible(false);
-        
-        // Sequence dot pool
-        for (let i = 0; i < 6; i++) {
-            const dot = this.scene.add.circle(0, 0, 8, 0xffffff);
-            dot.setAlpha(0);
-            dot.setDepth(102);
-            dot.setScrollFactor(0);
-            this.sequenceDots.push({
-                sprite: dot,
-                active: false,
-                system: null
+        // Chain sequence display (center-top) - registered with HUDPanelManager
+        this.scene.hudPanels.registerSlot('RESONANCE_CASCADE', (container, width) => {
+            this.chainContainer = container;
+            this.chainContainer.setDepth(100);
+            this.chainContainer.setVisible(false);
+            
+            // Multiplier text (large, central)
+            this.multiplierText = this.scene.add.text(0, 0, '', {
+                fontFamily: 'monospace',
+                fontSize: '36px',
+                fontStyle: 'bold',
+                fill: '#ffffff'
             });
-        }
-        
-        // Cascade break text
-        this.cascadeText = this.scene.add.text(0, 0, '', {
-            fontFamily: 'monospace',
-            fontSize: '48px',
-            fontStyle: 'bold',
-            fill: '#ff00ff'
-        });
-        this.cascadeText.setOrigin(0.5);
-        this.cascadeText.setDepth(200);
-        this.cascadeText.setVisible(false);
+            this.multiplierText.setOrigin(0.5);
+            this.multiplierText.setDepth(101);
+            this.multiplierText.setVisible(false);
+            container.add(this.multiplierText);
+            
+            // Sequence dot pool
+            for (let i = 0; i < 6; i++) {
+                const dot = this.scene.add.circle(0, 0, 8, 0xffffff);
+                dot.setAlpha(0);
+                dot.setDepth(102);
+                this.sequenceDots.push({
+                    sprite: dot,
+                    active: false,
+                    system: null
+                });
+                container.add(dot);
+            }
+            
+            // Cascade break text
+            this.cascadeText = this.scene.add.text(0, 0, '', {
+                fontFamily: 'monospace',
+                fontSize: '48px',
+                fontStyle: 'bold',
+                fill: '#ff00ff'
+            });
+            this.cascadeText.setOrigin(0.5);
+            this.cascadeText.setDepth(200);
+            this.cascadeText.setVisible(false);
+            container.add(this.cascadeText);
+        }, 'TOP_CENTER');
     }
     
     /**

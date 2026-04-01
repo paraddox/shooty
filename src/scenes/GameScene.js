@@ -267,6 +267,9 @@ export default class GameScene extends Phaser.Scene {
         // Initialize Panel-based HUD Manager for clean organized HUD
         this.hudPanels = new HUDPanelManager(this);
         
+        // Backward compatibility: expose as hudLayout for existing systems
+        this.hudLayout = this.hudPanels;
+        
         // World bounds (game arena)
         const worldWidth = 1920;
         const worldHeight = 1440;

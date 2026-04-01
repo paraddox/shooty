@@ -28,9 +28,12 @@ export default class HUDPanelManager {
                     { id: 'SCORE', label: 'SCORE', type: 'value', height: 25 },
                     { id: 'WAVE', label: 'WAVE', type: 'text', height: 20 },
                     { id: 'ENEMY_COUNT', label: 'HOSTILES', type: 'text', height: 18 },
+                    { id: 'NEAR_MISS', label: 'STREAK', type: 'text', height: 18 },
                     { id: 'SYNTROPY', label: 'SYNTROPY', type: 'value', height: 18 },
                     { id: 'OMNI_WEAPON', label: 'WEAPON', type: 'compact', height: 15 },
                     { id: 'CONVERGENCE', label: 'CONVERGENCE', type: 'text', height: 18 },
+                    { id: 'SYNTHESIS', label: 'SYNTHESIS', type: 'text', height: 18 },
+                    { id: 'PATTERN', label: 'PATTERNS', type: 'text', height: 18 },
                     { id: 'VOID_COHERENCE', label: 'COHERENCE', type: 'bar', height: 15 },
                     { id: 'CHRONO_LOOP', label: 'TIME LOOP', type: 'bar', height: 15 },
                     { id: 'CAUSAL_LINK', label: 'CAUSALITY', type: 'compact', height: 15 },
@@ -387,5 +390,74 @@ export default class HUDPanelManager {
     colorToHex(color) {
         const hex = color.toString(16).padStart(6, '0');
         return '#' + hex;
+    }
+    
+    // ============================================================================
+    // BACKWARD COMPATIBILITY with old HUDLayoutManager API
+    // These methods allow existing systems to work without immediate rewrites
+    // ============================================================================
+    
+    /**
+     * Compatibility method: Get slot position (maps to panel slot position)
+     * @param {string} slotId - Slot identifier
+     * @param {string} region - Panel region (TOP_LEFT, TOP_RIGHT, TOP_CENTER, BOTTOM_RIGHT)
+     * @returns {Object} Position {x, y}
+     * @deprecated Use registerSlot() instead for new code
+     */
+    getSlotPosition(slotId, region = 'TOP_LEFT') {
+        // Map old slot names to panel regions
+        const slot = this.getSlotPositionInternal(slotId, region);
+        if (slot) return slot;
+        
+        // Fallback: return panel content position
+        const panel = this.panels.get(region);
+        if (!panel) return { x: 0, y: 0 };
+        
+        return { x: panel.container.x + this.panelPadding, y: panel.container.y + 35 };
+    }
+    
+    getSlotPositionInternal(slotId, region) {
+        const panel = this.panels.get(region);
+        if (!panel) return null;
+        
+        // Check if slot exists
+        const slotConfig = panel.config.slots.find(s => s.id === slotId);
+        if (!slotConfig) return null;
+        
+        // Calculate position based on slot index
+        let y = 35; // Start below title
+        for (const s of panel.config.slots) {
+            if (s.id === slotId) break;
+            y += s.height + 3;
+        }
+        
+        return {
+            x: panel.container.x + this.panelPadding,
+            y: panel.container.y + y
+        };
+    }
+    
+    /**
+     * Compatibility method: Register a slot with old API signature
+     * Creates a wrapper that works with the panel system
+     * @param {string} slotId - Slot identifier
+     * @param {Phaser.GameObjects.GameObject} element - Element to register
+     * @param {string} region - Panel region
+     * @deprecated Use registerSlot() with callback for new code
+     */
+    registerSlot(slotId, element, region = 'TOP_LEFT') {
+        const pos = this.getSlotPositionInternal(slotId, region);
+        if (pos && element && element.setPosition) {
+            element.setPosition(pos.x, pos.y);
+        }
+        
+        // Store in slot map for tracking
+        const panel = this.panels.get(region);
+        if (panel) {
+            panel.slotMap.set(slotId, {
+                container: element,
+                external: true  // Mark as externally managed
+            });
+        }
     }
 }
