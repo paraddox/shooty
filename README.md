@@ -29,6 +29,7 @@ npm run dev
 | Y | Syntropy Radial (reshape reality) |
 | M | Mnemosyne Trance (enter shard portals) |
 | F | Dimensional Collapse (when all systems ready) |
+| ENTER | Formalize Architect Discovery (when prompted) |
 | Right Click | Paradox Engine (predict future) |
 
 ## Visual Design
@@ -521,6 +522,119 @@ The Bootstrap Protocol fills this gap. Where Oracle warns you about external eve
 
 ---
 
+## 🏗️ THE ARCHITECT SYSTEM — Player Authorship 🏗️
+
+**The ultimate evolution: Players become game designers.**
+
+The Architect System is the 32nd temporal mechanic and represents a paradigm shift in game design. Instead of developers creating all content, **players invent new temporal mechanics** by naturally combining existing systems in unprecedented ways. The game detects these innovations, formalizes them into new named mechanics, and shares them with the community.
+
+### How It Works
+
+**1. DISCOVERY (Detection)**
+- As you play, the Architect monitors system interactions
+- When you combine 2+ systems in a novel way, it calculates "novelty score"
+- Novelty > 0.85 triggers a Discovery Event
+
+**2. FORMALIZATION (Creation)**
+- The game generates a new mechanic from your combination
+- Creates visual signature, assigns procedural name
+- You can accept the name or suggest your own
+
+**3. COMMONS (Sharing)**
+- Your discovery enters the Temporal Commons
+- Other players can encounter and use your invention
+- Your name appears as credit: "ECHO FRACTURE by PlayerName"
+
+### Example Player Discoveries
+
+| Discovery | Combination | Effect |
+|-----------|-------------|--------|
+| **ECHO FRACTURE** | Echo Storm + Fracture | Absorb echoes during fracture for burst damage on resolve |
+| **QUANTUM RESIDUE** | Quantum + Residue | Death echoes carry temporal residue nodes |
+| **PROPHETIC PARADOX** | Bootstrap + Paradox | Fulfilling prophecy auto-triggers paradox projection |
+
+### The Architect Ranks
+
+| Rank | Discoveries | Privileges |
+|------|-------------|------------|
+| **NOVICE** | 1+ | Basic naming, commons access |
+| **JOURNEYMAN** | 5+ | Custom descriptions, tuning hints |
+| **MASTER** | 10+ | Visual design input, priority listing |
+| **GRAND ARCHITECT** | 20+ | Propose new base system categories |
+
+### The Temporal Commons
+
+Browse all player-discovered mechanics:
+- Sort by: popularity, novelty, architect, systems involved
+- Equip up to 3 Discovered Mechanics per run
+- Community "Elevation" voting for exceptional discoveries
+
+### Why This Is Revolutionary
+
+1. **Genuine player authorship** — Not modding, not suggestions, but genuine creation
+2. **Emergent design** — The community collectively expands the game beyond developer imagination
+3. **Perpetual novelty** — As long as players find new combinations, the game grows
+4. **Creative partnership** — Developers built the first 31 systems; players build everything beyond
+5. **No other game does this** — True player-driven mechanic invention, formalized and shared
+
+### The Missing Dimension: AUTHORSHIP
+
+All previous 31 systems covered cognitive dimensions of PLAY. The Architect System adds the dimension of **CREATION**:
+
+| Dimension | System | What It Enables |
+|-----------|--------|-----------------|
+| **Authorship** | **Architect** | **Players create the game itself** |
+| **Meaning** | **Saga Engine** | **Gameplay becomes personal mythology** |
+
+---
+
+## 📖 THE SAGA ENGINE — NarrativeConvergenceSystem 📖
+
+**The ultimate synthesis: Your gameplay becomes a legendary epic.**
+
+The Saga Engine transforms 32 isolated temporal mechanics into a coherent, emergent personal mythology. Each run becomes a **chapter** in your temporal saga. System combinations generate **unique myths**. Enemies become **recurring characters** with history against you.
+
+### How It Works
+
+**CHAPTER GENERATION:**
+- Each run becomes a mythic chapter with procedurally-generated title
+- "The Echo Fracture of Kael" — "Through Time and Chaos" — "The Seventh Trial"
+- Chapters are organized into Volumes (I: The Awakening, II: The Deepening, III: The Transcendence)
+
+**CHARACTER SYSTEM:**
+- Fast triangles become "The Swift Legion" with grudges
+- Diamond enemies become "The Crimson Order" with history
+- The Titan becomes "The Geometric Overseer" — a recurring nemesis
+- Enemies remember wounds you dealt, building narrative tension
+
+**ARCHETYPE DISCOVERY:**
+Based on playstyle, you embody different mythic figures:
+- **THE DANCER** — Grace under fire, mastered near-miss bullet time
+- **THE ARCHITECT** — System combiner, builder of cascading destruction
+- **THE SURVIVOR** — Deathless persistence, the refusal to fall
+- **THE PROPHET** — Seer of futures, walker of paradox paths
+- **THE CHRONICLER** — Memory-keeper, curator of temporal shards
+
+**EPITHETS:**
+Earn narrative titles through accomplishments:
+- "Kael the Untouchable" (20 near-misses)
+- "The System-Binder" (used 10+ systems)
+- "The Enduring" (3+ minute survival)
+
+**THE CODEX TEMPORALIS:**
+Persistent library of your mythology across all runs. Browse your saga. Relive legendary moments. Watch your legend grow from novice to mythic.
+
+### Why This Is Revolutionary
+
+**No other game generates genuine personal mythology from gameplay.** The Saga Engine:
+- Transforms mechanical skill into **narrative meaning**
+- Creates **emergent stories** without scripted content
+- Makes every run feel like **part of an epic tale**
+- Generates **unique player identity** through archetype analysis
+- Completes the temporal ecosystem with the final dimension: **MEANING**
+
+---
+
 ## Roadmap
 
 - [x] Near-miss bullet time system
@@ -538,6 +652,8 @@ The Bootstrap Protocol fills this gap. Where Oracle warns you about external eve
 - [x] **NEMESIS GENESIS: The Adversarial Mirror** 🎭
 - [x] **ORACLE PROTOCOL: Echoes from Unrealized Futures** 🔮
 - [x] **BOOTSTRAP PROTOCOL: Retrocausal Discovery Engine** ⟲
+- [x] **ARCHITECT SYSTEM: Player-Authored Mechanics** 🏗️
+- [x] **SAGA ENGINE: Emergent Personal Mythology** 📖
 - [ ] Power-ups (speed, shield, bomb)
 - [ ] Persistent high scores
 - [ ] Synthwave audio

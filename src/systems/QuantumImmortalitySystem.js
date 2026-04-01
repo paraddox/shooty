@@ -268,6 +268,16 @@ export default class QuantumImmortalitySystem {
             this.scene.synchronicityCascade.onSystemActivate('quantum');
         }
         
+        // Saga Engine: record quantum death/resurrection story beat
+        if (this.scene.sagaEngine) {
+            this.scene.sagaEngine.onSystemActivated('quantumDeath', {
+                deathCount: this.deathCount,
+                entropy: this.timelineEntropy,
+                isSentient: isSentient,
+                echoesActive: this.quantumEchoes.length
+            });
+        }
+        
         // Notify omni-weapon
         if (this.scene.omniWeapon) {
             this.scene.omniWeapon.onQuantumBranch();

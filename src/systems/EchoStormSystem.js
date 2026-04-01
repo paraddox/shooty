@@ -311,6 +311,11 @@ export default class EchoStormSystem {
             });
         }
         
+        // Record for Temporal Pedagogy System (learning tracking)
+        if (this.scene.temporalPedagogy) {
+            this.scene.temporalPedagogy.recordSystemUse('ECHO_STORM', 1);
+        }
+        
         // Absorption effect
         this.scene.tweens.add({
             targets: echo,

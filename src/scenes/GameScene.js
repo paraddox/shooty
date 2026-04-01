@@ -32,6 +32,15 @@ import RecursionEngineSystem from '../systems/RecursionEngineSystem.js';
 import HarmonicConvergenceSystem from '../systems/HarmonicConvergenceSystem.js';
 import SynchronicityCascadeSystem from '../systems/SynchronicityCascadeSystem.js';
 import BootstrapProtocolSystem from '../systems/BootstrapProtocolSystem.js';
+import GeometricChorusSystem from '../systems/GeometricChorusSystem.js';
+import ArchitectSystem from '../systems/ArchitectSystem.js';
+import NarrativeConvergenceSystem from '../systems/NarrativeConvergenceSystem.js';
+import NoeticMirrorSystem from '../systems/NoeticMirrorSystem.js';
+import AmbientAwarenessSystem from '../systems/AmbientAwarenessSystem.js';
+import DissolutionProtocolSystem from '../systems/DissolutionProtocolSystem.js';
+import TemporalPedagogySystem from '../systems/TemporalPedagogySystem.js';
+import AthenaeumProtocolSystem from '../systems/AthenaeumProtocolSystem.js';
+import AxiomNexusSystem from '../systems/AxiomNexusSystem.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -145,6 +154,33 @@ export default class GameScene extends Phaser.Scene {
         
         // Bootstrap Protocol — The Retrocausal Discovery Engine
         this.bootstrapProtocol = null;
+        
+        // Geometric Chorus System — The Living Arena
+        this.geometricChorus = null;
+        
+        // Architect System — Player-Authored Mechanics
+        this.architectSystem = null;
+        
+        // NarrativeConvergenceSystem — The Saga Engine
+        this.sagaEngine = null;
+        
+        // Noetic Mirror System — The Self-Aware Commentary Engine
+        this.noeticMirror = null;
+        
+        // Ambient Awareness System — The Game That Breathes With Reality
+        this.ambientAwareness = null;
+        
+        // Dissolution Protocol — The Art of Intentional Forgetting
+        this.dissolutionProtocol = null;
+        
+        // Temporal Pedagogy System — The Self-Teaching Game
+        this.temporalPedagogy = null;
+        
+        // Athenaeum Protocol — The Geography of Memory (39th dimension)
+        this.athenaeumProtocol = null;
+        
+        // Axiom Nexus — The Synthesis Mentor (40th dimension: PEDAGOGICAL SYNTHESIS)
+        this.axiomNexus = null;
         
         // Equipped shard bonuses
         this.shardBonuses = {};
@@ -308,7 +344,8 @@ export default class GameScene extends Phaser.Scene {
         
         // Fix HUD elements to screen (ignore camera scroll/zoom)
         [this.healthBarBg, this.healthBar, this.scoreText, this.waveText, 
-         this.enemyText, this.nearMissText, this.syntropyText, this.convergenceText, this.waveTimerBg, this.waveTimerBar].forEach(el => {
+         this.enemyText, this.nearMissText, this.syntropyText, this.convergenceText, 
+         this.synthesisText, this.waveTimerBg, this.waveTimerBar].forEach(el => {
             el.setScrollFactor(0);
         });
 
@@ -409,6 +446,33 @@ export default class GameScene extends Phaser.Scene {
         // Initialize Bootstrap Protocol — the retrocausal discovery engine
         this.bootstrapProtocol = new BootstrapProtocolSystem(this);
         
+        // Initialize Geometric Chorus — the living arena
+        this.geometricChorus = new GeometricChorusSystem(this);
+        
+        // Initialize Architect System — player-authored mechanics
+        this.architectSystem = new ArchitectSystem(this);
+        
+        // Initialize NarrativeConvergenceSystem — The Saga Engine
+        this.sagaEngine = new NarrativeConvergenceSystem(this);
+        
+        // Initialize Noetic Mirror System — The Self-Aware Commentary Engine
+        this.noeticMirror = new NoeticMirrorSystem(this);
+        
+        // Initialize Ambient Awareness System — The Game That Breathes With Reality
+        this.ambientAwareness = new AmbientAwarenessSystem(this);
+        
+        // Initialize Dissolution Protocol — The Art of Intentional Forgetting
+        this.dissolutionProtocol = new DissolutionProtocolSystem(this);
+        
+        // Initialize Temporal Pedagogy System — The Self-Teaching Game (38th dimension)
+        this.temporalPedagogy = new TemporalPedagogySystem(this);
+        
+        // Initialize Athenaeum Protocol — The Geography of Memory (39th dimension: TOPOGRAPHY)
+        this.athenaeumProtocol = new AthenaeumProtocolSystem(this);
+        
+        // Initialize Axiom Nexus — The Synthesis Mentor (40th dimension: PEDAGOGICAL SYNTHESIS)
+        this.axiomNexus = new AxiomNexusSystem(this);
+        
         // Apply equipped shard bonuses
         this.applyEquippedShardBonuses();
         
@@ -486,6 +550,50 @@ export default class GameScene extends Phaser.Scene {
         
         // Show Synchronicity Cascade hint (the transcendental convergence)
         this.time.delayedCall(270000, () => this.showSynchronicityHint());
+        
+        // Show Geometric Chorus hint (the living arena)
+        this.time.delayedCall(300000, () => this.showGeometricChorusHint());
+        
+        // Show Architect hint (the ultimate player authorship)
+        this.time.delayedCall(330000, () => this.showArchitectHint());
+        
+        // Show Noetic Mirror hint (the ultimate meta-awareness)
+        this.time.delayedCall(360000, () => this.showNoeticMirrorHint());
+        
+        // Show Dissolution Protocol hint (the art of forgetting)
+        this.time.delayedCall(390000, () => this.showDissolutionHint());
+        
+        // Show Athenaeum Protocol hint (the geography of memory - TOPOGRAPHY)
+        this.time.delayedCall(420000, () => this.showAthenaeumHint());
+    }
+    
+    showDissolutionHint() {
+        const dissolved = this.dissolutionProtocol?.getDissolvedCount() || 0;
+        const active = this.dissolutionProtocol?.getActiveCount() || 36;
+        
+        const hint = this.add.text(this.player.x, this.player.y - 100,
+            `DISSOLUTION PROTOCOL — THE 37TH DIMENSION\n` +
+            `${active} systems active. ${dissolved} dissolved.\n` +
+            `Press [DELETE] to enter dissolution mode.\n` +
+            `Convert complexity into essence. Curate your experience.\n` +
+            `The apocalypse of complexity awaits those who dissolve all.`,
+            {
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                letterSpacing: 1,
+                fill: '#2d1f3d',
+                align: 'center'
+            }
+        ).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: hint,
+            y: hint.y - 30,
+            alpha: 0,
+            duration: 15000,
+            ease: 'Power2',
+            onComplete: () => hint.destroy()
+        });
     }
     
     showRecursionHint() {
@@ -552,6 +660,125 @@ export default class GameScene extends Phaser.Scene {
             fontSize: '14px',
             letterSpacing: 1,
             fill: '#ffd700',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: hint,
+            y: hint.y - 30,
+            alpha: 0,
+            duration: 15000,
+            ease: 'Power2',
+            onComplete: () => hint.destroy()
+        });
+    }
+    
+    showGeometricChorusHint() {
+        const profile = this.geometricChorus?.playstyleProfile || { aggression: 0.5, mobility: 0.5 };
+        const aggressionType = profile.aggression > 0.6 ? 'AGGRESSOR' : profile.aggression < 0.4 ? 'TACTICIAN' : 'ADAPTOR';
+        
+        const hint = this.add.text(this.player.x, this.player.y - 100, 
+            `GEOMETRIC CHORUS — THE LIVING ARENA\n` +
+            `The arena breathes. The walls respond. Space itself is alive.\n` +
+            `Your ${aggressionType} profile shapes the architecture.\n` +
+            `Sanctuaries appear when you suffer. Lanes open for aggression.\n` +
+            `This is the missing dimension: SPATIAL MASTERY.`, {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            letterSpacing: 1,
+            fill: '#4b0082', // Indigo
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: hint,
+            y: hint.y - 30,
+            alpha: 0,
+            duration: 12000,
+            ease: 'Power2',
+            onComplete: () => hint.destroy()
+        });
+    }
+    
+    showArchitectHint() {
+        const rank = this.architectSystem?.getRank() || 'NOVICE';
+        const discoveries = this.architectSystem?.getDiscoveries().length || 0;
+        
+        const hint = this.add.text(this.player.x, this.player.y - 100, 
+            `THE ARCHITECT SYSTEM — PLAYER AUTHORSHIP\n` +
+            `Rank: ${rank} | Discoveries: ${discoveries}\n` +
+            `Combine systems in novel ways to discover new mechanics.\n` +
+            `Echo + Fracture. Paradox + Quantum. Chrono + Residue.\n` +
+            `Your inventions become part of the Temporal Commons.\n` +
+            `Press [ENTER] to formalize discoveries. Create the future.`, {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            letterSpacing: 1,
+            fill: '#ffb700', // Architect's Gold
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: hint,
+            y: hint.y - 30,
+            alpha: 0,
+            duration: 15000,
+            ease: 'Power2',
+            onComplete: () => hint.destroy()
+        });
+    }
+    
+    showNoeticMirrorHint() {
+        const profile = this.noeticMirror?.cognitiveProfile || {};
+        const riskType = profile.riskTolerance > 0.7 ? 'DANCER' : 
+                        profile.riskTolerance > 0.4 ? 'ADAPTOR' : 'SURVIVOR';
+        const temporalFocus = profile.temporalBias || 'present';
+        
+        const hint = this.add.text(this.player.x, this.player.y - 100, 
+            `NOETIC MIRROR — META-COGNITIVE AWARENESS\n` +
+            `I have been watching not just what you do, but how you think.\n` +
+            `Your ${riskType} profile reveals ${temporalFocus}-focused cognition.\n` +
+            `The game now speaks to you about the nature of your play.\n` +
+            `This is the 34th dimension: the mirror that understands.`, {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            letterSpacing: 1,
+            fill: '#c0c0c0', // Mirror Silver
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: hint,
+            y: hint.y - 30,
+            alpha: 0,
+            duration: 15000,
+            ease: 'Power2',
+            onComplete: () => hint.destroy()
+        });
+    }
+    
+    showAthenaeumHint() {
+        const discovered = this.athenaeumProtocol?.discoveredRegions?.size || 0;
+        const dominant = this.athenaeumProtocol?.calculateDominantType() || 'VOID';
+        
+        const regionDescriptions = {
+            VERDANT: 'Healing groves bloom where you dance.',
+            SCORCHED: 'War-torn zones amplify your fury.',
+            ECHO: 'Temporal resonance pools quicken cooldowns.',
+            VOID: 'Silent spaces hide you from enemies.',
+            NEXUS: 'Crossroads of power converge.'
+        };
+        
+        const hint = this.add.text(this.player.x, this.player.y - 100,
+            `ATHENAEUM PROTOCOL — THE 39TH DIMENSION: TOPOGRAPHY\n` +
+            `${discovered} regions mapped. Dominant terrain: ${dominant}.\n` +
+            `${regionDescriptions[dominant] || 'The void remembers all.'}\n` +
+            `The arena is no longer empty. It learns. It becomes geography.\n` +
+            `Where you fight changes how you fight. Location is now strategy.`, {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            letterSpacing: 1,
+            fill: '#00ff88', // Topography Green
             align: 'center'
         }).setOrigin(0.5);
         
@@ -1064,6 +1291,14 @@ export default class GameScene extends Phaser.Scene {
 
         const dt = delta / 1000; // Convert to seconds
         
+        // Handle Architect System discovery key (ENTER)
+        const enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        if (Phaser.Input.Keyboard.JustDown(enterKey)) {
+            if (this.architectSystem && this.architectSystem.onDiscoveryKeyPressed()) {
+                // Discovery formalized
+            }
+        }
+        
         // Update near-miss bullet time system
         this.updateNearMiss(dt);
         
@@ -1227,6 +1462,46 @@ export default class GameScene extends Phaser.Scene {
             this.bootstrapProtocol.update(dt);
         }
         
+        // Update Geometric Chorus — the living arena
+        if (this.geometricChorus && this.player) {
+            this.geometricChorus.update(dt, this.player);
+        }
+        
+        // Update Architect System — detect and formalize player discoveries
+        if (this.architectSystem && this.player) {
+            this.architectSystem.update(dt);
+        }
+        
+        // Update Noetic Mirror System — the self-aware commentary engine
+        if (this.noeticMirror && this.player) {
+            this.noeticMirror.update(dt, this.player);
+        }
+        
+        // Update Ambient Awareness System — the game that breathes with reality
+        if (this.ambientAwareness && this.player) {
+            this.ambientAwareness.update(dt);
+        }
+        
+        // Update Dissolution Protocol — the art of intentional forgetting
+        if (this.dissolutionProtocol && this.player) {
+            this.dissolutionProtocol.update(time, delta);
+        }
+        
+        // Update Temporal Pedagogy System — the self-teaching game
+        if (this.temporalPedagogy && this.player) {
+            this.temporalPedagogy.update(dt, this.player);
+        }
+        
+        // Update Athenaeum Protocol — the geography of memory (TOPOGRAPHY)
+        if (this.athenaeumProtocol && this.player) {
+            this.athenaeumProtocol.update(dt, this.player);
+        }
+        
+        // Update Axiom Nexus — the synthesis mentor (PEDAGOGICAL SYNTHESIS)
+        if (this.axiomNexus && this.player) {
+            this.axiomNexus.update(dt);
+        }
+        
         // Update Tesseract Titan boss
         if (this.tesseractTitan) {
             this.tesseractTitan.update(dt);
@@ -1368,6 +1643,11 @@ export default class GameScene extends Phaser.Scene {
                     if (echoesFired > 0) {
                         this.score += echoesFired * 50;
                         
+                        // Saga Engine: record echo storm release
+                        if (this.sagaEngine) {
+                            this.sagaEngine.onSystemActivated('echoStorm', { echoesFired });
+                        }
+                        
                         // Add charge for singularity on echo absorption
                         if (this.singularitySystem) {
                             this.singularitySystem.addCharge(
@@ -1413,6 +1693,22 @@ export default class GameScene extends Phaser.Scene {
             this.syntropyEngine.onNearMiss(streakLevel);
         }
         
+        // Record interaction for Architect System (Echo Storm + any active system)
+        if (this.architectSystem) {
+            if (this.fractureSystem && this.fractureSystem.isFractured) {
+                this.architectSystem.recordSystemInteraction('echoStorm', 'fracture', {
+                    outcome: { streakLevel },
+                    context: 'near-miss-during-fracture'
+                });
+            }
+            if (this.singularitySystem && this.singularitySystem.activeSingularity) {
+                this.architectSystem.recordSystemInteraction('echoStorm', 'singularity', {
+                    outcome: { streakLevel },
+                    context: 'near-miss-near-singularity'
+                });
+            }
+        }
+        
         // Observe the near-miss (bullet time activation)
         if (this.observerEffect) {
             this.observerEffect.observeTemporalUse('bulletTime', {
@@ -1424,6 +1720,11 @@ export default class GameScene extends Phaser.Scene {
                 { x: this.player.x, y: this.player.y },
                 streakLevel >= 3
             );
+        }
+        
+        // Record for Temporal Pedagogy System (learning tracking)
+        if (this.temporalPedagogy) {
+            this.temporalPedagogy.recordSystemUse('NEAR_MISS', streakLevel);
         }
         
         // Track for Nemesis Genesis (behavioral profiling)
@@ -1447,6 +1748,11 @@ export default class GameScene extends Phaser.Scene {
         if (this.synchronicityCascade) {
             this.synchronicityCascade.onSystemActivate('bulletTime');
             this.synchronicityCascade.onSystemActivate('echoStorm');
+        }
+        
+        // Saga Engine: record bullet time story beat
+        if (this.sagaEngine) {
+            this.sagaEngine.onSystemActivated('bulletTime', { streakLevel });
         }
         
         // Slow down physics world
@@ -1586,6 +1892,11 @@ export default class GameScene extends Phaser.Scene {
                             bullet.x, bullet.y,
                             dist < 45 // wasGrazing
                         );
+                    }
+                    
+                    // Notify Noetic Mirror of threat encounter
+                    if (this.noeticMirror) {
+                        this.noeticMirror.onThreatEncountered('nearMiss', dist);
                     }
                 } else if (dist <= this.HIT_RADIUS) {
                     // Bullet actually hit - mark as checked so we don't trigger near-miss
@@ -1779,6 +2090,11 @@ export default class GameScene extends Phaser.Scene {
         // Notify Syntropy Engine of damage (resets damageless timer)
         if (this.syntropyEngine) {
             this.syntropyEngine.onPlayerDamaged();
+        }
+        
+        // Notify Noetic Mirror of damage (for error recovery analysis)
+        if (this.noeticMirror) {
+            this.noeticMirror.onPlayerDamaged(10, 'bullet');
         }
         
         // Apply Causal Entanglement damage sharing
@@ -1995,6 +2311,14 @@ export default class GameScene extends Phaser.Scene {
             letterSpacing: 1,
             fill: '#ffffff'
         });
+        
+        // Axiom Nexus - synthesis discovery counter
+        this.synthesisText = this.add.text(margin, margin + 139, '◇ 0/50', {
+            fontFamily: 'monospace',
+            fontSize: '11px',
+            letterSpacing: 1,
+            fill: '#ffeebb'
+        });
 
         // Wave timer bar - top right
         const screenWidth = this.scale.width;
@@ -2005,7 +2329,8 @@ export default class GameScene extends Phaser.Scene {
 
         // Set high depth so UI renders on top
         [this.healthBarBg, this.healthBar, this.scoreText, this.waveText, 
-         this.enemyText, this.nearMissText, this.syntropyText, this.convergenceText, this.waveTimerBg, this.waveTimerBar].forEach(el => {
+         this.enemyText, this.nearMissText, this.syntropyText, this.convergenceText, 
+         this.synthesisText, this.waveTimerBg, this.waveTimerBar].forEach(el => {
             el.setDepth(100);
         });
 
@@ -2142,6 +2467,23 @@ export default class GameScene extends Phaser.Scene {
                 }
             }
         }
+        
+        // Axiom Nexus synthesis display
+        if (this.axiomNexus) {
+            const stats = this.axiomNexus.getDiscoveryStats();
+            this.synthesisText.setText(`◇ ${stats.discovered}/${stats.total}`);
+            
+            // Color shifts based on layer progress
+            if (stats.layer >= 4) {
+                this.synthesisText.setFill('#ffffff'); // White for transcendence
+            } else if (stats.layer >= 3) {
+                this.synthesisText.setFill('#ffeebb'); // Gold-white for master
+            } else if (stats.layer >= 2) {
+                this.synthesisText.setFill('#ffd700'); // Gold for journeyman
+            } else {
+                this.synthesisText.setFill('#ffeebb'); // Default nexus color
+            }
+        }
     }
 
     spawnEnemies(count) {
@@ -2182,6 +2524,13 @@ export default class GameScene extends Phaser.Scene {
 
             const enemy = new Enemy(this, x, y, this.player, type);
             this.enemies.add(enemy);
+            
+            // Saga Engine: register enemy as character
+            if (this.sagaEngine) {
+                const character = this.sagaEngine.onEnemySpawned(enemy, type);
+                // Store character ID on enemy for later reference
+                enemy.characterId = character ? character.id : null;
+            }
         }
     }
 
@@ -2247,6 +2596,11 @@ export default class GameScene extends Phaser.Scene {
         
         enemy.takeDamage(damage);
         
+        // Record combat for Athenaeum Protocol (geography of memory)
+        if (this.athenaeumProtocol) {
+            this.athenaeumProtocol.recordCombat(enemy.x, enemy.y, damage);
+        }
+        
         // Apply Causal Entanglement damage sharing
         if (this.causalEntanglement) {
             this.causalEntanglement.onEntityDamaged(enemy, damage, 'bullet');
@@ -2308,6 +2662,13 @@ export default class GameScene extends Phaser.Scene {
             if (enemy.isUnknownGeometry && this.egregoreProtocol) {
                 this.egregoreProtocol.onUnknownDestroyed(enemy);
             }
+            
+            // Notify Noetic Mirror of enemy killed (for mastery tracking)
+            if (this.noeticMirror) {
+                const method = bullet.isGhostBullet ? 'ghost' : 
+                               bullet.isParadoxBullet ? 'paradox' : 'standard';
+                this.noeticMirror.onEnemyKilled(enemy, method);
+            }
         }
     }
     
@@ -2355,6 +2716,14 @@ export default class GameScene extends Phaser.Scene {
         
         // Player damage
         player.takeDamage(enemy.damage);
+        
+        // Saga Engine: record enemy wound on player
+        if (this.sagaEngine && enemy.characterId) {
+            this.sagaEngine.onPlayerDamaged(enemy.damage, { 
+                id: enemy.characterId,
+                type: enemy.enemyType 
+            });
+        }
         
         // Notify Syntropy Engine of damage
         if (this.syntropyEngine) {
@@ -2500,6 +2869,14 @@ export default class GameScene extends Phaser.Scene {
                 wave: this.wave
             });
         }
+        
+        // Saga Engine: record boss confrontation story beat
+        if (this.sagaEngine) {
+            this.sagaEngine.onSystemActivated('titan', {
+                wave: this.wave,
+                bossName: 'The Geometric Overseer'
+            });
+        }
     }
     
     hitBoss(bullet, bossCore) {
@@ -2594,6 +2971,11 @@ export default class GameScene extends Phaser.Scene {
         // Leave Resonant Whisper bloodmark at death location
         if (this.resonantWhispers && this.player) {
             this.resonantWhispers.onPlayerDeath('final');
+        }
+        
+        // Temporal Pedagogy: Analyze death for learning opportunity
+        if (this.temporalPedagogy) {
+            this.temporalPedagogy.onPlayerDeath();
         }
         
         // Finalize and save timeline shard
@@ -2714,6 +3096,55 @@ export default class GameScene extends Phaser.Scene {
         if (this.bootstrapProtocol) {
             this.bootstrapProtocol.destroy();
             this.bootstrapProtocol = null;
+        }
+        
+        // Clean up Geometric Chorus system
+        if (this.geometricChorus) {
+            this.geometricChorus.destroy();
+            this.geometricChorus = null;
+        }
+        
+        // Clean up Architect System
+        if (this.architectSystem) {
+            this.architectSystem.destroy();
+            this.architectSystem = null;
+        }
+        
+        // Complete Saga Engine chapter and clean up
+        if (this.sagaEngine) {
+            this.sagaEngine.onGameEnd(this.score, this.survivalTime, this.wave);
+            this.sagaEngine.destroy();
+            this.sagaEngine = null;
+        }
+        
+        // Clean up Noetic Mirror System
+        if (this.noeticMirror) {
+            this.noeticMirror.destroy();
+            this.noeticMirror = null;
+        }
+        
+        // Clean up Ambient Awareness System
+        if (this.ambientAwareness) {
+            this.ambientAwareness.destroy();
+            this.ambientAwareness = null;
+        }
+        
+        // Clean up Temporal Pedagogy System (saves learning profile)
+        if (this.temporalPedagogy) {
+            this.temporalPedagogy.destroy();
+            this.temporalPedagogy = null;
+        }
+        
+        // Clean up Athenaeum Protocol (saves geographic memory)
+        if (this.athenaeumProtocol) {
+            this.athenaeumProtocol.destroy();
+            this.athenaeumProtocol = null;
+        }
+        
+        // Clean up Axiom Nexus (saves synthesis discoveries)
+        if (this.axiomNexus) {
+            this.axiomNexus.destroy();
+            this.axiomNexus = null;
         }
         
         this.cameras.main.shake(300, 0.02);

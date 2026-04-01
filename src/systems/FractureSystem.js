@@ -181,6 +181,18 @@ export default class FractureSystem {
         if (this.scene.synchronicityCascade) {
             this.scene.synchronicityCascade.onSystemActivate('fracture');
         }
+        
+        // Saga Engine: record fracture story beat
+        if (this.scene.sagaEngine) {
+            this.scene.sagaEngine.onSystemActivated('fracture', { 
+                ghostPattern: this.ghostPattern 
+            });
+        }
+        
+        // Record for Temporal Pedagogy System (learning tracking)
+        if (this.scene.temporalPedagogy) {
+            this.scene.temporalPedagogy.recordSystemUse('FRACTURE', 2);
+        }
     }
     
     recordGhostPattern() {
