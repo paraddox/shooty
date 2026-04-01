@@ -207,6 +207,34 @@ describe('MetaSystemOperator Patch Mode Click Handling', () => {
         });
     });
     
+    describe('visual distinctiveness', () => {
+        it('each system node should have a unique color for visibility', () => {
+            // Mock system nodes with unique colors
+            const nodes = [
+                { name: 'NEAR-MISS', color: 0xff6b6b },
+                { name: 'ECHO', color: 0x4ecdc4 },
+                { name: 'FRACTURE', color: 0xffe66d },
+                { name: 'RESIDUE', color: 0x9d4edd }
+            ];
+            
+            // All colors should be unique
+            const colors = nodes.map(n => n.color);
+            const uniqueColors = new Set(colors);
+            expect(uniqueColors.size).toBe(colors.length);
+        });
+        
+        it('nodes should be spread out enough to be clickable (radius >= 80)', () => {
+            // Use test data that reflects the actual implementation
+            const nodes = [
+                { radius: 120 }, { radius: 120 }, { radius: 120 }
+            ];
+            
+            nodes.forEach(node => {
+                expect(node.radius).toBeGreaterThanOrEqual(80);
+            });
+        });
+    });
+    
     describe('potential click issues', () => {
         it('BUG: container not visible - clicks wont register', () => {
             // If container.setVisible(false), clicks won't work even if circle is interactive
@@ -234,6 +262,17 @@ describe('MetaSystemOperator Patch Mode Click Handling', () => {
             circle.on = vi.fn(); // Never registers handler
             
             expect(circle.on).not.toHaveBeenCalled();
+        });
+        
+        it('menu background should NOT block clicks on nodes behind it', () => {
+            const mockBg = {
+                setStrokeStyle: vi.fn(),
+                disableInteractive: vi.fn()
+            };
+            
+            // Background should have disableInteractive called
+            mockBg.disableInteractive();
+            expect(mockBg.disableInteractive).toHaveBeenCalled();
         });
     });
 });

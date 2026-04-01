@@ -33,24 +33,24 @@ export default class MetaSystemOperator {
         this.FLOW_COLOR = 0xffd700;         // Gold (energy flow)
         this.VOID_COLOR = 0x1a0a2e;         // Deep void
         
-        // Available systems for patching (system nodes)
+        // Available systems for patching (system nodes) - each with unique color
         this.systemNodes = [
-            { id: 'nearMiss', name: 'NEAR-MISS', color: 0xffd700, radius: 80, angle: 0 },
-            { id: 'echoStorm', name: 'ECHO', color: 0xffd700, radius: 80, angle: Math.PI / 8 },
-            { id: 'fracture', name: 'FRACTURE', color: 0xffd700, radius: 80, angle: Math.PI / 4 },
-            { id: 'residue', name: 'RESIDUE', color: 0x9d4edd, radius: 80, angle: 3 * Math.PI / 8 },
-            { id: 'singularity', name: 'SINGULARITY', color: 0xdc143c, radius: 80, angle: Math.PI / 2 },
-            { id: 'omniWeapon', name: 'WEAPON', color: 0xff3366, radius: 80, angle: 5 * Math.PI / 8 },
-            { id: 'paradox', name: 'PARADOX', color: 0xff00ff, radius: 80, angle: 3 * Math.PI / 4 },
-            { id: 'chronoLoop', name: 'CHRONO', color: 0x008080, radius: 80, angle: 7 * Math.PI / 8 },
-            { id: 'quantum', name: 'QUANTUM', color: 0xffffff, radius: 80, angle: Math.PI },
-            { id: 'resonance', name: 'RESONANCE', color: 0xffd700, radius: 80, angle: 9 * Math.PI / 8 },
-            { id: 'observer', name: 'OBSERVER', color: 0x00d4ff, radius: 80, angle: 5 * Math.PI / 4 },
-            { id: 'voidCoherence', name: 'VOID', color: 0x4b0082, radius: 80, angle: 11 * Math.PI / 8 },
-            { id: 'oracle', name: 'ORACLE', color: 0x00ffff, radius: 80, angle: 3 * Math.PI / 2 },
-            { id: 'nemesis', name: 'NEMESIS', color: 0xff0040, radius: 80, angle: 13 * Math.PI / 8 },
-            { id: 'architect', name: 'ARCHITECT', color: 0xffb700, radius: 80, angle: 7 * Math.PI / 4 },
-            { id: 'synaesthesia', name: 'AUDIO', color: 0xc0c0c0, radius: 80, angle: 15 * Math.PI / 8 }
+            { id: 'nearMiss', name: 'NEAR-MISS', color: 0xff6b6b, radius: 120, angle: 0 },           // Red
+            { id: 'echoStorm', name: 'ECHO', color: 0x4ecdc4, radius: 120, angle: Math.PI / 8 },      // Teal
+            { id: 'fracture', name: 'FRACTURE', color: 0xffe66d, radius: 120, angle: Math.PI / 4 },     // Yellow
+            { id: 'residue', name: 'RESIDUE', color: 0x9d4edd, radius: 120, angle: 3 * Math.PI / 8 },  // Purple
+            { id: 'singularity', name: 'SINGULARITY', color: 0xdc143c, radius: 120, angle: Math.PI / 2 }, // Crimson
+            { id: 'omniWeapon', name: 'WEAPON', color: 0xff3366, radius: 120, angle: 5 * Math.PI / 8 },  // Pink
+            { id: 'paradox', name: 'PARADOX', color: 0xff00ff, radius: 120, angle: 3 * Math.PI / 4 },  // Magenta
+            { id: 'chronoLoop', name: 'CHRONO', color: 0x00ff9f, radius: 120, angle: 7 * Math.PI / 8 }, // Mint
+            { id: 'quantum', name: 'QUANTUM', color: 0xffffff, radius: 120, angle: Math.PI },          // White
+            { id: 'resonance', name: 'RESONANCE', color: 0xff9f43, radius: 120, angle: 9 * Math.PI / 8 }, // Orange
+            { id: 'observer', name: 'OBSERVER', color: 0x00d4ff, radius: 120, angle: 5 * Math.PI / 4 }, // Cyan
+            { id: 'voidCoherence', name: 'VOID', color: 0x8b5cf6, radius: 120, angle: 11 * Math.PI / 8 }, // Violet
+            { id: 'oracle', name: 'ORACLE', color: 0x00ffff, radius: 120, angle: 3 * Math.PI / 2 },     // Aqua
+            { id: 'nemesis', name: 'NEMESIS', color: 0xff0040, radius: 120, angle: 13 * Math.PI / 8 },  // Rose
+            { id: 'architect', name: 'ARCHITECT', color: 0xffb700, radius: 120, angle: 7 * Math.PI / 4 }, // Gold
+            { id: 'synaesthesia', name: 'AUDIO', color: 0xc0c0c0, radius: 120, angle: 15 * Math.PI / 8 } // Silver
         ];
         
         // Active patches (source → target with modulation type)
@@ -300,9 +300,10 @@ export default class MetaSystemOperator {
         );
         this.patchMenuContainer.setDepth(92);
         
-        // Menu background
+        // Menu background - NOT interactive so clicks pass through to nodes behind
         const bg = this.scene.add.rectangle(0, 0, 120, 100, 0x0a0a0f, 0.95);
         bg.setStrokeStyle(1, this.META_COLOR);
+        bg.disableInteractive();
         
         // Title
         const title = this.scene.add.text(0, -35, 'PATCH TYPE', {
