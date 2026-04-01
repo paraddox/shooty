@@ -154,6 +154,22 @@ export default class EgregoreProtocolSystem {
         this.potentialDiscoveries = []; // Mechanics the Egregore predicts exist
         this.playerDiscoveryAttempts = []; // What players have tried
         
+        // ===== EMERGENT MECHANIC SYSTEM =====
+        this.emergentMechanics = []; // Discovered mechanics this run
+        this.mechanicGenePool = []; // All potential mechanics
+        this.systemInteractionMatrix = new Map(); // System combo tracking
+        this.lastSystemActivation = null;
+        
+        // Known emergent mechanic combinations
+        this.KNOWN_COMBINATIONS = [
+            { systems: ['ECHO_STORM', 'FRACTURE'], name: 'Echo Fracture' },
+            { systems: ['PARADOX', 'CHRONO_LOOP'], name: 'Paradox Loop' },
+            { systems: ['QUANTUM', 'RESIDUE'], name: 'Quantum Residue' },
+            { systems: ['SINGULARITY', 'ECHO'], name: 'Gravitic Echo' },
+            { systems: ['VOID', 'ECHO'], name: 'Void Echo' },
+            { systems: ['RESONANCE', 'PARADOX'], name: 'Resonant Paradox' }
+        ];
+        
         // ===== UNKNOWN GEOMETRY SPAWNING =====
         this.unknownSpawnTimer = 0;
         this.unknownSpawnInterval = 25; // Seconds between unknown encounters
@@ -190,8 +206,136 @@ export default class EgregoreProtocolSystem {
     
     init() {
         this.createVisuals();
-        // NOTE: initializeEmergentMechanics() removed - feature not yet implemented
+        this.initializeEmergentMechanics();
         console.log(`🧠 Egregore Protocol initialized — Stage ${this.egregoreStage}, ${this.encounterCount} collective encounters`);
+    }
+    
+    /**
+     * Initialize the emergent mechanic discovery system
+     * Sets up gene pool, interaction matrix, and event listeners
+     */
+    initializeEmergentMechanics() {
+        // Initialize gene pool from known combinations
+        this.mechanicGenePool = this.KNOWN_COMBINATIONS.map(combo => ({
+            ...combo,
+            discovered: false,
+            fitness: 0.5,
+            mutationCount: 0
+        }));
+        
+        // Create system interaction matrix
+        const systemKeys = ['ECHO_STORM', 'FRACTURE', 'PARADOX', 'CHRONO_LOOP', 
+                            'QUANTUM', 'RESIDUE', 'SINGULARITY', 'ECHO', 'VOID'];
+        
+        for (const sysA of systemKeys) {
+            this.systemInteractionMatrix.set(sysA, new Map());
+            for (const sysB of systemKeys) {
+                if (sysA !== sysB) {
+                    this.systemInteractionMatrix.get(sysA).set(sysB, {
+                        count: 0,
+                        lastContext: null,
+                        synergyScore: 0
+                    });
+                }
+            }
+        }
+        
+        // Register event listeners for system activations
+        this.scene.events.on('systemActivated', this.onSystemActivated, this);
+        this.scene.events.on('hybridCombination', this.onHybridCombination, this);
+        
+        // Schedule periodic mechanic evolution check
+        this.scheduleMechanicEvolution();
+        
+        console.log(`🧬 Emergent mechanics initialized: ${this.mechanicGenePool.length} base combinations`);
+    }
+    
+    onSystemActivated(systemType, context) {
+        // Track system activation for pattern analysis
+        this.lastSystemActivation = {
+            system: systemType,
+            time: this.scene.time.now,
+            context: context
+        };
+    }
+    
+    onHybridCombination(sysA, sysB, context) {
+        // Check if this combination exists in gene pool
+        const existing = this.mechanicGenePool.find(m => 
+            (m.systems[0] === sysA && m.systems[1] === sysB) ||
+            (m.systems[0] === sysB && m.systems[1] === sysA)
+        );
+        
+        if (existing && !existing.discovered) {
+            // Mark as discovered
+            existing.discovered = true;
+            existing.discoveredAt = this.scene.time.now;
+            existing.discovererContext = context;
+            
+            // Add to emergent mechanics list
+            this.emergentMechanics.push({
+                name: existing.name,
+                systems: existing.systems,
+                discovered: true,
+                discoveredAt: this.scene.time.now
+            });
+            
+            console.log(`🔮 Emergent mechanic discovered: ${existing.name}`);
+        }
+        
+        // Update interaction matrix
+        if (this.systemInteractionMatrix.has(sysA)) {
+            const interactions = this.systemInteractionMatrix.get(sysA);
+            if (interactions.has(sysB)) {
+                const data = interactions.get(sysB);
+                data.count++;
+                data.lastContext = context;
+                data.synergyScore = Math.min(1.0, data.count / 10);
+            }
+        }
+    }
+    
+    scheduleMechanicEvolution() {
+        // Check for new mechanic discoveries every 30 seconds
+        this.scene.time.delayedCall(30000, () => {
+            this.evolveMechanics();
+            this.scheduleMechanicEvolution();
+        });
+    }
+    
+    evolveMechanics() {
+        // Simulate genetic algorithm on mechanic gene pool
+        for (const mechanic of this.mechanicGenePool) {
+            // Increase fitness for undiscovered combinations
+            if (!mechanic.discovered) {
+                mechanic.fitness += 0.01;
+                
+                // Check for mutation opportunity
+                if (mechanic.fitness > 0.8 && mechanic.mutationCount < 3) {
+                    this.mutateMechanic(mechanic);
+                }
+            }
+        }
+    }
+    
+    mutateMechanic(mechanic) {
+        mechanic.mutationCount++;
+        mechanic.fitness *= 0.7; // Reset fitness after mutation
+        
+        // Generate variation name
+        const variations = ['Enhanced', 'Perfected', 'Transcendent', 'Chaotic', 'Harmonic'];
+        const variation = variations[mechanic.mutationCount - 1] || 'Ultimate';
+        mechanic.name = `${variation} ${mechanic.name}`;
+        
+        console.log(`🧬 Mechanic evolved: ${mechanic.name}`);
+    }
+    
+    getDiscoveredMechanics() {
+        return this.emergentMechanics.filter(m => m.discovered);
+    }
+    
+    getUndiscoveredMechanics() {
+        return this.mechanicGenePool.filter(m => !m.discovered);
     }
     
     // ===== DATA PERSISTENCE =====

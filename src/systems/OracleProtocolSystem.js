@@ -148,6 +148,10 @@ export default class OracleProtocolSystem {
             COLLAPSE: 0xffd700          // Gold flash
         };
         
+        // Ghost enemy premonition constants
+        this.GHOST_COLOR = 0x00f0ff;   // Cyan ghost outline
+        this.GHOST_DURATION = 3000;     // 3 seconds
+        
         this.init();
     }
     
@@ -249,7 +253,86 @@ export default class OracleProtocolSystem {
     
     setupEvents() {
         // Event hooks for oracle system
-        // NOTE: preSpawnEnemy handler removed - feature not yet implemented
+        this.scene.events.on('preSpawnEnemy', this.onPreSpawnEnemy, this);
+    }
+    
+    /**
+     * Handle preSpawnEnemy event - create ghost outline of impending enemy
+     * @param {Object} enemyData - Contains x, y, type of upcoming enemy
+     */
+    onPreSpawnEnemy(enemyData) {
+        // Create ghost outline of impending enemy
+        const ghost = this.createGhostEnemy(enemyData);
+        
+        // Create premonition entry
+        const premonition = {
+            ghost: ghost,
+            enemyData: enemyData,
+            createdAt: this.scene.time.now,
+            fulfilled: false
+        };
+        
+        this.premonitions.push(premonition);
+        
+        // Auto-remove after ghost duration
+        this.scene.time.delayedCall(this.GHOST_DURATION, () => {
+            this.removePremonition(premonition);
+        });
+        
+        // Visual announcement
+        this.showPremonitionNotice(enemyData);
+        
+        return premonition;
+    }
+    
+    createGhostEnemy(enemyData) {
+        const ghost = this.scene.add.sprite(enemyData.x, enemyData.y, 'enemy');
+        ghost.setAlpha(0.4);
+        ghost.setTint(this.GHOST_COLOR);
+        ghost.setVisible(true);
+        
+        // Pulse animation
+        this.scene.tweens.add({
+            targets: ghost,
+            alpha: 0.2,
+            duration: 500,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        return ghost;
+    }
+    
+    removePremonition(premonition) {
+        if (premonition.ghost && premonition.ghost.destroy) {
+            premonition.ghost.destroy();
+        }
+        this.premonitions = this.premonitions.filter(p => p !== premonition);
+    }
+    
+    showPremonitionNotice(enemyData) {
+        const text = this.scene.add.text(
+            enemyData.x, enemyData.y - 40,
+            '◆ APPROACHING',
+            { 
+                fontFamily: 'monospace',
+                fontSize: '12px', 
+                fill: '#00f0ff' 
+            }
+        );
+        text.setOrigin(0.5);
+        
+        this.scene.tweens.add({
+            targets: text,
+            y: enemyData.y - 60,
+            alpha: 0,
+            duration: 2000,
+            onComplete: () => text.destroy()
+        });
+    }
+    
+    cleanup() {
+        this.scene.events.off('preSpawnEnemy', this.onPreSpawnEnemy, this);
     }
     
     awakenOracle() {

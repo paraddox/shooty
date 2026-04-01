@@ -312,9 +312,9 @@ export default class SynaesthesiaProtocolSystem {
                 this.playReverbTrail(330, 3.0, 0.2);
             },
             
-            // Chrono-loop record → Tape effect (not yet implemented)
+            // Chrono-loop record → Tape effect
             chronoRecord: () => {
-                // TODO: Tape recorder sound effect
+                this.playTapeRecorderEffect();
             },
             
             // Chrono-loop echo spawn → Echo delay
@@ -731,6 +731,65 @@ export default class SynaesthesiaProtocolSystem {
                 osc.stop(this.audioContext.currentTime + 1.1);
             }, i * 100);
         }
+    }
+    
+    /**
+     * Tape recorder effect - simulates analog tape saturation/wobble
+     * Used for chrono-loop recording feedback
+     */
+    playTapeRecorderEffect() {
+        if (!this.audioContext) return;
+        
+        const now = this.audioContext.currentTime;
+        
+        // Carrier oscillator (tape motor hum)
+        const carrier = this.audioContext.createOscillator();
+        carrier.type = 'sine';
+        carrier.frequency.value = 60; // 60Hz hum
+        
+        // FM modulation for tape wobble
+        const modulator = this.audioContext.createOscillator();
+        modulator.type = 'sine';
+        modulator.frequency.value = 3; // 3Hz wow/flutter
+        
+        const modGain = this.audioContext.createGain();
+        modGain.gain.value = 2; // Modulation depth
+        
+        // Main tone
+        const tone = this.audioContext.createOscillator();
+        tone.type = 'sawtooth';
+        tone.frequency.value = 440;
+        
+        // Lowpass filter for tape warmth
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 3000;
+        
+        // Gain envelope
+        const gain = this.audioContext.createGain();
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.3, now + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
+        
+        // Connect graph
+        modulator.connect(modGain);
+        modGain.connect(tone.frequency);
+        tone.connect(filter);
+        carrier.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.compressor);
+        
+        // Start/stop
+        carrier.start(now);
+        modulator.start(now);
+        tone.start(now);
+        
+        carrier.stop(now + 1.0);
+        modulator.stop(now + 1.0);
+        tone.stop(now + 1.0);
+        
+        // Return nodes for potential chaining
+        return { carrier, modulator, tone, filter, gain };
     }
     
     playCymbalAndSub(waveNumber) {

@@ -415,7 +415,67 @@ export default class ObserverEffectSystem {
         this.generateObservationPoem();
         
         // Check for mutation triggers
-        // NOTE: checkMutations() stub - mutation system not yet fully implemented
+        this.checkMutations();
+    }
+    
+    /**
+     * Check and trigger mutations based on observation level
+     */
+    checkMutations() {
+        // Check each threshold
+        for (const threshold of this.mutationThresholds) {
+            if (this.mutationLevel >= threshold.level && 
+                !this.activeMutations.has(threshold.mutation)) {
+                // Trigger mutation
+                this.activeMutations.add(threshold.mutation);
+                this.applyMutation(threshold.mutation);
+            }
+        }
+    }
+    
+    /**
+     * Apply a specific mutation effect
+     */
+    applyMutation(mutationType) {
+        switch (mutationType) {
+            case 'bulletPatterns':
+                // Increase bullet pattern complexity
+                this.patternMutation.patternComplexity += 1;
+                this.showMutationNotice('BULLET PATTERNS EVOLVING');
+                break;
+            case 'observerEchoes':
+                // Enable observer echo spawning
+                this.showMutationNotice('OBSERVER ECHOES DETECTED');
+                break;
+            case 'adaptiveSpawning':
+                // Enemies adapt to player style
+                this.showMutationNotice('ADAPTIVE SPAWNING ACTIVE');
+                break;
+            case 'realityGlitch':
+                // Enable visual glitches
+                this.realityGlitchIntensity = 0.3;
+                this.showMutationNotice('REALITY GLITCH DETECTED');
+                break;
+            case 'personalityBoss':
+                // Spawn personality-matched boss
+                this.showMutationNotice('PERSONALITY BOSS APPROACHING');
+                break;
+            case 'quantumArena':
+                // Arena becomes quantum-unstable
+                this.showMutationNotice('QUANTUM ARENA ACTIVE');
+                break;
+            case 'observerGod':
+                // Final mutation - maximum difficulty
+                this.realityGlitchIntensity = 1.0;
+                this.showMutationNotice('THE OBSERVER AWAKENS');
+                break;
+        }
+    }
+    
+    showMutationNotice(text) {
+        if (this.scene.showMutationNotice) {
+            this.scene.showMutationNotice(text);
+        }
     }
     
     generateObservationPoem() {

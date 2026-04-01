@@ -324,12 +324,40 @@ export default class AmbientAwarenessSystem {
             this.timeStateText.setFill('#' + this.currentPalette.accent.toString(16).padStart(6, '0'));
         }
         
-        // NOTE: Harmonic Convergence palette sync not yet implemented
+        // Sync with Harmonic Convergence system
+        this.syncWithHarmonicConvergence(this.currentPalette);
         
         // Notify Noetic Mirror for commentary
         if (this.scene.noeticMirror) {
             this.scene.noeticMirror.onTimeStateChange(this.currentTimeState);
         }
+    }
+    
+    /**
+     * Sync current palette with Harmonic Convergence system
+     * @param {Object} palette - Current time-based palette
+     * @returns {boolean} - Whether sync succeeded
+     */
+    syncWithHarmonicConvergence(palette) {
+        // Only sync if Harmonic Convergence system exists
+        if (!this.scene.harmonicConvergence) {
+            return false;
+        }
+        
+        // Convert ambient palette to Harmonic Convergence format
+        const harmonicPalette = {
+            primary: palette.player,
+            secondary: palette.enemy,
+            accent: palette.accent,
+            background: palette.background,
+            source: 'ambient', // Track that this came from Ambient Awareness
+            timeState: this.currentTimeState
+        };
+        
+        // Send to Harmonic Convergence
+        this.scene.harmonicConvergence.setAmbientPalette(harmonicPalette);
+        
+        return true;
     }
     
     startIdleDetection() {
