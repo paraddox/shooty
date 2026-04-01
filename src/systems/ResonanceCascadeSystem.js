@@ -800,6 +800,13 @@ export default class ResonanceCascadeSystem {
     }
     
     /**
+     * Get current chain array
+     */
+    getCurrentChain() {
+        return this.activeChain || [];
+    }
+    
+    /**
      * Check if a specific resonance state is active
      */
     hasResonanceState(state) {
