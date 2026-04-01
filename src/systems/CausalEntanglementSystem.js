@@ -925,6 +925,9 @@ export default class CausalEntanglementSystem {
     }
     
     updateHUD() {
+        // Guard: panel elements may not be initialized yet
+        if (!this.linkSegments) return;
+        
         // Update link segment visibility
         this.linkSegments.forEach((seg, i) => {
             seg.fillAlpha = i < this.entanglements.length ? 0.9 : 0.3;
