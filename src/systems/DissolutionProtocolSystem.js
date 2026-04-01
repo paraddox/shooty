@@ -333,6 +333,9 @@ export default class DissolutionProtocolSystem {
         // Called from update() to render essence bars via unified renderer
         if (!this.scene.graphicsManager) return;
         
+        // Guard: panel elements may not be initialized yet
+        if (!this.essenceContainer) return;
+        
         const gm = this.scene.graphicsManager;
         const containerX = this.essenceContainer.x;
         const containerY = this.essenceContainer.y;
