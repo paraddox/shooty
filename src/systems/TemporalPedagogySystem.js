@@ -202,6 +202,11 @@ export default class TemporalPedagogySystem {
         this.minHintInterval = 5000; // Minimum ms between hints
         this.demoGhost = null;       // Active demonstration
         
+        // ===== CHALLENGE TRACKING =====
+        this.recentGrazes = [];      // Timestamps of grazes in last 5 seconds
+        this.fractureKills = 0;      // Kills during fracture state
+        this.paradoxHistory = [];    // Record of paradox completions
+        
         // ===== VISUAL ELEMENTS =====
         this.pedagogyColor = 0x20b2aa;      // Pedagogical Teal
         this.pedagogyGlow = 0x40e0d0;
@@ -680,27 +685,59 @@ export default class TemporalPedagogySystem {
     }
     
     // Challenge check functions
+    
+    /**
+     * Record a graze for challenge tracking
+     */
+    recordGraze() {
+        const now = this.scene.time.now;
+        this.recentGrazes.push(now);
+        // Clean old grazes (>5 seconds)
+        this.recentGrazes = this.recentGrazes.filter(t => now - t <= 5000);
+    }
+    
     checkGrazeChallenge() {
-        // Would need to track grazes in last 5 seconds
-        return false; // Placeholder
+        const now = this.scene.time.now;
+        // Clean old grazes (>5 seconds)
+        this.recentGrazes = this.recentGrazes.filter(t => now - t <= 5000);
+        // Check if 5+ grazes in last 5 seconds
+        return this.recentGrazes.length >= 5;
     }
     
     checkEchoChallenge() {
         return this.scene.echoStorm?.absorbedCount >= 10;
     }
     
+    /**
+     * Record a kill during fracture state
+     */
+    recordKillDuringFracture() {
+        if (this.scene.fractureSystem?.isFractured) {
+            this.fractureKills++;
+        }
+    }
+    
     checkFractureKill() {
-        // Would need to track kills during fracture
-        return false; // Placeholder
+        return this.fractureKills > 0;
     }
     
     checkComboChallenge(count) {
         return this.scene.resonanceCascade?.chainSequence?.length >= count;
     }
     
+    /**
+     * Record paradox completion (perfect or not)
+     */
+    recordParadoxCompletion(wasPerfect) {
+        this.paradoxHistory.push({
+            perfect: wasPerfect,
+            time: this.scene.time.now
+        });
+    }
+    
     checkParadoxChallenge() {
-        // Would need to track perfect paradox completion
-        return false; // Placeholder
+        // Check if any perfect paradox was completed
+        return this.paradoxHistory.some(p => p.perfect);
     }
     
     // ===== UTILITY METHODS =====

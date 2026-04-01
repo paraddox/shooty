@@ -248,7 +248,7 @@ export default class NemesisGenesisSystem {
         this.announceNemesis();
         
         // Start behavioral mirroring
-        // NOTE: startMirroring() stub - behavioral mirroring not yet implemented
+        this.startMirroring();
         
         // Record in chronicle
         if (this.scene.timelineChronicle) {
@@ -257,6 +257,66 @@ export default class NemesisGenesisSystem {
                 this.profile
             );
         }
+    }
+    
+    /**
+     * Start behavioral mirroring - nemesis begins copying player patterns
+     */
+    startMirroring() {
+        const state = this.nemesis.nemesisState;
+        
+        // Initialize mirroring state
+        state.mirroringActive = true;
+        state.mirrorBuffer = []; // Track recent player positions
+        state.mirrorDelay = 500; // 500ms delay (reaction time)
+        state.mirrorAccuracy = 0.3; // Starts at 30% accuracy, increases with adaptation
+        
+        // Set up observation of player movement patterns
+        this.mirrorEvent = this.scene.time.addEvent({
+            delay: 100, // Sample every 100ms
+            callback: () => {
+                if (!this.nemesis || !this.scene.player) return;
+                
+                const player = this.scene.player;
+                
+                // Record player position and velocity
+                this.observationBuffer.push({
+                    x: player.x,
+                    y: player.y,
+                    vx: player.body?.velocity.x || 0,
+                    vy: player.body?.velocity.y || 0,
+                    timestamp: this.scene.time.now
+                });
+                
+                // Keep buffer at manageable size
+                if (this.observationBuffer.length > 100) {
+                    this.observationBuffer.shift();
+                }
+                
+                // Update mirror accuracy based on adaptation
+                state.mirrorAccuracy = Math.min(0.95, 0.3 + state.adaptationLevel * 0.65);
+            },
+            callbackScope: this,
+            loop: true
+        });
+        
+        console.log('[NemesisGenesis] Behavioral mirroring activated');
+    }
+    
+    /**
+     * Stop behavioral mirroring and cleanup
+     */
+    stopMirroring() {
+        if (this.mirrorEvent) {
+            this.mirrorEvent.remove();
+            this.mirrorEvent = null;
+        }
+        
+        if (this.nemesis?.nemesisState) {
+            this.nemesis.nemesisState.mirroringActive = false;
+        }
+        
+        console.log('[NemesisGenesis] Behavioral mirroring deactivated');
     }
     
     createNemesisEntity(x, y) {

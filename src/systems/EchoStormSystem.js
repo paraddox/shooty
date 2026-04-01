@@ -235,6 +235,78 @@ export default class EchoStormSystem {
     }
     
     /**
+     * Create an echo at a specific position (for Symbiotic Prediction fulfillment)
+     * @param {number} x - X position
+     * @param {number} y - Y position
+     * @param {Object} options - Optional parameters (velocity, color, lifetime)
+     * @returns {boolean} - Whether echo was created
+     */
+    createEchoAt(x, y, options = {}) {
+        // Must be during bullet time for echoes to function
+        if (!this.scene.nearMissState?.active && !options.force) {
+            return false;
+        }
+        
+        // Find inactive echo from pool
+        const echo = this.echoTrailPool.find(e => !e.echoData.active);
+        if (!echo) return false;
+        
+        // Set up echo with random drift velocity
+        const driftSpeed = options.driftSpeed || 30;
+        const angle = Math.random() * Math.PI * 2;
+        const vx = Math.cos(angle) * driftSpeed;
+        const vy = Math.sin(angle) * driftSpeed;
+        
+        // Activate echo at position
+        echo.setPosition(x, y);
+        echo.setAlpha(options.alpha || 0.8);
+        echo.setVisible(true);
+        echo.setRotation(angle);
+        
+        // Apply custom color if provided
+        if (options.color) {
+            echo.setTint(options.color);
+        } else {
+            echo.clearTint(); // Default echo color
+        }
+        
+        echo.echoData = {
+            active: true,
+            birthTime: this.scene.time.now,
+            velocityX: vx,
+            velocityY: vy,
+            absorbed: false,
+            originalBullet: null, // Not from a real bullet
+            isSynthetic: true // Mark as prediction-generated
+        };
+        
+        this.echoBullets.push({
+            echo: echo,
+            bullet: null
+        });
+        
+        const lifetime = options.lifetime || this.ECHO_LIFETIME;
+        
+        // Fade out with optional faster fade for prediction echoes
+        this.scene.tweens.add({
+            targets: echo,
+            alpha: 0,
+            duration: lifetime,
+            ease: 'Power2',
+            onComplete: () => {
+                if (echo.echoData.active && !echo.echoData.absorbed) {
+                    this.deactivateEcho(echo);
+                }
+            }
+        });
+        
+        // Visual flash
+        this.scene.cameras.main.flash(100, 0x9d4edd, 0.2);
+        
+        return true;
+    }
+    
+    /**
      * Update during bullet time - handle echo absorption
      */
     updateBulletTime(player) {

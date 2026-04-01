@@ -509,12 +509,51 @@ export default class MetaSystemOperator {
     }
     
     createPatchHandler(patch) {
-        // Return object with methods for each patch type
-        // NOTE: Callbacks not yet implemented - returning empty functions
+        const scene = this.scene;
+        
         return {
-            cleanup: () => {},
-            onSourceActivate: () => {},
-            onTargetActivate: () => {}
+            cleanup: () => {
+                // Restore original functions if any were patched
+                if (patch.originalFunctions) {
+                    patch.originalFunctions.forEach(({ obj, method, original }) => {
+                        obj[method] = original;
+                    });
+                }
+                patch.active = false;
+            },
+            
+            onSourceActivate: (context = {}) => {
+                // Source system activated - apply boost logic
+                if (patch.type === 'AMPLIFY') {
+                    patch.boostActive = true;
+                    patch.boostExpiry = scene.time.now + 5000; // 5 second boost window
+                    
+                    // Visual feedback
+                    if (patch.visuals && patch.visuals.flow) {
+                        patch.visuals.flow.setAlpha(1);
+                        scene.tweens.add({
+                            targets: patch.visuals.flow,
+                            alpha: 0.3,
+                            duration: 5000,
+                            ease: 'Power2'
+                        });
+                    }
+                }
+            },
+            
+            onTargetActivate: (context = {}) => {
+                // Target system activated - consume any active boost
+                if (patch.type === 'AMPLIFY' && patch.boostActive) {
+                    // Check if boost hasn't expired
+                    if (scene.time.now < patch.boostExpiry) {
+                        patch.boostActive = false;
+                        return { boosted: true, multiplier: patch.multiplier || 2 };
+                    } else {
+                        patch.boostActive = false; // Expired
+                    }
+                }
+                return { boosted: false };
+            }
         };
     }
     

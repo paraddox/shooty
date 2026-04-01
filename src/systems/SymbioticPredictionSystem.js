@@ -687,8 +687,23 @@ export default class SymbioticPredictionSystem {
             }
         }
         
-        // 3. Echo Storm enhancement
-        // NOTE: createEchoAt() not implemented in EchoStormSystem - skipping echo creation
+        // 3. Echo Storm enhancement - spawn echoes at prediction location
+        if (this.scene.echoStorm?.createEchoAt) {
+            const echoCount = prediction.isCritical ? 3 : 1;
+            for (let i = 0; i < echoCount; i++) {
+                const offsetX = (Math.random() - 0.5) * 60;
+                const offsetY = (Math.random() - 0.5) * 60;
+                this.scene.echoStorm.createEchoAt(
+                    prediction.targetX + offsetX,
+                    prediction.targetY + offsetY,
+                    {
+                        color: 0x9d4edd, // Purple for prediction echoes
+                        alpha: 0.9,
+                        lifetime: 4000
+                    }
+                );
+            }
+        }
     }
     
     // Subversion happens when player deliberately avoids the prediction
