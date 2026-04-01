@@ -49,6 +49,11 @@ export default class ResonanceCascadeSystem {
         // Damage tracking for multiplier
         this.pendingDamageBonus = 1.0;
         
+        // Chain protection properties (for ResonanceOrb CASCADE synergy)
+        this.chainBreakProtection = false; // Prevents chain from breaking on timeout
+        this.chainBreakProtectionUses = 0; // Number of uses remaining
+        this.chainWindowBonus = 0; // Additional seconds added to chain window
+        
         this.init();
     }
     
@@ -797,6 +802,36 @@ export default class ResonanceCascadeSystem {
         if (this.multiplierText) {
             this.multiplierText.setVisible(false);
         }
+    }
+    
+    /**
+     * Add chain levels (for ResonanceOrb CASCADE synergy)
+     * Grants bonus chain progress without requiring activations
+     * @param {number} levels - Number of chain levels to add
+     * @param {Object} bonuses - Optional bonuses { protectionUses, windowBonus }
+     */
+    addChainLevels(levels, bonuses = {}) {
+        // Add phantom chain steps to boost multiplier
+        for (let i = 0; i < levels; i++) {
+            this.activeChain.push('ORB_BONUS');
+            this.currentMultiplier += this.multiplierGainPerStep;
+        }
+        
+        // Apply chain break protection if provided
+        if (bonuses.protectionUses > 0) {
+            this.chainBreakProtection = true;
+            this.chainBreakProtectionUses = bonuses.protectionUses;
+        }
+        
+        // Extend chain window if provided
+        if (bonuses.windowBonus > 0) {
+            this.chainWindowBonus = bonuses.windowBonus;
+            this.chainTimer += bonuses.windowBonus;
+        }
+        
+        // Update visuals to show new chain state
+        this.updateResonanceState();
+        this.createVisuals();
     }
     
     /**

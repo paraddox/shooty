@@ -474,10 +474,12 @@ export default class ResonanceOrbSystem {
                 break;
                 
             case 'CASCADE':
-                // Cascade orb effects
+                // Cascade orb effects - enhance resonance chains
                 if (this.scene.resonanceCascade) {
-                    // NOTE: addChainLevels() not implemented - chainBreakProtection and chainWindowBonus
-                    // properties don't exist either, this needs proper implementation
+                    this.scene.resonanceCascade.addChainLevels(2, {
+                        protectionUses: 1,  // One chain break protection
+                        windowBonus: 2.0     // +2 seconds to chain window
+                    });
                 }
                 break;
                 
