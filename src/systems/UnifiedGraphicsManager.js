@@ -65,6 +65,12 @@ export default class UnifiedGraphicsManager {
     addCommand(layer, type, params) {
         if (!this.layers[layer]) return;
         
+        // Hard limit to prevent memory issues under extreme load
+        if (this.layers[layer].commands.length > 500) {
+            // Skip adding more commands this frame, layer is saturated
+            return;
+        }
+        
         this.layers[layer].commands.push({ type, params, frame: this.renderCounter });
         this.layers[layer].dirty = true;
         this.commandCount++;
@@ -101,32 +107,86 @@ export default class UnifiedGraphicsManager {
     render() {
         this.renderCounter++;
         
-        // Dynamic frame skipping based on load
-        if (this.renderCounter % (this.skipFrames + 1) !== 0) return;
+        // Skip frames under heavy load (max skip = 2 for 20fps minimum)
+        if (this.skipFrames > 0 && this.renderCounter % (this.skipFrames + 1) !== 0) {
+            // Still clear command buildup even when skipping render
+            for (const layer of Object.values(this.layers)) {
+                layer.commands = [];
+                layer.dirty = false;
+            }
+            return;
+        }
         
         // Process each layer
         for (const [name, layer] of Object.entries(this.layers)) {
             if (!layer.dirty || layer.commands.length === 0) continue;
             
+            // Cull off-screen commands before rendering
+            const visibleCommands = this.cullCommands(layer.commands);
+            
             // ONE clear per layer per frame (instead of 40)
             layer.graphics.clear();
             
-            // Batch all commands for this layer
-            this.executeCommands(layer.graphics, layer.commands);
+            // Batch all visible commands for this layer
+            if (visibleCommands.length > 0) {
+                this.executeCommands(layer.graphics, visibleCommands);
+            }
             
             // Clear commands for next frame
             layer.commands = [];
             layer.dirty = false;
         }
         
-        // Adaptive performance: increase frame skipping if overwhelmed
-        if (this.commandCount > 1000) {
-            this.skipFrames = Math.min(this.skipFrames + 1, 3);
-        } else if (this.commandCount < 100 && this.skipFrames > 0) {
-            this.skipFrames--;
+        // Adaptive performance tuning
+        if (this.commandCount > 800) {
+            this.skipFrames = Math.min(this.skipFrames + 1, 2); // Cap at skipping 2 frames
+        } else if (this.commandCount < 200 && this.skipFrames > 0) {
+            this.skipFrames = Math.max(this.skipFrames - 1, 0);
         }
         
         this.commandCount = 0;
+    }
+    
+    /**
+     * Cull commands that are off-screen to reduce GPU load
+     */
+    cullCommands(commands) {
+        const camera = this.scene.cameras.main;
+        const viewX = camera.scrollX - 100; // Buffer margin
+        const viewY = camera.scrollY - 100;
+        const viewW = camera.width + 200;
+        const viewH = camera.height + 200;
+        
+        return commands.filter(cmd => {
+            const params = cmd.params;
+            if (!params) return false;
+            
+            // Quick bounds check based on command type
+            switch (cmd.type) {
+                case 'circle':
+                    return params.x + params.radius >= viewX && 
+                           params.x - params.radius <= viewX + viewW &&
+                           params.y + params.radius >= viewY && 
+                           params.y - params.radius <= viewY + viewH;
+                case 'line':
+                    return (params.x1 >= viewX && params.x1 <= viewX + viewW &&
+                           params.y1 >= viewY && params.y1 <= viewY + viewH) ||
+                           (params.x2 >= viewX && params.x2 <= viewX + viewW &&
+                           params.y2 >= viewY && params.y2 <= viewY + viewH);
+                case 'rect':
+                    return params.x + params.width >= viewX && 
+                           params.x <= viewX + viewW &&
+                           params.y + params.height >= viewY && 
+                           params.y <= viewY + viewH;
+                case 'path':
+                    // Check first point of path
+                    return params.points && params.points.length > 0 &&
+                           params.points[0].x >= viewX && 
+                           params.points[0].x <= viewX + viewW;
+                default:
+                    return true;
+            }
+        });
     }
     
     executeCommands(graphics, commands) {
