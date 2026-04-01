@@ -188,7 +188,7 @@ export default class AthenaeumProtocolSystem {
         this.updatePlayerPath(player);
         
         // Record activities
-        this.recordActivity(player);
+        this.recordActivity(player, dt);
         
         // Update region states
         this.updateRegions(dt);
@@ -216,7 +216,7 @@ export default class AthenaeumProtocolSystem {
         }
     }
     
-    recordActivity(player) {
+    recordActivity(player, dt) {
         const gridX = Math.floor(player.x / this.REGION_SIZE);
         const gridY = Math.floor(player.y / this.REGION_SIZE);
         const key = `${gridX},${gridY}`;
@@ -226,11 +226,11 @@ export default class AthenaeumProtocolSystem {
         
         // Calculate movement intensity
         let movement = 0;
-        if (this.playerPath.length >= 2) {
+        if (this.playerPath.length >= 2 && dt > 0) {
             const last = this.playerPath[this.playerPath.length - 1];
             const prev = this.playerPath[this.playerPath.length - 2];
             const dist = Phaser.Math.Distance.Between(last.x, last.y, prev.x, prev.y);
-            movement = dist / dt; // pixels per second
+            movement = dist / (dt / 1000); // pixels per second (dt is in ms)
         }
         
         // Record to buffer for batch processing

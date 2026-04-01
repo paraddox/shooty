@@ -820,21 +820,21 @@ export default class NoeticMirrorSystem {
         
         // Only show if enough time has passed
         if (this.commentaryCooldown <= 0) {
-            this.showInsight(insight, 'ambient');
+            this.showFloatingCommentary(insight);
             this.commentaryCooldown = this.minCommentaryInterval;
         }
     }
     
     onDreamStateEnter() {
-        this.showInsight("The game dreams without you...", 'dream');
+        this.showFloatingCommentary("The game dreams without you...");
     }
     
     onDreamStateExit(duration) {
         const minutes = Math.floor(duration / 60000);
         if (minutes > 0) {
-            this.showInsight(`You return from ${minutes} minutes of shared dreaming`, 'dream');
+            this.showFloatingCommentary(`You return from ${minutes} minutes of shared dreaming`);
         } else {
-            this.showInsight("You return before the dream deepened", 'dream');
+            this.showFloatingCommentary("You return before the dream deepened");
         }
     }
     

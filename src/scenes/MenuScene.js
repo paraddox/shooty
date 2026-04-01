@@ -60,7 +60,7 @@ export default class MenuScene extends Phaser.Scene {
         });
 
         // Start prompt with pulse animation
-        const startText = this.add.text(cx, cy + 130, '[ CLICK TO START ]', {
+        const startText = this.add.text(cx, cy + 200, '[ CLICK TO START ]', {
             fontFamily: 'monospace',
             fontSize: '18px',
             letterSpacing: 4,
@@ -84,7 +84,7 @@ export default class MenuScene extends Phaser.Scene {
         // Chronicle button (if shards exist)
         const chronicle = this.loadChronicle();
         if (chronicle.shards.length > 0) {
-            const chronicleText = this.add.text(cx, cy + 170, `[ CHRONICLE (${chronicle.shards.length}) ]`, {
+            const chronicleText = this.add.text(cx, cy + 240, `[ CHRONICLE (${chronicle.shards.length}) ]`, {
                 fontFamily: 'monospace',
                 fontSize: '14px',
                 letterSpacing: 2,

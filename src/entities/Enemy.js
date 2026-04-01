@@ -191,4 +191,55 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
             onComplete: () => this.destroy()
         });
     }
+    
+    escape() {
+        // Visual escape effect - enemy retreats and fades
+        this.isEscaping = true;
+        
+        // Calculate escape direction (away from player)
+        if (this.target && this.target.active) {
+            const angle = Phaser.Math.Angle.Between(this.target.x, this.target.y, this.x, this.y);
+            this.setVelocity(
+                Math.cos(angle) * this.speed * 2,
+                Math.sin(angle) * this.speed * 2
+            );
+        }
+        
+        // Fade out while retreating
+        this.scene.tweens.add({
+            targets: this,
+            alpha: 0,
+            scaleX: this.scaleX * 0.5,
+            scaleY: this.scaleY * 0.5,
+            duration: 1000,
+            ease: 'Power2',
+            onComplete: () => {
+                // Emit escape event for Rival Protocol
+                this.scene.events.emit('enemyEscaped', {
+                    id: this.rivalId || this.scene.generateEnemyId(),
+                    enemyType: this.type,
+                    health: this.health,
+                    maxHealth: this.maxHealth,
+                    healthPercent: this.health / this.maxHealth,
+                    x: this.x,
+                    y: this.y,
+                    traumaType: this.lastDamageType || 'generic',
+                    hitLocation: { x: this.lastHitX, y: this.lastHitY }
+                });
+                this.destroy();
+            }
+        });
+    }
+    
+    // Called when hit to track damage type for trauma
+    onHitByPlayer(bullet, damageType) {
+        this.lastDamageType = damageType;
+        this.lastHitX = bullet ? bullet.x : this.x;
+        this.lastHitY = bullet ? bullet.y : this.y;
+        
+        // Generate or retain rival ID for tracking
+        if (!this.rivalId) {
+            this.rivalId = 'enemy_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+    }
 }

@@ -416,7 +416,7 @@ export default class ObserverEffectSystem {
         this.generateObservationPoem();
         
         // Check for mutation triggers
-        this.checkMutations();
+        // NOTE: checkMutations() stub - mutation system not yet fully implemented
     }
     
     generateObservationPoem() {

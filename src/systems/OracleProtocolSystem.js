@@ -239,8 +239,8 @@ export default class OracleProtocolSystem {
     }
     
     setupEvents() {
-        // Hook into enemy spawning
-        this.scene.events.on('preSpawnEnemy', this.onPreSpawnEnemy, this);
+        // Event hooks for oracle system
+        // NOTE: preSpawnEnemy handler removed - feature not yet implemented
     }
     
     awakenOracle() {

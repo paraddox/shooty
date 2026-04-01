@@ -678,6 +678,15 @@ export default class AethericConvergenceSystem {
             });
         }
         
+        // Inscribe convergence in the living chronicle
+        if (this.scene.inscriptionProtocol) {
+            this.scene.inscriptionProtocol.requestInscription('discovery', {
+                name: convergence.name || `${convergence.tier.toUpperCase()} CONVERGENCE`,
+                description: `A ${convergence.tier} convergence of ${convergence.systems?.length || 0} systems: ${convergence.systems?.join(', ')}`,
+                significance: `Entropy: ${convergence.entropy?.toFixed(2) || 'unknown'}, Tier: ${convergence.tier}`
+            });
+        }
+        
         console.log(`Convergence activated: ${convergence.name} (${convergence.tier})`);
     }
     

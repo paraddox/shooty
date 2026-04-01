@@ -612,6 +612,10 @@ export default class FractureSystem {
             if (this.scene.omniWeapon) {
                 this.scene.omniWeapon.onPerfectFracture();
             }
+            // Guaranteed Resonance Orb drop for perfect fractures
+            if (this.scene.resonanceOrbs) {
+                this.scene.resonanceOrbs.onPerfectFracture(this.scene.player.x, this.scene.player.y);
+            }
         } else if (this.killsInFracture >= 3) {
             text = 'MASSACRE';
             color = '#ff3366';

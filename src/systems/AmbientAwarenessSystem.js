@@ -318,10 +318,7 @@ export default class AmbientAwarenessSystem {
             this.timeStateText.setFill('#' + this.currentPalette.accent.toString(16).padStart(6, '0'));
         }
         
-        // Apply to Harmonic Convergence if exists
-        if (this.scene.harmonicConvergence) {
-            this.scene.harmonicConvergence.setAmbientPalette(this.currentTimeState);
-        }
+        // NOTE: Harmonic Convergence palette sync not yet implemented
         
         // Notify Noetic Mirror for commentary
         if (this.scene.noeticMirror) {

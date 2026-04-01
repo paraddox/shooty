@@ -117,6 +117,15 @@ export default class EchoStormSystem {
         this.absorbedEchoes = 0;
         this.echoBullets = [];
         
+        // Emit system activation for Dream State Protocol
+        this.scene.events.emit('systemActivated', {
+            system: 'echoStorm',
+            x: this.scene.player?.x || 960,
+            y: this.scene.player?.y || 720,
+            intensity: 1,
+            context: 'bulletTimeStart'
+        });
+        
         // Show echo ring
         this.echoRing.setVisible(true);
         this.echoCore.setVisible(true);
@@ -240,7 +249,8 @@ export default class EchoStormSystem {
         // Update echo ring position and pulse
         this.echoRing.clear();
         this.echoRing.lineStyle(2, this.ECHO_COLOR, 0.3 + Math.sin(this.scene.time.now / 200) * 0.2);
-        this.echoRing.strokeCircle(player.x, player.y, this.ECHO_ABSORB_RADIUS);
+        const ringRadius = this.getEmpatheticAbsorbRadius();
+        this.echoRing.strokeCircle(player.x, player.y, ringRadius);
         
         // Update echo core
         this.echoCore.setPosition(player.x, player.y);
@@ -277,8 +287,9 @@ export default class EchoStormSystem {
                 echo.echoData.velocityY *= 0.95;
             }
             
-            // Check absorption
-            if (distToPlayer <= this.ECHO_ABSORB_RADIUS && !echo.echoData.absorbed) {
+            // Check absorption (with empathetic radius from Heartflux)
+            const absorbRadius = this.getEmpatheticAbsorbRadius();
+            if (distToPlayer <= absorbRadius && !echo.echoData.absorbed) {
                 this.absorbEcho(echo, player);
                 return false; // Remove from active list
             }
@@ -315,6 +326,15 @@ export default class EchoStormSystem {
         if (this.scene.temporalPedagogy) {
             this.scene.temporalPedagogy.recordSystemUse('ECHO_STORM', 1);
         }
+        
+        // Emit echo absorbed event for Dream State Protocol
+        this.scene.events.emit('echoAbsorbed', {
+            x: echo.x,
+            y: echo.y,
+            type: echo.echoData?.type || 'standard',
+            power: echo.echoData?.power || 1,
+            totalAbsorbed: this.absorbedEchoes
+        });
         
         // Absorption effect
         this.scene.tweens.add({
@@ -526,6 +546,21 @@ export default class EchoStormSystem {
                 bullet.isHoming = false;
             }
         });
+    }
+    
+    /**
+     * Get empathetic absorb radius from Heartflux Protocol
+     * When player shows high tremor (stress), graze radius increases to help
+     */
+    getEmpatheticAbsorbRadius() {
+        const baseRadius = this.ECHO_ABSORB_RADIUS;
+        
+        // Check if Heartflux is available and player has high tremor
+        if (this.scene.heartflux) {
+            return this.scene.heartflux.getEmpatheticGrazeRadius(baseRadius);
+        }
+        
+        return baseRadius;
     }
     
     destroy() {

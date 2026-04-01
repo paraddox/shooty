@@ -130,12 +130,39 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
                         this.x, this.y, finalAngle, weaponStats.bulletSpeed, true
                     );
                 }
+                
+                // Record bullet trail for Apophenia Protocol — The 53rd Dimension
+                if (this.scene.apophenia) {
+                    this.scene.apophenia.recordBulletTrail(this.x, this.y, finalAngle, weaponStats.bulletSpeed);
+                }
+                
+                // Emit bullet fired event for Dream State Protocol
+                this.scene.events.emit('bulletFired', {
+                    x: this.x,
+                    y: this.y,
+                    angle: finalAngle,
+                    speed: weaponStats.bulletSpeed,
+                    vx: Math.cos(finalAngle) * weaponStats.bulletSpeed,
+                    vy: Math.sin(finalAngle) * weaponStats.bulletSpeed,
+                    isPlayer: true
+                });
             }
         });
         
         // Track for Recursion Engine (shot analysis)
         if (this.scene.recursionEngine) {
             this.scene.recursionEngine.recordShot();
+        }
+        
+        // Audio: bullet fired
+        if (this.scene.synaesthesiaProtocol) {
+            const weaponType = shotCount === 3 ? 'spread' : weaponStats.fireRate < 100 ? 'rapid' : 'standard';
+            this.scene.synaesthesiaProtocol.onGameplayEvent('bulletFired', weaponType);
+        }
+        
+        // Rhythm of the Void: Check for on-beat bonus
+        if (this.scene.rhythmOfTheVoid) {
+            this.scene.rhythmOfTheVoid.onPlayerFire();
         }
     }
 

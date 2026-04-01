@@ -732,10 +732,7 @@ export default class SymbioticPredictionSystem {
         }
         
         // 3. Echo Storm enhancement
-        if (this.scene.echoStorm) {
-            // Fulfillment creates echo at prediction point
-            this.scene.echoStorm.createEchoAt(prediction.targetX, prediction.targetY, 'harmony');
-        }
+        // NOTE: createEchoAt() not implemented in EchoStormSystem - skipping echo creation
     }
     
     // Subversion happens when player deliberately avoids the prediction

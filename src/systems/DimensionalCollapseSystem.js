@@ -288,14 +288,6 @@ export default class DimensionalCollapseSystem {
         this.totalCollapses++;
         this.collapseDamageDealt = 0;
         
-        // Record in chronicle
-        if (this.scene.timelineChronicle) {
-            this.scene.timelineChronicle.recordEvent('DIMENSIONAL_COLLAPSE', {
-                duration: this.collapseDuration,
-                timestamp: Date.now()
-            });
-        }
-        
         // Record in resonance cascade (ultimate activation)
         if (this.scene.resonanceCascade) {
             this.scene.resonanceCascade.recordActivation('DIMENSIONAL_COLLAPSE', {

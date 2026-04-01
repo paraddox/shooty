@@ -190,7 +190,7 @@ export default class EgregoreProtocolSystem {
     
     init() {
         this.createVisuals();
-        this.initializeEmergentMechanics();
+        // NOTE: initializeEmergentMechanics() removed - feature not yet implemented
         console.log(`🧠 Egregore Protocol initialized — Stage ${this.egregoreStage}, ${this.encounterCount} collective encounters`);
     }
     

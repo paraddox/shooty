@@ -41,6 +41,23 @@ import DissolutionProtocolSystem from '../systems/DissolutionProtocolSystem.js';
 import TemporalPedagogySystem from '../systems/TemporalPedagogySystem.js';
 import AthenaeumProtocolSystem from '../systems/AthenaeumProtocolSystem.js';
 import AxiomNexusSystem from '../systems/AxiomNexusSystem.js';
+import InscriptionProtocolSystem from '../systems/InscriptionProtocolSystem.js';
+import SynaesthesiaProtocolSystem from '../systems/SynaesthesiaProtocolSystem.js';
+import TychosAuroraSystem from '../systems/TychosAuroraSystem.js';
+import RivalProtocolSystem from '../systems/RivalProtocolSystem.js';
+import RhythmOfTheVoidSystem from '../systems/RhythmOfTheVoidSystem.js';
+import ApertureProtocolSystem from '../systems/ApertureProtocolSystem.js';
+import CartographerProtocolSystem from '../systems/CartographerProtocolSystem.js';
+import ResonanceOrbSystem from '../systems/ResonanceOrbSystem.js';
+import SanctumProtocolSystem from '../systems/SanctumProtocolSystem.js';
+import MetaSystemOperator from '../systems/MetaSystemOperator.js';
+import LivingWorldSystem from '../systems/LivingWorldSystem.js';
+import DreamStateProtocol from '../systems/DreamStateProtocol.js';
+import ApopheniaProtocol from '../systems/ApopheniaProtocol.js';
+import VoidExchangeSystem from '../systems/VoidExchangeSystem.js';
+import HeartfluxProtocolSystem from '../systems/HeartfluxProtocolSystem.js';
+import ExogenesisProtocolSystem from '../systems/ExogenesisProtocolSystem.js';
+import ProteusProtocolSystem from '../systems/ProteusProtocolSystem.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -181,6 +198,57 @@ export default class GameScene extends Phaser.Scene {
         
         // Axiom Nexus — The Synthesis Mentor (40th dimension: PEDAGOGICAL SYNTHESIS)
         this.axiomNexus = null;
+        
+        // Inscription Protocol — Transcendence Through Persistent Memory (41st dimension)
+        this.inscriptionProtocol = null;
+        
+        // Synaesthesia Protocol — The 42nd Dimension: AUDITORY SYNTHESIS
+        this.synaesthesiaProtocol = null;
+        
+        // Tychos Aurora Protocol — The 43rd Dimension: PHASE SPACE MANIFESTATION
+        this.tychosAurora = null;
+        
+        // Rival Protocol — The 44th Dimension: RELATIONAL EVOLUTION
+        this.rivalProtocol = null;
+        
+        // Rhythm of the Void — The 45th Dimension: MUSICAL ONTOGENESIS
+        this.rhythmOfTheVoid = null;
+        
+        // Aperture Protocol — The 46th Dimension: ATTENTION AS ONTOLOGY
+        this.apertureProtocol = null;
+        
+        // Cartographer Protocol — The 47th Dimension: SPATIAL ONTOLOGY
+        this.cartographerProtocol = null;
+        
+        // Resonance Orb System — The 48th Dimension: LIVING POWER-UPS
+        this.resonanceOrbs = null;
+        
+        // Sanctum Protocol — The 49th Dimension: PERSISTENT SPATIAL METAGAME
+        this.sanctumProtocol = null;
+        
+        // Meta-System Operator — The 50th Dimension: ARCHITECTURAL ONTOLOGY
+        this.metaSystemOperator = null;
+        
+        // Living World Protocol — The 51st Dimension: AUTONOMOUS CONTINUITY
+        this.livingWorld = null;
+        
+        // Dream State Protocol — The 52nd Dimension: ONEIRIC SYNTHESIS
+        this.dreamState = null;
+        
+        // Apophenia Protocol — The 53rd Dimension: PATTERN DIVINATION
+        this.apophenia = null;
+        
+        // Void Exchange System — The 54th Dimension: TEMPORAL CAPITALISM
+        this.voidExchange = null;
+        
+        // Heartflux Protocol — The 55th Dimension: BIOMETRIC EMPATHY
+        this.heartflux = null;
+        
+        // Exogenesis Protocol — The 56th Dimension: REALITY MANIFESTATION
+        this.exogenesis = null;
+        
+        // Proteus Protocol — The 57th Dimension: THE EVOLUTION OF RULES
+        this.proteus = null;
         
         // Equipped shard bonuses
         this.shardBonuses = {};
@@ -345,8 +413,8 @@ export default class GameScene extends Phaser.Scene {
         // Fix HUD elements to screen (ignore camera scroll/zoom)
         [this.healthBarBg, this.healthBar, this.scoreText, this.waveText, 
          this.enemyText, this.nearMissText, this.syntropyText, this.convergenceText, 
-         this.synthesisText, this.waveTimerBg, this.waveTimerBar].forEach(el => {
-            el.setScrollFactor(0);
+         this.synthesisText, this.patternText, this.waveTimerBg, this.waveTimerBar, this.audioIndicator].forEach(el => {
+            if (el) el.setScrollFactor(0);
         });
 
         // Wave system
@@ -473,6 +541,70 @@ export default class GameScene extends Phaser.Scene {
         // Initialize Axiom Nexus — The Synthesis Mentor (40th dimension: PEDAGOGICAL SYNTHESIS)
         this.axiomNexus = new AxiomNexusSystem(this);
         
+        // Initialize Inscription Protocol — Transcendence Through Persistent Memory (41st dimension)
+        this.inscriptionProtocol = new InscriptionProtocolSystem(this);
+        
+        // Initialize Synaesthesia Protocol — The 42nd Dimension: AUDITORY SYNTHESIS
+        this.synaesthesiaProtocol = new SynaesthesiaProtocolSystem(this);
+        this.synaesthesiaProtocol.start();
+        
+        // Initialize Tychos Aurora Protocol — The 43rd Dimension: PHASE SPACE MANIFESTATION
+        this.tychosAurora = new TychosAuroraSystem(this);
+        
+        // Initialize Rival Protocol — The 44th Dimension: RELATIONAL EVOLUTION
+        this.rivalProtocol = new RivalProtocolSystem(this);
+        
+        // Initialize Rhythm of the Void — The 45th Dimension: MUSICAL ONTOGENESIS
+        this.rhythmOfTheVoid = new RhythmOfTheVoidSystem(this);
+        
+        // Initialize Aperture Protocol — The 46th Dimension: ATTENTION AS ONTOLOGY
+        this.apertureProtocol = new ApertureProtocolSystem(this);
+        
+        // Initialize Cartographer Protocol — The 47th Dimension: SPATIAL ONTOLOGY
+        this.cartographerProtocol = new CartographerProtocolSystem(this);
+        
+        // Initialize Resonance Orb System — The 48th Dimension: LIVING POWER-UPS
+        this.resonanceOrbs = new ResonanceOrbSystem(this);
+        this.resonanceOrbs.init();
+        
+        // Initialize Sanctum Protocol — The 49th Dimension: PERSISTENT SPATIAL METAGAME
+        this.sanctumProtocol = new SanctumProtocolSystem(this);
+        
+        // Initialize Meta-System Operator — The 50th Dimension: ARCHITECTURAL ONTOLOGY
+        this.metaSystemOperator = new MetaSystemOperator(this);
+        
+        // Initialize Living World Protocol — The 51st Dimension: AUTONOMOUS CONTINUITY
+        this.livingWorld = new LivingWorldSystem(this);
+        
+        // Initialize Dream State Protocol — The 52nd Dimension: ONEIRIC SYNTHESIS
+        this.dreamState = new DreamStateProtocol(this);
+        
+        // Initialize Apophenia Protocol — The 53rd Dimension: PATTERN DIVINATION
+        this.apophenia = new ApopheniaProtocol(this);
+        
+        // Initialize Void Exchange System — The 54th Dimension: TEMPORAL CAPITALISM
+        this.voidExchange = new VoidExchangeSystem(this);
+        
+        // Initialize Heartflux Protocol — The 55th Dimension: BIOMETRIC EMPATHY
+        this.heartflux = new HeartfluxProtocolSystem(this);
+        
+        // Initialize Exogenesis Protocol — The 56th Dimension: REALITY MANIFESTATION
+        this.exogenesis = new ExogenesisProtocolSystem(this);
+        
+        // Initialize Proteus Protocol — The 57th Dimension: THE EVOLUTION OF RULES
+        this.proteus = new ProteusProtocolSystem(this);
+        this.proteus.create();
+        
+        // Show Proteus welcome (once per session)
+        this.time.delayedCall(2000, () => {
+            if (this.proteus && this.proteus.genome.generation <= 2) {
+                this.showProteusWelcome();
+            }
+        });
+        
+        // Show void exchange hint
+        this.time.delayedCall(25000, () => this.showVoidExchangeHint());
+        
         // Apply equipped shard bonuses
         this.applyEquippedShardBonuses();
         
@@ -490,6 +622,12 @@ export default class GameScene extends Phaser.Scene {
         
         // Show observer effect hint (subtle, mysterious)
         this.time.delayedCall(15000, () => this.showObserverHint());
+        
+        // Show Tychos Aurora hint (introducing the 43rd dimension)
+        this.time.delayedCall(20000, () => this.showTychosAuroraHint());
+        
+        // Show Rival Protocol hint (the 44th dimension - relational evolution)
+        this.time.delayedCall(21000, () => this.showRivalHint());
         
         // Show void coherence hint (deep purple, mysterious)
         this.time.delayedCall(22000, () => this.showVoidHint());
@@ -565,6 +703,24 @@ export default class GameScene extends Phaser.Scene {
         
         // Show Athenaeum Protocol hint (the geography of memory - TOPOGRAPHY)
         this.time.delayedCall(420000, () => this.showAthenaeumHint());
+        
+        // Show Synaesthesia Protocol hint (the 42nd dimension - AUDITORY SYNTHESIS)
+        this.time.delayedCall(450000, () => this.showSynaesthesiaHint());
+        
+        // Show Aperture Protocol hint (the 46th dimension - ATTENTION AS ONTOLOGY)
+        this.time.delayedCall(480000, () => this.showApertureHint());
+        
+        // Show Cartographer Protocol hint (the 47th dimension - SPATIAL ONTOLOGY)
+        this.time.delayedCall(5000, () => this.showCartographerHint());
+        
+        // Show Meta-System Operator hint (the 50th dimension - ARCHITECTURAL ONTOLOGY)
+        this.time.delayedCall(10000, () => this.showMetaSystemOperatorHint());
+        
+        // Show Living World Protocol hint (the 51st dimension - AUTONOMOUS CONTINUITY)
+        this.time.delayedCall(15000, () => this.showLivingWorldHint());
+        
+        // Show Dream State Protocol hint (the 52nd dimension - ONEIRIC SYNTHESIS)
+        this.time.delayedCall(20000, () => this.showDreamStateHint());
     }
     
     showDissolutionHint() {
@@ -787,6 +943,188 @@ export default class GameScene extends Phaser.Scene {
             y: hint.y - 30,
             alpha: 0,
             duration: 15000,
+            ease: 'Power2',
+            onComplete: () => hint.destroy()
+        });
+    }
+    
+    showSynaesthesiaHint() {
+        const audioData = this.synaesthesiaProtocol?.getAudioData();
+        const intensity = audioData?.intensity?.toFixed(2) || '0.00';
+        const measure = audioData?.measure || 0;
+        
+        const hint = this.add.text(this.player.x, this.player.y - 100,
+            `SYNAESTHESIA PROTOCOL — THE 42ND DIMENSION: AUDITORY SYNTHESIS\n` +
+            `You are now hearing the game. Every action creates sound.\n` +
+            `Bullets ring. Near-misses swell. Deaths resonate.\n` +
+            `Intensity: ${intensity} | Measure: ${measure}\n` +
+            `The game is no longer just played. It is performed. It is composed.\n` +
+            `To see the sound, to hear the geometry, to become the song.`, {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            letterSpacing: 1,
+            fill: '#c0c0c0', // Synaesthetic Silver
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: hint,
+            y: hint.y - 30,
+            alpha: 0,
+            duration: 15000,
+            ease: 'Power2',
+            onComplete: () => hint.destroy()
+        });
+    }
+    
+    showApertureHint() {
+        const stats = this.apertureProtocol?.getStats();
+        const blinks = stats?.blinksUsed || 0;
+        const dwell = Math.floor(stats?.totalDwellTime || 0);
+        const canBlink = this.apertureProtocol?.canBlink() || false;
+        
+        const hint = this.add.text(this.player.x, this.player.y - 100,
+            `APERTURE PROTOCOL — THE 46TH DIMENSION: ATTENTION AS ONTOLOGY\n` +
+            `The game responds not to your bullets, but to your GAZE.\n` +
+            `Looking empowers enemies. Ignoring spawns resentment.\n` +
+            `Blinks used: ${blinks} | Time focused: ${dwell}s\n` +
+            `${canBlink ? '[SPACE] to BLINK — reset all charges' : 'Blink recharging...'}\n` +
+            `You cannot pay attention to everything. Choose wisely.\n` +
+            `Where your eye goes, power flows. To see is to change.`, {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            letterSpacing: 1,
+            fill: '#00d4aa', // Aperture Cyan
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: hint,
+            y: hint.y - 30,
+            alpha: 0,
+            duration: 15000,
+            ease: 'Power2',
+            onComplete: () => hint.destroy()
+        });
+    }
+    
+    showCartographerHint() {
+        const hint = this.add.text(this.player.x, this.player.y - 100,
+            `CARTOGRAPHER PROTOCOL — THE 47TH DIMENSION: SPATIAL ONTOLOGY\n` +
+            `The void is not empty — it is WAITING.\n` +
+            `Your movement creates ripples. Your stillness creates sanctuaries.\n` +
+            `Near-misses crystallize into shields. Walk the same path to raise walls.\n` +
+            `The arena becomes your legacy. Shape it wisely.\n` +
+            `You do not merely fight in the world — you cultivate it.`, {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            letterSpacing: 1,
+            fill: '#00b4d8', // Void Cerulean
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: hint,
+            y: hint.y - 30,
+            alpha: 0,
+            duration: 12000,
+            ease: 'Power2',
+            onComplete: () => hint.destroy()
+        });
+    }
+    
+    showMetaSystemOperatorHint() {
+        const patches = this.metaSystemOperator?.getActivePatches() || [];
+        const behaviors = this.metaSystemOperator?.getEmergentBehaviors() || [];
+        
+        const hint = this.add.text(this.player.x, this.player.y - 100,
+            `META-SYSTEM OPERATOR — THE 50TH DIMENSION: ARCHITECTURAL ONTOLOGY\n` +
+            `${patches.length} active patches. ${behaviors.length} emergent behaviors.\n` +
+            `Press [P] to enter PATCH MODE — wire systems together\n` +
+            `Create AMPLIFY, CASCADE, MODULATE, SYNERGY connections\n` +
+            `Discover emergent behaviors like ECHO FRACTURE and QUANTUM CASCADE\n` +
+            `You are no longer just playing systems — you are ARCHITECTING them.`, {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            letterSpacing: 1,
+            fill: '#ffb700', // Meta-Gold
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: hint,
+            y: hint.y - 30,
+            alpha: 0,
+            duration: 15000,
+            ease: 'Power2',
+            onComplete: () => hint.destroy()
+        });
+        
+        // Reveal the HUD
+        if (this.metaSystemOperator) {
+            this.metaSystemOperator.revealHUD();
+        }
+    }
+    
+    showLivingWorldHint() {
+        const stats = this.livingWorld?.getEcosystemStats() || { population: 0, epoch: 1, shrines: 0 };
+        const factions = stats.factions || [];
+        
+        const hint = this.add.text(this.player.x, this.player.y - 100,
+            `THE LIVING WORLD — THE 51ST DIMENSION: AUTONOMOUS CONTINUITY\n` +
+            `${stats.population} entities in Epoch ${stats.epoch}. ${stats.shrines} shrines mark the fallen.\n` +
+            `Factions: ${factions.map(f => f.name).join(', ') || 'Forming...'}\n` +
+            `The world lives even when you are absent. Close the tab — they continue.\n` +
+            `Return to find evolved enemies, territorial wars, emergent history.\n` +
+            `You do not play a game. You enter a world that breathes.`, {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            letterSpacing: 1,
+            fill: '#00c853', // Living Green
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: hint,
+            y: hint.y - 30,
+            alpha: 0,
+            duration: 18000,
+            ease: 'Power2',
+            onComplete: () => hint.destroy()
+        });
+        
+        // Update territory visuals
+        if (this.livingWorld) {
+            this.livingWorld.updateTerritoryVisuals();
+        }
+    }
+    
+    showDreamStateHint() {
+        const archive = this.dreamState?.getDreamArchive() || [];
+        const dreamCount = archive.length;
+        const latestDream = archive[0];
+        
+        const hint = this.add.text(this.player.x, this.player.y - 100,
+            `DREAM STATE PROTOCOL — THE 52ND DIMENSION: ONEIRIC SYNTHESIS\n` +
+            `${dreamCount} dreams archived. The game dreams of you.\n` +
+            `When you die, pause, or leave — reality dissolves into symbols.\n` +
+            `Kills become mountains. Bullets become rivers. Near-misses become lightning.\n` +
+            `The dream leaves RESIDUE that reshapes the waking world.\n` +
+            `To play is to dream. To dream is to change. This is the 52nd dimension.`, {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            letterSpacing: 1,
+            fill: '#4b0082', // Dream Indigo
+            stroke: '#00d4ff',
+            strokeThickness: 1,
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: hint,
+            y: hint.y - 30,
+            alpha: 0,
+            duration: 20000,
             ease: 'Power2',
             onComplete: () => hint.destroy()
         });
@@ -1112,6 +1450,48 @@ export default class GameScene extends Phaser.Scene {
             fill: '#9d4edd',
             align: 'center'
         }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: hint,
+            y: hint.y - 30,
+            alpha: 0,
+            duration: 5000,
+            ease: 'Power2',
+            onComplete: () => hint.destroy()
+        });
+    }
+    
+    showTychosAuroraHint() {
+        const hint = this.add.text(this.player.x, this.player.y - 100,
+            'TYCHOS AURORA MANIFESTS\nThe 43rd Dimension: See the invisible topology',
+            {
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                letterSpacing: 1,
+                fill: '#00f0ff', // Aurora cyan
+                align: 'center'
+            }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: hint,
+            y: hint.y - 30,
+            alpha: 0,
+            duration: 5000,
+            ease: 'Power2',
+            onComplete: () => hint.destroy()
+        });
+    }
+    
+    showRivalHint() {
+        const hint = this.add.text(this.player.x, this.player.y - 100,
+            'THE RIVAL PROTOCOL AWAKENS\nThe 44th Dimension: Those who escape remember...',
+            {
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                letterSpacing: 1,
+                fill: '#cd7f32', // Burnished bronze
+                align: 'center'
+            }).setOrigin(0.5);
         
         this.tweens.add({
             targets: hint,
@@ -1502,6 +1882,76 @@ export default class GameScene extends Phaser.Scene {
             this.axiomNexus.update(dt);
         }
         
+        // Update Inscription Protocol — Transcendence Through Persistent Memory
+        if (this.inscriptionProtocol && this.player) {
+            this.inscriptionProtocol.update(dt);
+        }
+        
+        // Update Synaesthesia Protocol — The 42nd Dimension: AUDITORY SYNTHESIS
+        if (this.synaesthesiaProtocol) {
+            this.synaesthesiaProtocol.update(time, delta);
+        }
+        
+        // Update Tychos Aurora Protocol — The 43rd Dimension: PHASE SPACE MANIFESTATION
+        if (this.tychosAurora) {
+            this.tychosAurora.update(delta);
+        }
+        
+        // Update Rival Protocol — The 44th Dimension: RELATIONAL EVOLUTION
+        if (this.rivalProtocol) {
+            this.rivalProtocol.update(dt);
+        }
+        
+        // Update Rhythm of the Void — The 45th Dimension: MUSICAL ONTOGENESIS
+        if (this.rhythmOfTheVoid) {
+            this.rhythmOfTheVoid.update(dt);
+        }
+        
+        // Update Cartographer Protocol — The 47th Dimension: SPATIAL ONTOLOGY
+        if (this.cartographerProtocol && this.player) {
+            this.cartographerProtocol.update(dt, this.player, this.enemies);
+        }
+        
+        // Update Resonance Orb System — The 48th Dimension: LIVING POWER-UPS
+        if (this.resonanceOrbs) {
+            this.resonanceOrbs.update(time, delta);
+        }
+        
+        // Update Meta-System Operator — The 50th Dimension: ARCHITECTURAL ONTOLOGY
+        if (this.metaSystemOperator) {
+            this.metaSystemOperator.update(dt);
+        }
+        
+        // Update Dream State Protocol — The 52nd Dimension: ONEIRIC SYNTHESIS
+        if (this.dreamState) {
+            this.dreamState.update(time, delta);
+        }
+        
+        // Update Apophenia Protocol — The 53rd Dimension: PATTERN DIVINATION
+        if (this.apophenia) {
+            this.apophenia.update();
+        }
+        
+        // Update Void Exchange System — The 54th Dimension: TEMPORAL CAPITALISM
+        if (this.voidExchange) {
+            this.voidExchange.update(dt, this.player);
+        }
+        
+        // Update Heartflux Protocol — The 55th Dimension: BIOMETRIC EMPATHY
+        if (this.heartflux) {
+            this.heartflux.update(dt, this.player);
+        }
+        
+        // Update Exogenesis Protocol — The 56th Dimension: REALITY MANIFESTATION
+        if (this.exogenesis) {
+            this.exogenesis.update();
+        }
+        
+        // Update Proteus Protocol — The 57th Dimension: THE EVOLUTION OF RULES
+        if (this.proteus) {
+            this.proteus.update();
+        }
+        
         // Update Tesseract Titan boss
         if (this.tesseractTitan) {
             this.tesseractTitan.update(dt);
@@ -1733,15 +2183,38 @@ export default class GameScene extends Phaser.Scene {
             this.nemesisGenesis.recordSystemUsage('ECHO_STORM');
         }
         
+        // Emit near-miss event for Dream State Protocol
+        this.events.emit('nearMiss', {
+            x: this.player?.x || 0,
+            y: this.player?.y || 0,
+            streak: streakLevel,
+            velocity: Math.sqrt(
+                (this.player?.body?.velocity?.x || 0) ** 2 +
+                (this.player?.body?.velocity?.y || 0) ** 2
+            )
+        });
+        
         // Track for Recursion Engine (behavioral analysis)
         if (this.recursionEngine) {
             this.recursionEngine.recordNearMiss();
+        }
+        
+        // Audio: near-miss bullet time pad swell
+        if (this.synaesthesiaProtocol) {
+            this.synaesthesiaProtocol.onGameplayEvent('nearMiss', streakLevel);
         }
         
         // Harmonic Convergence: near-miss creates musical stinger
         if (this.harmonicConvergence) {
             this.harmonicConvergence.onNearMiss(streakLevel, this.player.x, this.player.y);
             this.harmonicConvergence.onEchoStormActivate();
+        }
+        
+        // Tychos Aurora: Intensify momentum field during near-miss flow state
+        if (this.tychosAurora && this.player) {
+            this.tychosAurora.pulseField('momentum', this.player.x, this.player.y, 0.8);
+            // Also intensify safety at player position (the "eye" of the storm)
+            this.tychosAurora.pulseField('optimal', this.player.x, this.player.y, 0.5);
         }
         
         // Synchronicity Cascade: bullet time activation
@@ -1836,6 +2309,66 @@ export default class GameScene extends Phaser.Scene {
         });
     }
     
+    /**
+     * Empathetic bullet time triggered by Heartflux Protocol when player stress spikes
+     * This is "helping" bullet time, not "reward" bullet time — gentler, protective
+     */
+    triggerEmpatheticBulletTime(strength = 0.5) {
+        const state = this.nearMissState;
+        
+        // Don't interrupt existing bullet time
+        if (state.active) return;
+        
+        // Gentler duration than near-miss bullet time
+        const duration = this.SLOW_MO_DURATION * strength;
+        
+        state.active = true;
+        state.remaining = duration;
+        state.streak = 0; // No streak for empathetic trigger
+        state.timeSinceLast = 0;
+        
+        // Slow down physics world
+        this.physics.world.timeScale = 0.5 + (1 - strength) * 0.5; // Gentler slowdown
+        
+        // Subtle vignette (less dramatic than near-miss)
+        this.tweens.add({
+            targets: this.bulletTimeVignette,
+            alpha: 0.4,
+            duration: 200,
+            ease: 'Power2'
+        });
+        
+        // Quiet text — no "BULLET TIME!" announcement, just gentle presence
+        const quietText = this.add.text(this.player.x, this.player.y - 40, '...breathe...', {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            fontStyle: 'italic',
+            fill: '#ff6b9d'
+        }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: quietText,
+            y: quietText.y - 30,
+            alpha: 0,
+            duration: 1500,
+            ease: 'Power2',
+            onComplete: () => quietText.destroy()
+        });
+        
+        // Gentle screen shake
+        this.cameras.main.shake(50, 0.001);
+        
+        // Activate Echo Storm system (gentler echoes)
+        if (this.echoStorm) {
+            this.echoStorm.onBulletTimeStart();
+        }
+        
+        // Record for Resonance Cascade as empathetic activation
+        if (this.resonanceCascade) {
+            this.resonanceCascade.recordActivation('EMPATHETIC_TIME', { strength });
+        }
+    }
+    
     updateEnemyBullets(timeScale) {
         const player = this.player;
         const state = this.nearMissState;
@@ -1885,6 +2418,11 @@ export default class GameScene extends Phaser.Scene {
                     this.triggerNearMiss(newStreak);
                     bullet.nearMissChecked = true;
                     
+                    // Cartographer Protocol: Near-misses sculpt the arena
+                    if (this.cartographerProtocol) {
+                        this.cartographerProtocol.onNearMiss(bullet.x, bullet.y);
+                    }
+                    
                     // Record near-miss in Timeline Chronicle
                     if (this.timelineChronicle) {
                         this.timelineChronicle.recordNearMiss(
@@ -1892,6 +2430,11 @@ export default class GameScene extends Phaser.Scene {
                             bullet.x, bullet.y,
                             dist < 45 // wasGrazing
                         );
+                    }
+                    
+                    // Record near-miss for Apophenia Protocol — The 53rd Dimension
+                    if (this.apophenia) {
+                        this.apophenia.recordNearMiss(bullet.x, bullet.y, false);
                     }
                     
                     // Notify Noetic Mirror of threat encounter
@@ -1956,6 +2499,19 @@ export default class GameScene extends Phaser.Scene {
             if (this.timelineChronicle) {
                 this.timelineChronicle.recordBulletFired(x, y, angle, speed, false);
             }
+            
+            // Record bullet trail for Apophenia Protocol — The 53rd Dimension
+            if (this.apophenia) {
+                this.apophenia.recordBulletTrail(x, y, angle, speed);
+            }
+            
+            // Emit bullet fired event for Dream State Protocol
+            this.events.emit('bulletFired', {
+                x, y, angle, speed,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                isPlayer: false
+            });
             
             // If in bullet time, immediately convert to echo
             if (this.nearMissState.active && this.echoStorm) {
@@ -2138,6 +2694,15 @@ export default class GameScene extends Phaser.Scene {
                 this.observerEffect.observeDeath('bullet');
             }
             
+            // Emit player death event for Dream State Protocol
+            this.events.emit('playerDeath', {
+                x: player.x,
+                y: player.y,
+                killerType: 'bullet',
+                score: this.score || 0,
+                wave: this.wave || 1
+            });
+            
             // QUANTUM IMMORTALITY: Branch timeline instead of game over
             if (this.quantumImmortality) {
                 this.triggerQuantumBranch(player, bullet);
@@ -2319,9 +2884,25 @@ export default class GameScene extends Phaser.Scene {
             letterSpacing: 1,
             fill: '#ffeebb'
         });
+        
+        // Apophenia Protocol - pattern discovery counter (53rd dimension)
+        this.patternText = this.add.text(margin, margin + 156, '◈ 0 patterns', {
+            fontFamily: 'monospace',
+            fontSize: '11px',
+            letterSpacing: 1,
+            fill: '#f0f0f0'
+        });
 
         // Wave timer bar - top right
         const screenWidth = this.scale.width;
+        
+        // Synaesthesia Protocol indicator — the 42nd dimension
+        this.audioIndicator = this.add.text(screenWidth - margin, margin + 20, '♫ ON', {
+            fontFamily: 'monospace',
+            fontSize: '10px',
+            letterSpacing: 1,
+            fill: '#c0c0c0'
+        }).setOrigin(1, 0.5);
         this.waveTimerBg = this.add.rectangle(screenWidth - margin, margin, 100, 3, 0x22222a);
         this.waveTimerBar = this.add.rectangle(screenWidth - margin, margin, 100, 3, 0xffff00);
         this.waveTimerBg.setOrigin(1, 0.5);
@@ -2330,11 +2911,12 @@ export default class GameScene extends Phaser.Scene {
         // Set high depth so UI renders on top
         [this.healthBarBg, this.healthBar, this.scoreText, this.waveText, 
          this.enemyText, this.nearMissText, this.syntropyText, this.convergenceText, 
-         this.synthesisText, this.waveTimerBg, this.waveTimerBar].forEach(el => {
+         this.synthesisText, this.patternText, this.waveTimerBg, this.waveTimerBar, this.audioIndicator].forEach(el => {
             el.setDepth(100);
         });
 
         this.score = 0;
+        this.scoreMultiplier = 1.0;  // For Dream State Protocol residue effects
         
         // Handle window resize
         this.scale.on('resize', this.resizeHUD, this);
@@ -2348,6 +2930,11 @@ export default class GameScene extends Phaser.Scene {
         // Update wave timer bar position (top right of screen)
         this.waveTimerBg.x = this.scale.width - margin;
         this.waveTimerBar.x = this.scale.width - margin;
+        
+        // Update audio indicator position
+        if (this.audioIndicator) {
+            this.audioIndicator.x = this.scale.width - margin;
+        }
         
         // Camera always at zoom=1 - just update bounds and viewport
         this.cameras.main.setZoom(1.0);
@@ -2386,6 +2973,13 @@ export default class GameScene extends Phaser.Scene {
             this.nearMissText.setAlpha(1);
         } else {
             this.nearMissText.setAlpha(0);
+        }
+        
+        // Apophenia Protocol pattern counter
+        if (this.apophenia && this.patternText) {
+            const patternCount = this.apophenia.totalPatternsDiscovered;
+            const activeCount = this.apophenia.detectedPatterns.length;
+            this.patternText.setText(`◈ ${patternCount} patterns${activeCount > 0 ? ` (${activeCount} active)` : ''}`);
         }
 
         // Wave timer
@@ -2525,6 +3119,37 @@ export default class GameScene extends Phaser.Scene {
             const enemy = new Enemy(this, x, y, this.player, type);
             this.enemies.add(enemy);
             
+            // Apply Exogenesis reality modifiers to enemy
+            if (this.exogenesis) {
+                const modifiers = this.exogenesis.getEnemyModifiers();
+                enemy.speed *= modifiers.speed;
+                enemy.damage *= modifiers.damage;
+                
+                // Visual indicator for full moon enemies
+                if (this.exogenesis.isFullMoon()) {
+                    enemy.setTint(0xff4444); // Red tint during full moon
+                }
+            }
+            
+            // Apply Proteus Protocol phenotype modifiers to enemy
+            if (this.proteus) {
+                const phenotype = this.proteus.getPhenotype();
+                enemy.speed *= phenotype.enemySpeedMultiplier;
+                enemy.damage *= phenotype.enemyHealthMultiplier; // Reuse health as damage mod
+                
+                // Apply intelligence-based behaviors
+                if (this.proteus.shouldFlank()) {
+                    enemy.enableFlanking = true;
+                }
+                
+                // Visual tint based on species type
+                if (this.proteus.isHighAggression()) {
+                    enemy.setTint(0xff6644); // Orange-red for aggressive genomes
+                } else if (this.proteus.isHighTempo()) {
+                    enemy.setTint(0x66aaff); // Blue for tempo-focused genomes
+                }
+            }
+            
             // Saga Engine: register enemy as character
             if (this.sagaEngine) {
                 const character = this.sagaEngine.onEnemySpawned(enemy, type);
@@ -2568,6 +3193,11 @@ export default class GameScene extends Phaser.Scene {
         this.hitParticles.setParticleTint(enemy.tintTopLeft || 0xff3366);
         this.hitParticles.emitParticleAt(enemy.x, enemy.y);
         
+        // Audio: enemy hit
+        if (this.synaesthesiaProtocol) {
+            this.synaesthesiaProtocol.onGameplayEvent('enemyHit');
+        }
+        
         // Screen shake on hit
         this.cameras.main.shake(50, 0.002);
         
@@ -2589,9 +3219,19 @@ export default class GameScene extends Phaser.Scene {
             damage *= this.symbioticPrediction.getHarmonyMultiplier();
         }
         
+        // Apply Rhythm of the Void on-beat bonus
+        if (this.rhythmOfTheVoid) {
+            damage *= this.rhythmOfTheVoid.getRhythmBonus();
+        }
+        
         // Track for Recursion Engine (accuracy analysis)
         if (this.recursionEngine) {
             this.recursionEngine.recordHit();
+        }
+        
+        // Track hit for Rival Protocol trauma system
+        if (enemy.onHitByPlayer) {
+            enemy.onHitByPlayer(bullet, 'piercing');
         }
         
         enemy.takeDamage(damage);
@@ -2610,6 +3250,20 @@ export default class GameScene extends Phaser.Scene {
             // Death particles
             this.deathParticles.setParticleTint(enemy.tintTopLeft || 0xff3366);
             this.deathParticles.emitParticleAt(enemy.x, enemy.y);
+            
+            // Emit enemy killed event for Dream State Protocol
+            this.events.emit('enemyKilled', {
+                x: enemy.x,
+                y: enemy.y,
+                type: enemy.type,
+                maxHealth: enemy.maxHealth,
+                scoreValue: enemy.scoreValue
+            });
+            
+            // Record kill for Apophenia Protocol — The 53rd Dimension: PATTERN DIVINATION
+            if (this.apophenia) {
+                this.apophenia.recordKill(enemy.x, enemy.y, enemy.type);
+            }
             
             // Apply Kairos flow multiplier to score
             const kairosMultiplier = this.kairosMoment?.getFlowBonus() || 1.0;
@@ -2664,10 +3318,27 @@ export default class GameScene extends Phaser.Scene {
             }
             
             // Notify Noetic Mirror of enemy killed (for mastery tracking)
+            // Report kill method to Noetic Mirror
+            const method = bullet.isGhostBullet ? 'ghost' : 'direct';
             if (this.noeticMirror) {
-                const method = bullet.isGhostBullet ? 'ghost' : 
-                               bullet.isParadoxBullet ? 'paradox' : 'standard';
                 this.noeticMirror.onEnemyKilled(enemy, method);
+            }
+            
+            // Audio: enemy death satisfaction
+            if (this.synaesthesiaProtocol) {
+                this.synaesthesiaProtocol.onGameplayEvent('enemyDeath');
+            }
+            
+            // Tychos Aurora: Pulse safety field at enemy death location
+            if (this.tychosAurora) {
+                this.tychosAurora.pulseField('safety', enemy.x, enemy.y, 0.6);
+                this.tychosAurora.pulseField('memory', enemy.x, enemy.y, 0.4);
+            }
+            
+            // Resonance Orb System: Chance to drop power-up orb
+            if (this.resonanceOrbs) {
+                const comboLength = this.resonanceCascade?.chain?.length || 0;
+                this.resonanceOrbs.onEnemyDefeated(enemy.x, enemy.y, comboLength);
             }
         }
     }
@@ -2716,6 +3387,11 @@ export default class GameScene extends Phaser.Scene {
         
         // Player damage
         player.takeDamage(enemy.damage);
+        
+        // Audio: damage warning
+        if (this.synaesthesiaProtocol) {
+            this.synaesthesiaProtocol.onGameplayEvent('damageTaken', player.health);
+        }
         
         // Saga Engine: record enemy wound on player
         if (this.sagaEngine && enemy.characterId) {
@@ -2784,6 +3460,22 @@ export default class GameScene extends Phaser.Scene {
     nextWave() {
         this.wave++;
         this.nextWaveTime = this.time.now + 30000;
+        
+        // Rival Protocol: Check for enemy escapes at wave transition
+        // Enemies at low health may escape and become future Rivals
+        if (this.rivalProtocol) {
+            this.enemies.children.entries.forEach(enemy => {
+                if (enemy.active && !enemy.isRival && enemy.health / enemy.maxHealth <= 0.25) {
+                    // Low health enemy escapes - will remember this trauma
+                    enemy.escape();
+                }
+            });
+        }
+        
+        // Audio: wave transition cymbal + sub drop
+        if (this.synaesthesiaProtocol) {
+            this.synaesthesiaProtocol.onGameplayEvent('waveTransition', this.wave);
+        }
         
         // Advance Recursion Engine infection
         if (this.recursionEngine) {
@@ -2963,6 +3655,12 @@ export default class GameScene extends Phaser.Scene {
     }
 
     gameOver() {
+        // Audio: game over - final chord
+        if (this.synaesthesiaProtocol) {
+            this.synaesthesiaProtocol.onGameplayEvent('gameOver');
+            this.synaesthesiaProtocol.stop();
+        }
+        
         // Record final death in chronicle
         if (this.timelineChronicle && this.player) {
             this.timelineChronicle.recordDeath(this.player.x, this.player.y, 'final');
@@ -2978,6 +3676,15 @@ export default class GameScene extends Phaser.Scene {
             this.temporalPedagogy.onPlayerDeath();
         }
         
+        // Inscription Protocol: Record death in the living chronicle
+        if (this.inscriptionProtocol) {
+            this.inscriptionProtocol.requestInscription('death', {
+                wave: this.wave,
+                score: this.score,
+                systems: this.getActiveSystems()
+            });
+        }
+        
         // Finalize and save timeline shard
         let newShard = null;
         if (this.timelineChronicle) {
@@ -2987,6 +3694,12 @@ export default class GameScene extends Phaser.Scene {
         // Save Recursion Engine behavioral genome
         if (this.recursionEngine) {
             this.recursionEngine.onGameEnd();
+        }
+        
+        // PROTEUS PROTOCOL: Evolve the game genome based on this run
+        if (this.proteus) {
+            const evolution = this.proteus.evolveGeneration('death');
+            console.log(`[GAME] Proteus evolution complete: Gen ${evolution.generation}, Fitness: ${evolution.fitness.toFixed(2)}`);
         }
         
         // Clean up echo storm
@@ -3147,7 +3860,63 @@ export default class GameScene extends Phaser.Scene {
             this.axiomNexus = null;
         }
         
-        this.cameras.main.shake(300, 0.02);
+        // Finalize Inscription Protocol (writes session closing to chronicle)
+        if (this.inscriptionProtocol) {
+            this.inscriptionProtocol.finalizeSession();
+            this.inscriptionProtocol.destroy();
+            this.inscriptionProtocol = null;
+        }
+        
+        // Notify Rival Protocol of player death (rivals escape with grudge)
+        if (this.rivalProtocol) {
+            this.rivalProtocol.onPlayerDeath();
+            this.rivalProtocol.destroy();
+            this.rivalProtocol = null;
+        }
+        
+        // Cleanup Rhythm of the Void
+        if (this.rhythmOfTheVoid) {
+            this.rhythmOfTheVoid.destroy();
+            this.rhythmOfTheVoid = null;
+        }
+        
+        // Clean up Cartographer Protocol
+        if (this.cartographerProtocol) {
+            this.cartographerProtocol.destroy();
+            this.cartographerProtocol = null;
+        }
+        
+        // Clean up Sanctum Protocol (saves state for next visit)
+        if (this.sanctumProtocol) {
+            this.sanctumProtocol.destroy();
+            this.sanctumProtocol = null;
+        }
+        
+        // Clean up Meta-System Operator
+        if (this.metaSystemOperator) {
+            this.metaSystemOperator.destroy();
+            this.metaSystemOperator = null;
+        }
+        
+        // Clean up Void Exchange System (saves portfolio state)
+        if (this.voidExchange) {
+            this.voidExchange.destroy();
+            this.voidExchange = null;
+        }
+        
+        // Clean up Heartflux Protocol
+        if (this.heartflux) {
+            this.heartflux.destroy();
+            this.heartflux = null;
+        }
+        
+        // Clean up Proteus Protocol (genome is already saved during evolution)
+        if (this.proteus) {
+            this.proteus.cleanup();
+            this.proteus = null;
+        }
+
+        // Stop all sounds and music
         this.cameras.main.fade(1000, 0, 0, 0);
         this.cameras.main.once('camerafadeoutcomplete', () => {
             this.scene.start('GameOverScene', { 
@@ -3174,6 +3943,11 @@ export default class GameScene extends Phaser.Scene {
 
     getBulletTrails() {
         return this.bulletTrails;
+    }
+    
+    generateEnemyId() {
+        // Generate unique ID for enemy tracking in Rival Protocol
+        return 'enemy_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
     
     applyEquippedShardBonuses() {
@@ -3276,5 +4050,86 @@ export default class GameScene extends Phaser.Scene {
         if (this.syntropyEngine) {
             this.syntropyEngine.onSystemUsed(systemName);
         }
+    }
+    
+    showVoidExchangeHint() {
+        const hint = this.add.text(this.player.x, this.player.y - 100,
+            '◈ VOID EXCHANGE — THE 54TH DIMENSION ◈\n' +
+            'TEMPORAL CAPITALISM: Trade your future for power now\n' +
+            'Press [X] to open the trading floor. Buy futures. Short survival.\n' +
+            'Debt is power. Margin calls are death. Trade wisely.',
+            {
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                letterSpacing: 1,
+                fill: '#ffd700', // Gold - the color of capital
+                align: 'center'
+            }).setOrigin(0.5);
+        
+        this.tweens.add({
+            targets: hint,
+            y: hint.y - 30,
+            alpha: 0,
+            duration: 6000,
+            delay: 1000,
+            ease: 'Power2',
+            onComplete: () => hint.destroy()
+        });
+    }
+    
+    showProteusWelcome() {
+        const { width, height } = this.scale;
+        
+        const container = this.add.container(width / 2, height / 2 - 50);
+        
+        const title = this.add.text(0, -30, '◈ PROTEUS PROTOCOL — THE 57TH DIMENSION ◈', {
+            fontFamily: 'monospace',
+            fontSize: '18px',
+            fontStyle: 'bold',
+            fill: '#00d4aa',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        const subtitle = this.add.text(0, 10, 'THE EVOLUTION OF RULES', {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            fill: '#9d4edd',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        const desc = this.add.text(0, 45, 
+            'The game is now alive. It evolves to match you.\n' +
+            'Each death shapes its DNA. Each run is unique.\n' +
+            `Current species: ${this.proteus.genome.species} | Gen ${this.proteus.genome.generation}`, {
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        container.add([title, subtitle, desc]);
+        
+        // Animate in
+        container.setAlpha(0);
+        container.setScale(0.8);
+        
+        this.tweens.add({
+            targets: container,
+            alpha: 1,
+            scale: 1,
+            duration: 800,
+            ease: 'Back.out'
+        });
+        
+        // Fade out after delay
+        this.tweens.add({
+            targets: container,
+            alpha: 0,
+            scale: 0.9,
+            delay: 5000,
+            duration: 1000,
+            ease: 'Power2',
+            onComplete: () => container.destroy()
+        });
     }
 }

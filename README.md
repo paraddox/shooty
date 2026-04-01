@@ -31,6 +31,7 @@ npm run dev
 | F | Dimensional Collapse (when all systems ready) |
 | ENTER | Formalize Architect Discovery (when prompted) |
 | Right Click | Paradox Engine (predict future) |
+| X | Void Exchange (temporal futures market) |
 
 ## Visual Design
 
@@ -635,6 +636,296 @@ Persistent library of your mythology across all runs. Browse your saga. Relive l
 
 ---
 
+## 🎵 SYNAESTHESIA PROTOCOL — The 42nd Dimension: AUDITORY SYNTHESIS 🎵
+
+**The ultimate synthesis: Gameplay becomes music, music becomes gameplay.**
+
+The Synaesthesia Protocol is not "background music" or even "adaptive audio." This is genuine **BIDIRECTIONAL COUPLING** between the auditory and ludic dimensions — the game creates sound from your actions, and the sound shapes the gameplay experience.
+
+### The Sonic-Gameplay Matrix
+
+| Gameplay Element | Sonic Signature |
+|-----------------|-----------------|
+| Player movement | Pitch-shifted triangle wave |
+| Bullet fired | Short exponential decay ping |
+| Near-miss bullet time | Time-stretched pad swell |
+| Echo absorbed | Granular synthesis sparkle |
+| Fracture activation | Dual stereo detuned saw |
+| Resonance chain | Arpeggiator acceleration |
+| Singularity deploy | Low-frequency gravitational drone |
+| Paradox projection | Reversed reverb trail |
+| Enemy hit | Short impact |
+| Enemy death | Satisfaction chord |
+| Wave transition | Cymbal swell + sub drop |
+| Game over | Final resolving chord |
+
+### Generative Music Engine
+
+Audio is synthesized in real-time using Web Audio API:
+- **FM synthesis** for melodic elements
+- **Subtractive synthesis** for bass and gravity effects
+- **Granular synthesis** for texture and echoes
+- **Physical modeling** for percussion
+- **128 BPM tempo** locked to gameplay rhythms
+
+The generative algorithm follows a "narrative arc":
+- **Intro**: Sparse, establishing mood from time-of-day
+- **Build**: Layering as systems activate
+- **Climax**: Full density during boss encounters
+- **Resolution**: Gradual return during quiet moments
+- **Coda**: End-of-run summary based on performance
+
+### The 42nd Dimension
+
+All 41 previous systems exist in the visual-ludic domain. The Synaesthesia Protocol adds the **AUDITORY** dimension and then **FUSES** them:
+
+**Visual + Ludic + Auditory = SYNTHESIS**
+
+The game is no longer just played or watched — it is **HEARD**, and in hearing, the player becomes composer, performer, and instrument simultaneously.
+
+### Why This Is Revolutionary
+
+1. **True synesthesia**: The game stimulates cross-modal perception
+2. **Generative music**: Every run produces a unique, professional-quality track
+3. **Audio as information**: Expert players "read" the soundscape tactically
+4. **Performance art**: Skilled play produces beautiful music automatically
+5. **The 42nd dimension**: Completes the cognitive architecture
+6. **No other game**: Has this level of bidirectional audio-gameplay coupling
+
+---
+
+## 🔮 RESONANCE ORB SYSTEM — The 48th Dimension: LIVING POWER-UPS 🔮
+
+**Power-ups that feed into existing systems instead of isolated bonuses.**
+
+The Resonance Orb System transforms traditional power-ups into **living temporal surges** that cascade through the existing 43+ dimensional systems. Instead of static bonuses, these orbs temporarily amplify and interconnect your abilities in unique ways.
+
+### The 7 Orb Types
+
+| Orb | Color | Effect | Duration |
+|-----|-------|--------|----------|
+| **CHRONO** | Cyan | +50% bullet time, 2x Fracture charge, -30% Chrono-Loop CD | 8s |
+| **ECHO** | Gold | Auto-absorb echoes in 100px, +75% Echo Storm damage | 6s |
+| **CASCADE** | Magenta | +2 chain levels, chain break protection, +3s window | 10s |
+| **PARADOX** | Iridescent | Perfect predictions, auto-trigger paradox on near-miss, -50% CD | 5s |
+| **VOID** | Deep Purple | Rapid coherence to 100%, unlock "Void Bloom" aura, omni-directional Syntropy | 7s |
+| **SINGULARITY** | Black/White Halo | Instant max charge, +50% radius, enemy bullets 25% speed in gravity | Instant |
+| **QUANTUM** | Rainbow | ALL orb effects simultaneously, brief invincibility | 4s |
+
+### Drop Mechanics
+
+- **15% base chance** on enemy death (scales up to 40% with combo length)
+- **50% chance** on boss phase transitions (guaranteed drop for rare+ orbs)
+- **Guaranteed** on perfect Fracture resolution
+- **Guaranteed** on reaching 5+ Resonance Chain
+
+### Collection Mechanics
+
+- Orbs drift toward player within 150px (temporal magnetism)
+- Unclaimed orbs fade after 8 seconds (temporal decay creates urgency)
+- Collecting during matching system = 25% bonus duration
+- Multiple orbs create **Superposition Bonuses**:
+  - **2 orbs**: +25% duration to both
+  - **3 orbs**: "Resonance Harmony" — all damage +30%
+  - **4+ orbs**: Brief invincibility pulse
+
+### Why This Is Revolutionary
+
+1. **Zero isolated mechanics** — Every orb feeds INTO existing systems
+2. **Meaningful tactical choice** — Players prioritize based on build/playstyle
+3. **Spatial pressure** — Drift + fade creates genuine risk/reward decisions
+4. **Mastery amplification** — Better players maintain more simultaneous orbs
+5. **Visual spectacle** — Superposition states create stunning visual moments
+6. **Complements all 43 systems** — Adds power-ups without complexity debt
+
+### Integration Examples
+
+- **Chrono + Echo**: Extended bullet time with massive echo auto-absorption = devastating Echo Storms
+- **Cascade + Paradox**: High chain maintenance with perfect predictions = transcendence state farming
+- **Void + Singularity**: Gravity well with damage aura + slowed enemy bullets = total zone control
+- **Quantum Superposition**: All effects + invincibility = ultimate temporal apotheosis moment
+
+---
+
+## 🌍 THE LIVING WORLD PROTOCOL — The 51st Dimension: AUTONOMOUS CONTINUITY 🌍
+
+**The game that lives even when you don't play it.**
+
+The Living World Protocol shatters the boundary between "game session" and "real life." When you close the browser tab, the simulation continues — enemies evolve, factions wage wars, territories shift, and history accumulates. Your return is an event. The world has changed.
+
+### The Three Pillars of Continuity
+
+**PILLAR 1: THE BIOLOGICAL LAYER**
+- **Hunger**: Enemies must consume echoes (destroyed bullets) to survive
+- **Territory**: Each enemy claims space; trespassing triggers conflict
+- **Reproduction**: Well-fed enemies spawn offspring with inherited traits
+- **Mutation**: Offspring have slight variations (speed, aggression, color)
+- **Death**: Starvation, combat, age — enemies genuinely die
+
+**PILLAR 2: THE SOCIAL LAYER**
+- **Faction Formation**: Same-type enemies ally; different types may war
+- **Hierarchy**: Strongest enemies become leaders, directing faction behavior
+- **Diplomacy**: Factions negotiate borders, form alliances against threats
+- **Betrayal**: Weaker factions may switch sides mid-conflict
+- **Culture**: Each faction develops "customs" (patrol routes, sentry posts)
+
+**PILLAR 3: THE HISTORICAL LAYER**
+- **Battle Scars**: Persistent damage to the arena (craters, scorch marks)
+- **Memorials**: Factions mark dead leaders with shrines
+- **Lineage Trees**: Track enemy families across generations
+- **Epoch Events**: Major shifts (extinctions, revolutions, migrations)
+- **Player Ghost**: Your past actions echo in faction attitudes toward you
+
+### The Background Simulation
+
+When the game tab is hidden or browser closed:
+- Service Worker continues simulation at accelerated rate (100x real-time)
+- Physics simplified to cellular automaton rules
+- Key events logged: battles, births, deaths, territorial shifts
+- Player receives **"World Report"** on return summarizing what happened
+
+### The Return Experience
+
+Coming back to the game after absence:
+1. **"While you were away..."** cinematic showing key events
+2. The world visibly changed: new faction territories, evolved enemies
+3. Factions remember you: allies greet, enemies prepare ambushes
+4. New **"epoch enemies"** — descendants of survivors, visibly evolved
+5. Emergent quests: Factions request help, offer rewards
+
+### Visual Language
+
+- **Faction territories**: Subtle color tints in world regions (Orange: Swift Legion, Red: Crimson Order, Purple: Void Keepers)
+- **Leader auras**: Distinctive glows marking faction heads
+- **Battle scars**: Persistent crater sprites, scorch marks
+- **Lineage markers**: Enemies show generational number (I, II, III...)
+- **Shrines**: Geometric memorials to dead faction leaders
+
+### Ecological Balance
+
+The system self-regulates through:
+- **Predator-Prey dynamics**: Fast enemies hunt, tank enemies defend
+- **Resource scarcity**: Limited echoes force competition
+- **Carrying capacity**: World supports ~50 autonomous enemies maximum
+- **Player as disruption**: Your return is an ecological catastrophe/event
+
+### Why This Is Revolutionary
+
+**No other game truly lives when you stop playing.** The Living World Protocol:
+- Creates **genuine continuity** across real-world time
+- Makes **absence meaningful** — the world changes whether you witness it or not
+- Generates **emergent history** through autonomous agent interactions
+- Transforms **every return into discovery** — what happened while you were gone?
+- Creates **genuine attachment** — you care about factions, lineages, territories
+- Completes the temporal architecture: Past → Present → Future → **Absence**
+
+### The Missing Dimension: CONTINUITY
+
+All 50 previous systems focused on PLAYER PRESENCE. The Living World Protocol adds PLAYER ABSENCE:
+
+| Dimension | System | What It Covers |
+|-----------|--------|----------------|
+| Past | Timeline Chronicle | What happened |
+| Present | All gameplay systems | What is happening |
+| Future | Oracle Protocol | What will happen |
+| **Absence** | **Living World** | **What happens without you** |
+
+The game is now a genuine **world**, not just a toy. It lives. It breathes. It waits. And it remembers.
+
+---
+
+## 💹 VOID EXCHANGE — The 54th Dimension: TEMPORAL CAPITALISM 💹
+
+**The ultimate evolution: The game becomes a market where you trade your future for power now.**
+
+The Void Exchange System introduces genuine **economic gameplay** to the temporal ecosystem. Unlike other systems that manipulate time, space, or perception, this system manipulates **value itself** — creating a futures market where survival, score, and ability become tradeable commodities.
+
+### The Trading Floor
+
+Press **X** to open the Void Exchange. Four temporal commodities trade in real-time:
+
+| Commodity | Name | What You Trade | Price Volatility |
+|-----------|------|----------------|------------------|
+| **SCORE** | Futures Contract | Future points for immediate damage boost | Medium |
+| **SURVIVAL** | Life Bond | Seconds of survival for health/shield | High |
+| **ABILITY** | Power Derivative | System charges for instant ability power | High |
+| **WAVE** | Wave Advancement | Progress speed for score multiplier | Low |
+
+### How Trading Works
+
+**BUY (Go Long)**: Promise future potential now, receive immediate power
+- Buy Score Futures → Immediate damage boost
+- Buy Survival Bonds → Health or temporal shield
+- Buy Ability Derivatives → Charge all systems
+- Buy Wave Advancement → Score boost + faster spawns
+
+**SELL (Short)**: Borrow power now, pay back with interest
+- Short Score → Get capital now, lose score later
+- Short Survival → Get shield now, debt accrues
+- Higher risk but immediate liquidity
+
+### Market Dynamics
+
+The exchange simulates real market conditions:
+
+- **Volatility**: Prices fluctuate every second based on game state
+- **Liquidity**: Market depth changes with your debt level
+- **Panic**: High waves increase volatility
+- **Margin Calls**: Too much debt triggers forced liquidation (damage penalty)
+
+### The Exchange Shop
+
+Spend accumulated **Temporal Capital (TC)** on:
+
+| Item | Cost | Effect |
+|------|------|--------|
+| **Divine Intervention** | 500 TC | Full heal |
+| **Temporary Godhood** | 1000 TC | 10-second invincibility |
+| **Casino Royale** | 250 TC | Random power (risk/reward) |
+| **Debt Jubilee** | 800 TC | Clear all debt |
+| **Insider Trading** | 350 TC | Price prediction (see future prices) |
+| **Bailout** | 600 TC | Reset market, stabilize prices |
+
+### Contracts & Maturity
+
+Every trade creates a **contract**:
+- 30-second maturity window
+- Fulfill on time → Bonus temporal capital
+- Default → Reputation loss, market penalties
+- Contracts auto-deduct from score on maturity
+
+### Market Events
+
+Random economic events shake the market:
+- **BULL RUN**: All prices rise (good for sellers)
+- **MARKET CRASH**: All prices fall (good for buyers)
+- **TEMPORAL BUBBLE**: Extreme volatility
+- **LIQUIDITY CRISIS**: Limited trading capacity
+- **GOLDEN OPPORTUNITY**: One item heavily discounted
+
+### Why This Is Revolutionary
+
+1. **Economic gameplay**: First bullet hell with genuine market mechanics
+2. **Strategic depth**: Every trade is a risk/reward decision
+3. **Integration**: All 53 previous systems feed into the economy
+4. **Emergent stories**: "I mortgaged my future to survive that wave"
+5. **Genuine capitalism**: Debt, interest, margin calls, bankruptcy
+6. **The 54th dimension**: VALUE — the game now has an economy
+
+### The Missing Dimension: CAPITAL
+
+| Dimension | System | What It Covers |
+|-----------|--------|----------------|
+| Past | Timeline Chronicle | What happened |
+| Present | All gameplay systems | What is happening |
+| Future | Oracle Protocol | What will happen |
+| Absence | Living World | What happens without you |
+| **Value** | **Void Exchange** | **What your time is worth** |
+
+The game is now a market. Your survival has a price. Your death is a transaction. Time is money.
+
+---
+
 ## Roadmap
 
 - [x] Near-miss bullet time system
@@ -654,6 +945,8 @@ Persistent library of your mythology across all runs. Browse your saga. Relive l
 - [x] **BOOTSTRAP PROTOCOL: Retrocausal Discovery Engine** ⟲
 - [x] **ARCHITECT SYSTEM: Player-Authored Mechanics** 🏗️
 - [x] **SAGA ENGINE: Emergent Personal Mythology** 📖
-- [ ] Power-ups (speed, shield, bomb)
+- [x] **SYNAESTHESIA PROTOCOL: The 42nd Dimension — Auditory Synthesis** 🎵
+- [x] **RESONANCE ORB SYSTEM: The 48th Dimension — Living Power-Ups** 🔮
+- [x] **LIVING WORLD PROTOCOL: The 51st Dimension — Autonomous Continuity** 🌍
+- [x] **VOID EXCHANGE: The 54th Dimension — Temporal Capitalism** 💹
 - [ ] Persistent high scores
-- [ ] Synthwave audio

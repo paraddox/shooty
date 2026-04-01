@@ -4,6 +4,7 @@ import MenuScene from './scenes/MenuScene.js';
 import GameScene from './scenes/GameScene.js';
 import GameOverScene from './scenes/GameOverScene.js';
 import ChronicleMenuScene from './scenes/ChronicleMenuScene.js';
+import { SanctumScene } from './systems/SanctumProtocolSystem.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -22,7 +23,7 @@ const config = {
             debug: false
         }
     },
-    scene: [BootScene, MenuScene, GameScene, GameOverScene, ChronicleMenuScene]
+    scene: [BootScene, MenuScene, GameScene, GameOverScene, ChronicleMenuScene, SanctumScene]
 };
 
 new Phaser.Game(config);

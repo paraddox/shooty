@@ -1103,6 +1103,11 @@ export default class TesseractTitan {
         this.scene.cameras.main.flash(800, 255, 0, 100, 0.5);
         this.scene.cameras.main.shake(800, 0.01);
         
+        // Resonance Orb System: Drop orb on boss phase transition
+        if (this.scene.resonanceOrbs) {
+            this.scene.resonanceOrbs.onBossPhaseTransition(this.x, this.y);
+        }
+        
         // Temporarily stop attacks during transition
         this.invulnerable = true;
         this.scene.time.delayedCall(3000, () => {
@@ -1226,6 +1231,15 @@ export default class TesseractTitan {
         // Award massive points
         if (this.scene.score !== undefined) {
             this.scene.score += 10000;
+        }
+        
+        // Notify scene of victory for inscription
+        if (this.scene.inscriptionProtocol) {
+            this.scene.inscriptionProtocol.requestInscription('victory', {
+                bossName: 'Tesseract Titan',
+                finalScore: this.scene.score,
+                sessionDuration: Date.now() - (this.scene.inscriptionProtocol?.sessionStartTime || Date.now())
+            });
         }
         
         // Show victory text

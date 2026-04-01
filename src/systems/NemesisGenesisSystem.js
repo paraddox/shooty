@@ -248,7 +248,7 @@ export default class NemesisGenesisSystem {
         this.announceNemesis();
         
         // Start behavioral mirroring
-        this.startMirroring();
+        // NOTE: startMirroring() stub - behavioral mirroring not yet implemented
         
         // Record in chronicle
         if (this.scene.timelineChronicle) {

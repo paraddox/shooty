@@ -139,7 +139,9 @@ export default class ResonanceCascadeSystem {
                 'TIMELINE_MERGE': 'quantum',
                 'DIMENSIONAL_COLLAPSE': 'dimensionalCollapse',
                 'REWIND': 'rewind',
-                'ANCHOR_PLACED': 'rewind'
+                'ANCHOR_PLACED': 'rewind',
+                'META_PATCH': 'metaSystem',
+                'META_EMERGENT': 'metaSystem'
             };
             
             const observerKey = systemKeyMap[systemType] || systemType.toLowerCase();
@@ -189,6 +191,14 @@ export default class ResonanceCascadeSystem {
         // Update max chain recorded
         if (this.activeChain.length > this.maxChainRecorded) {
             this.maxChainRecorded = this.activeChain.length;
+        }
+        
+        // Resonance Orb System: Drop orb on 5+ chain
+        if (this.activeChain.length === 5 && this.scene.resonanceOrbs) {
+            const player = this.scene.player;
+            if (player && player.active) {
+                this.scene.resonanceOrbs.onResonanceChain(5, player.x, player.y);
+            }
         }
         
         // Show activation feedback
@@ -336,6 +346,9 @@ export default class ResonanceCascadeSystem {
             'SINGULARITY_DEPLOY': '◉',
             'SINGULARITY_DETONATE': '◎',
             'PARADOX_COMMIT': '◈',
+            'EMPATHETIC_TIME': '◌',
+            'FLOW_STATE': '◍',
+            'HEARTFLUX_GRACE': '♥',
             'PARADOX_BONUS': '◇',
             'LOOP_START': '◧',
             'LOOP_COMPLETE': '◨',
@@ -354,7 +367,17 @@ export default class ResonanceCascadeSystem {
             'ECHO_COLLAPSED': '◈',
             'BOOTSTRAP_ECHO': '⟲',
             'BOOTSTRAP_FULFILLED': '✓',
-            'BOOTSTRAP_IGNORED': '✕'
+            'BOOTSTRAP_IGNORED': '✕',
+            'RIVAL_SPAWN': '⚔',
+            'RIVAL_ESCAPE': '↯',
+            'RIVAL_DEFEAT': '⚔',
+            'RIVAL_EVOLVE': '⬆',
+            'RHYTHM_KICK': '♪',
+            'RHYTHM_ON_BEAT': '♫',
+            'RHYTHM_BASS_DROP': '♬',
+            'LITHOGRAPHY': '▦',
+            'STILLNESS_SPRING': '◎',
+            'CRYSTAL_HARVEST': '◊'
         };
         
         const colors = {
@@ -369,6 +392,9 @@ export default class ResonanceCascadeSystem {
             'SINGULARITY_DETONATE': 0xff1744,
             'PARADOX_COMMIT': 0xff00ff,
             'PARADOX_BONUS': 0xffd700,
+            'EMPATHETIC_TIME': 0xff6b9d,
+            'FLOW_STATE': 0x00f0ff,
+            'HEARTFLUX_GRACE': 0xff6b9d,
             'QUANTUM_BRANCH': 0xffffff,
             'TIMELINE_MERGE': 0xff00ff,
             'LOOP_START': 0x008080,
@@ -386,7 +412,17 @@ export default class ResonanceCascadeSystem {
             'ECHO_COLLAPSED': 0xffd700,
             'BOOTSTRAP_ECHO': 0xffaa00,
             'BOOTSTRAP_FULFILLED': 0xffaa00,
-            'BOOTSTRAP_IGNORED': 0xff4444
+            'BOOTSTRAP_IGNORED': 0xff4444,
+            'RIVAL_SPAWN': 0xcd7f32,
+            'RIVAL_ESCAPE': 0xcd7f32,
+            'RIVAL_DEFEAT': 0xcd7f32,
+            'RIVAL_EVOLVE': 0xe6a65c,
+            'RHYTHM_KICK': 0xffd700,
+            'RHYTHM_ON_BEAT': 0xffed4a,
+            'RHYTHM_BASS_DROP': 0xff00ff,
+            'LITHOGRAPHY': 0xffffff,
+            'STILLNESS_SPRING': 0xffd700,
+            'CRYSTAL_HARVEST': 0x9d4edd
         };
         
         // Floating icon at player position
@@ -437,7 +473,10 @@ export default class ResonanceCascadeSystem {
             'KAIROS_CRYSTALLIZE': '◈',
             'NEMESIS_SPAWN': '◉',
             'NEMESIS_HIT': '◆',
-            'NEMESIS_DEFEAT': '◈'
+            'NEMESIS_DEFEAT': '◈',
+            'RHYTHM_KICK': '♪',
+            'RHYTHM_ON_BEAT': '♫',
+            'RHYTHM_BASS_DROP': '♬'
         };
         
         const colors = {
@@ -463,7 +502,10 @@ export default class ResonanceCascadeSystem {
             'KAIROS_CRYSTALLIZE': '#ffd700',
             'NEMESIS_SPAWN': '#ff0040',
             'NEMESIS_HIT': '#ff3366',
-            'NEMESIS_DEFEAT': '#00f0ff'
+            'NEMESIS_DEFEAT': '#00f0ff',
+            'RHYTHM_KICK': '#ffd700',
+            'RHYTHM_ON_BEAT': '#ffed4a',
+            'RHYTHM_BASS_DROP': '#ff00ff'
         };
         
         // Clear and rebuild display
