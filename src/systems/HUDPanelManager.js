@@ -197,31 +197,34 @@ export default class HUDPanelManager {
      * @returns {Phaser.GameObjects.Container} The created element
      */
     registerSlot(slotId, createFn, region = 'TOP_LEFT') {
-        const panel = this.panels.get(region);
-        if (!panel) {
-            console.warn(`[HUDPanelManager] Unknown panel: ${region}`);
-            return null;
-        }
-        
-        // Find slot config
-        const slotConfig = panel.config.slots.find(s => s.id === slotId);
-        if (!slotConfig) {
-            console.warn(`[HUDPanelManager] Unknown slot: ${slotId} in ${region}`);
-            return null;
-        }
-        
-        // Check if slot already occupied
-        if (panel.slotMap.has(slotId)) {
-            console.warn(`[HUDPanelManager] Slot ${slotId} already occupied in ${region}`);
-            const existing = panel.slotMap.get(slotId);
-            if (existing) existing.destroy();
-        }
-        
-        console.log(`[HUDPanelManager] Registering slot: ${slotId} in ${region} at y=${panel.nextY}, panel exists=${!!panel}, slotConfig exists=${!!slotConfig}`);
-        
-        // Create slot container at the allocated position
-        const slotContainer = this.scene.add.container(0, panel.nextY);
-        slotContainer.setDepth(100);
+        try {
+            console.log(`[HUDPanelManager] registerSlot called: ${slotId} in ${region}`);
+            
+            const panel = this.panels.get(region);
+            if (!panel) {
+                console.warn(`[HUDPanelManager] Unknown panel: ${region}`);
+                return null;
+            }
+            
+            // Find slot config
+            const slotConfig = panel.config.slots.find(s => s.id === slotId);
+            if (!slotConfig) {
+                console.warn(`[HUDPanelManager] Unknown slot: ${slotId} in ${region}`);
+                return null;
+            }
+            
+            // Check if slot already occupied
+            if (panel.slotMap.has(slotId)) {
+                console.warn(`[HUDPanelManager] Slot ${slotId} already occupied in ${region}`);
+                const existing = panel.slotMap.get(slotId);
+                if (existing) existing.destroy();
+            }
+            
+            console.log(`[HUDPanelManager] Creating slot: ${slotId} at y=${panel.nextY}`);
+            
+            // Create slot container at the allocated position
+            const slotContainer = this.scene.add.container(0, panel.nextY);
+            slotContainer.setDepth(100);
         
         // Add slot label
         const label = this.scene.add.text(0, 0, slotConfig.label, {
@@ -255,6 +258,10 @@ export default class HUDPanelManager {
         panel.nextY += slotConfig.height + 3;
         
         return contentContainer;
+        } catch (err) {
+            console.error(`[HUDPanelManager] Error registering slot ${slotId}:`, err);
+            return null;
+        }
     }
     
     /**
