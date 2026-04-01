@@ -2986,6 +2986,10 @@ export default class GameScene extends Phaser.Scene {
         // OmniWeapon, VoidCoherence, ChronoLoop, CausalLink, TemporalRewind
         // These will be populated by their respective systems
         
+        // Recalculate panel heights now that all slots are registered
+        // This measures actual content and resizes backgrounds properly
+        panels.recalculatePanelHeights();
+        
         this.score = 0;
         this.scoreMultiplier = 1.0;
         

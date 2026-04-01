@@ -24,20 +24,20 @@ export default class HUDPanelManager {
                 title: 'STATUS',
                 color: 0x00f0ff, // Cyan accent
                 slots: [
-                    { id: 'HEALTH_BAR', label: 'INTEGRITY', type: 'bar', height: 20 },
-                    { id: 'SCORE', label: 'SCORE', type: 'value', height: 25 },
-                    { id: 'WAVE', label: 'WAVE', type: 'text', height: 20 },
-                    { id: 'ENEMY_COUNT', label: 'HOSTILES', type: 'text', height: 18 },
-                    { id: 'NEAR_MISS', label: 'STREAK', type: 'text', height: 18 },
-                    { id: 'SYNTROPY', label: 'SYNTROPY', type: 'value', height: 18 },
-                    { id: 'OMNI_WEAPON', label: 'WEAPON', type: 'compact', height: 15 },
-                    { id: 'CONVERGENCE', label: 'CONVERGENCE', type: 'text', height: 18 },
-                    { id: 'SYNTHESIS', label: 'SYNTHESIS', type: 'text', height: 18 },
-                    { id: 'PATTERN', label: 'PATTERNS', type: 'text', height: 18 },
-                    { id: 'VOID_COHERENCE', label: 'COHERENCE', type: 'bar', height: 15 },
-                    { id: 'CHRONO_LOOP', label: 'TIME LOOP', type: 'bar', height: 15 },
-                    { id: 'CAUSAL_LINK', label: 'CAUSALITY', type: 'compact', height: 15 },
-                    { id: 'TEMPORAL_REWIND', label: 'REWIND', type: 'bar', height: 15 },
+                    { id: 'HEALTH_BAR', label: 'INTEGRITY', type: 'bar', minHeight: 16 },
+                    { id: 'SCORE', label: 'SCORE', type: 'value', minHeight: 20 },
+                    { id: 'WAVE', label: 'WAVE', type: 'text', minHeight: 16 },
+                    { id: 'ENEMY_COUNT', label: 'HOSTILES', type: 'text', minHeight: 14 },
+                    { id: 'NEAR_MISS', label: 'STREAK', type: 'text', minHeight: 14 },
+                    { id: 'SYNTROPY', label: 'SYNTROPY', type: 'value', minHeight: 14 },
+                    { id: 'OMNI_WEAPON', label: 'WEAPON', type: 'compact', minHeight: 12 },
+                    { id: 'CONVERGENCE', label: 'CONVERGENCE', type: 'text', minHeight: 14 },
+                    { id: 'SYNTHESIS', label: 'SYNTHESIS', type: 'text', minHeight: 14 },
+                    { id: 'PATTERN', label: 'PATTERNS', type: 'text', minHeight: 14 },
+                    { id: 'VOID_COHERENCE', label: 'COHERENCE', type: 'bar', minHeight: 12 },
+                    { id: 'CHRONO_LOOP', label: 'TIME LOOP', type: 'bar', minHeight: 12 },
+                    { id: 'CAUSAL_LINK', label: 'CAUSALITY', type: 'compact', minHeight: 12 },
+                    { id: 'TEMPORAL_REWIND', label: 'REWIND', type: 'bar', minHeight: 12 },
                 ]
             },
             TOP_RIGHT: {
@@ -47,15 +47,15 @@ export default class HUDPanelManager {
                 title: 'SYSTEMS',
                 color: 0xffd700, // Gold accent
                 slots: [
-                    { id: 'WAVE_TIMER', label: 'WAVE TIME', type: 'bar', height: 12 },
-                    { id: 'RESONANCE_ORB', label: 'ORBS', type: 'compact', height: 45 },
-                    { id: 'QUANTUM_IMMORTALITY', label: 'QUANTUM', type: 'compact', height: 40 },
-                    { id: 'DEBT_DISPLAY', label: 'DEBT', type: 'compact', height: 45 },
-                    { id: 'BOOTSTRAP', label: 'PARADOX', type: 'compact', height: 40 },
-                    { id: 'DISSOLUTION', label: 'ESSENCE', type: 'compact', height: 50 },
-                    { id: 'AMBIENT', label: 'AMBIENT', type: 'compact', height: 30 },
-                    { id: 'AXIOM_NEXUS', label: 'NEXUS', type: 'compact', height: 30 },
-                    { id: 'HEARTFLUX', label: 'HEARTFLUX', type: 'compact', height: 30 },
+                    { id: 'WAVE_TIMER', label: 'WAVE TIME', type: 'bar', minHeight: 10 },
+                    { id: 'RESONANCE_ORB', label: 'ORBS', type: 'compact', minHeight: 30 },
+                    { id: 'QUANTUM_IMMORTALITY', label: 'QUANTUM', type: 'compact', minHeight: 30 },
+                    { id: 'DEBT_DISPLAY', label: 'DEBT', type: 'compact', minHeight: 30 },
+                    { id: 'BOOTSTRAP', label: 'PARADOX', type: 'compact', minHeight: 30 },
+                    { id: 'DISSOLUTION', label: 'ESSENCE', type: 'compact', minHeight: 35 },
+                    { id: 'AMBIENT', label: 'AMBIENT', type: 'compact', minHeight: 20 },
+                    { id: 'AXIOM_NEXUS', label: 'NEXUS', type: 'compact', minHeight: 20 },
+                    { id: 'HEARTFLUX', label: 'HEARTFLUX', type: 'compact', minHeight: 20 },
                 ]
             },
             TOP_CENTER: {
@@ -65,8 +65,8 @@ export default class HUDPanelManager {
                 title: 'SYMBIOSIS',
                 color: 0xff00ff, // Magenta accent
                 slots: [
-                    { id: 'SYMBIOSIS_HARMONY', label: 'HARMONY/CHAOS', type: 'balance', height: 35 },
-                    { id: 'RESONANCE_CASCADE', label: 'RESONANCE', type: 'multiplier', height: 40 },
+                    { id: 'SYMBIOSIS_HARMONY', label: 'HARMONY/CHAOS', type: 'balance', minHeight: 25 },
+                    { id: 'RESONANCE_CASCADE', label: 'RESONANCE', type: 'multiplier', minHeight: 30 },
                 ]
             },
             BOTTOM_RIGHT: {
@@ -76,14 +76,14 @@ export default class HUDPanelManager {
                 title: 'ACTIVE',
                 color: 0x00d4aa, // Teal accent
                 slots: [
-                    { id: 'META_SYSTEM', label: 'META', type: 'compact', height: 50 },
-                    { id: 'APERTURE', label: 'BLINK', type: 'icon', height: 40 },
-                    { id: 'OBSERVER', label: 'OBSERVER', type: 'icon', height: 30 },
-                    { id: 'KARMA', label: 'KARMA', type: 'compact', height: 30 },
-                    { id: 'PEDAGOGY', label: 'PEDAGOGY', type: 'compact', height: 30 },
-                    { id: 'ATHENAEUM', label: 'ATHENAEUM', type: 'compact', height: 30 },
-                    { id: 'INSCRIPTION', label: 'INSCRIPTION', type: 'compact', height: 30 },
-                    { id: 'HARMONIC', label: 'HARMONIC', type: 'compact', height: 30 },
+                    { id: 'META_SYSTEM', label: 'META', type: 'compact', minHeight: 35 },
+                    { id: 'APERTURE', label: 'BLINK', type: 'icon', minHeight: 30 },
+                    { id: 'OBSERVER', label: 'OBSERVER', type: 'icon', minHeight: 20 },
+                    { id: 'KARMA', label: 'KARMA', type: 'compact', minHeight: 20 },
+                    { id: 'PEDAGOGY', label: 'PEDAGOGY', type: 'compact', minHeight: 20 },
+                    { id: 'ATHENAEUM', label: 'ATHENAEUM', type: 'compact', minHeight: 20 },
+                    { id: 'INSCRIPTION', label: 'INSCRIPTION', type: 'compact', minHeight: 20 },
+                    { id: 'HARMONIC', label: 'HARMONIC', type: 'compact', minHeight: 20 },
                 ]
             }
         };
@@ -193,8 +193,42 @@ export default class HUDPanelManager {
     
     calculatePanelHeight(config) {
         const titleHeight = 35;
-        const slotHeight = config.slots.reduce((sum, slot) => sum + slot.height + 3, 0);
+        // Use minHeight as baseline - actual height will be measured after content creation
+        const slotHeight = config.slots.reduce((sum, slot) => sum + (slot.minHeight || 12) + 4, 0);
         return titleHeight + slotHeight + this.panelPadding * 2;
+    }
+    
+    /**
+     * Recalculate and resize panel background after all slots are registered
+     * Call this after all systems have registered their slots
+     */
+    recalculatePanelHeights() {
+        this.panels.forEach((panel, region) => {
+            // Calculate actual height based on measured slot heights
+            let actualContentHeight = 35; // Title area
+            panel.slotMap.forEach((slot) => {
+                actualContentHeight += (slot.measuredHeight || slot.config.minHeight || 12) + 4;
+            });
+            actualContentHeight += this.panelPadding * 2;
+            
+            // Store for resize handling
+            panel.actualHeight = actualContentHeight;
+            
+            // Recreate background with correct size
+            const oldBg = panel.container.list[0];
+            if (oldBg && oldBg.type === 'Graphics') {
+                oldBg.destroy();
+                const newBg = this.createPanelBackground(panel.config.width, actualContentHeight, panel.config.color);
+                panel.container.addAt(newBg, 0);
+            }
+            
+            // Reposition panel if it's bottom-aligned
+            if (panel.config.y === null) {
+                const screenH = this.scene.scale.height;
+                const newY = screenH - actualContentHeight - this.margin;
+                panel.container.setY(newY);
+            }
+        });
     }
     
     /**
@@ -231,35 +265,38 @@ export default class HUDPanelManager {
             slotContainer.setDepth(100);
             
             // Add slot label (positioned at top of slot)
-            const label = this.scene.add.text(0, 2, slotConfig.label, {
+            const label = this.scene.add.text(0, 0, slotConfig.label, {
                 fontFamily: 'monospace',
                 fontSize: '9px',
                 letterSpacing: 1,
                 fill: '#666677'
             });
             slotContainer.add(label);
+            const labelHeight = label.height; // Measure actual label height
             
-            // Create content area below label with proper spacing
-            // Label is ~10px tall, so content starts at y=14 to give 2px gap
-            const contentY = 14;
+            // Create content area below label - measure after creation
+            const contentY = labelHeight + 2; // 2px gap after label
             const contentContainer = this.scene.add.container(0, contentY);
             slotContainer.add(contentContainer);
             
             // Provide layout helpers to the create function
+            const availableWidth = panel.config.width - this.panelPadding * 2;
             const layoutHelpers = {
-                // Available width for content
-                width: panel.config.width - this.panelPadding * 2,
-                // Center X position within content area
-                centerX: (panel.config.width - this.panelPadding * 2) / 2,
-                // Helpers for common layout patterns
+                width: availableWidth,
+                centerX: availableWidth / 2,
+                
+                // Add a progress bar - positioned correctly
                 addBar: (height = 6, color = 0x00f0ff) => {
-                    const bg = this.scene.add.rectangle(0, height/2, panel.config.width - this.panelPadding * 2, height, 0x22222a);
-                    const bar = this.scene.add.rectangle(0, height/2, panel.config.width - this.panelPadding * 2, height, color);
+                    const y = height / 2;
+                    const bg = this.scene.add.rectangle(0, y, availableWidth, height, 0x22222a);
+                    const bar = this.scene.add.rectangle(0, y, availableWidth, height, color);
                     bar.setOrigin(0, 0.5);
                     bg.setOrigin(0, 0.5);
                     contentContainer.add([bg, bar]);
-                    return { bg, bar };
+                    return { bg, bar, height };
                 },
+                
+                // Add text - returns height for flow layout
                 addText: (text, options = {}) => {
                     const config = {
                         fontFamily: 'monospace',
@@ -270,26 +307,83 @@ export default class HUDPanelManager {
                     const txt = this.scene.add.text(options.x || 0, options.y || 0, text, config);
                     if (options.origin) txt.setOrigin(options.origin);
                     contentContainer.add(txt);
-                    return txt;
+                    return { text: txt, height: txt.height, width: txt.width };
+                },
+                
+                // Add text that flows below previous content
+                addFlowText: (text, options = {}) => {
+                    const y = contentContainer.list.reduce((max, child) => {
+                        const childBottom = child.y + (child.height || 0);
+                        return Math.max(max, childBottom);
+                    }, 0) + (options.gap || 2);
+                    
+                    return layoutHelpers.addText(text, { ...options, y });
+                },
+                
+                // Row layout - items side by side
+                addRow: (items, options = {}) => {
+                    const gap = options.gap || 4;
+                    let currentX = 0;
+                    const elements = [];
+                    
+                    items.forEach((item, i) => {
+                        if (i > 0) currentX += gap;
+                        
+                        if (typeof item === 'string') {
+                            const txt = layoutHelpers.addText(item, { x: currentX });
+                            currentX += txt.width;
+                            elements.push(txt);
+                        } else if (item.type === 'icon') {
+                            const txt = layoutHelpers.addText(item.value || '◆', { 
+                                x: currentX, 
+                                color: item.color || '#ffffff' 
+                            });
+                            currentX += txt.width;
+                            elements.push(txt);
+                        } else if (item.type === 'text') {
+                            const txt = layoutHelpers.addText(item.value || '', { 
+                                x: currentX,
+                                size: item.size,
+                                color: item.color
+                            });
+                            currentX += txt.width;
+                            elements.push(txt);
+                        }
+                    });
+                    
+                    return elements;
+                },
+                
+                // Get current content height
+                getContentHeight: () => {
+                    return contentContainer.list.reduce((max, child) => {
+                        const childBottom = child.y + (child.height || 0);
+                        return Math.max(max, childBottom);
+                    }, 0);
                 }
             };
             
             // Let the system create its elements in the content container
             const userElements = createFn(contentContainer, layoutHelpers.width, layoutHelpers);
             
+            // Measure actual content height after creation
+            const contentHeight = layoutHelpers.getContentHeight();
+            const totalSlotHeight = contentY + contentHeight;
+            
             // Add to panel
             panel.content.add(slotContainer);
             
-            // Store reference
+            // Store reference with actual measured height
             panel.slotMap.set(slotId, {
                 container: slotContainer,
                 content: contentContainer,
                 elements: userElements,
-                config: slotConfig
+                config: slotConfig,
+                measuredHeight: totalSlotHeight
             });
             
-            // Advance nextY for following slots
-            panel.nextY += slotConfig.height + 3;
+            // Advance nextY based on ACTUAL measured content height
+            panel.nextY += Math.max(totalSlotHeight, slotConfig.minHeight || 12) + 4; // 4px gap between slots
             
             return contentContainer;
         } catch (err) {
