@@ -98,6 +98,8 @@ export default class CartographerProtocolSystem {
         // Bullet Sculpting (embedded bullets)
         this.crystals = [];
         this.maxCrystals = 50;
+        this.SCULPT_DISTANCE = 65; // px - near-miss threshold
+        this.CRYSTAL_SIZE = 30;    // px - crystalline obstacle size
         
         // Territorial Resonance (floor control)
         this.territoryGrid = [];
@@ -496,6 +498,120 @@ export default class CartographerProtocolSystem {
             crystal.body.destroy();
         }
         this.crystals = this.crystals.filter(c => c !== crystal);
+    }
+    
+    // === BULLET SCULPTING: Near-misses become architecture ===
+    updateBulletSculpting(dt, player) {
+        const playerRadius = Math.max(player.width, player.height) / 2;
+        
+        // Check enemy bullets for near-misses
+        const enemyBullets = this.scene.enemyBullets?.getChildren() || [];
+        
+        for (const bullet of enemyBullets) {
+            if (!bullet.active || !bullet.visible) continue;
+            
+            // Calculate distance to player
+            const dx = bullet.x - player.x;
+            const dy = bullet.y - player.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            // Near-miss: passed within 65px but didn't hit
+            // (hit would be ~playerRadius + bulletRadius, ~24px)
+            const hitThreshold = playerRadius + 8; // ~24px
+            const nearMissThreshold = this.SCULPT_DISTANCE;
+            
+            if (dist > hitThreshold && dist < nearMissThreshold) {
+                // This bullet was a near-miss - sculpt it!
+                this.sculptBulletIntoCrystal(bullet);
+                
+                // Remove the bullet (it becomes the crystal)
+                bullet.destroy();
+            }
+        }
+        
+        // Check for player harvesting crystals by touching them
+        this.checkCrystalHarvesting(player);
+    }
+    
+    /**
+     * Convert a bullet into a crystalline obstacle
+     */
+    sculptBulletIntoCrystal(bullet) {
+        // Cap crystal count
+        if (this.crystals.length >= this.maxCrystals) {
+            // Remove oldest crystal
+            const oldest = this.crystals.shift();
+            if (oldest.body) oldest.body.destroy();
+            if (oldest.graphics) oldest.graphics.destroy();
+        }
+        
+        // Create crystal graphics
+        const graphics = this.scene.add.rectangle(
+            bullet.x,
+            bullet.y,
+            this.CRYSTAL_SIZE,
+            this.CRYSTAL_SIZE,
+            this.CRYSTAL_COLOR
+        );
+        
+        graphics.setOrigin(0.5);
+        graphics.setAlpha(0.8);
+        graphics.setStrokeStyle(2, 0xffffff, 0.5);
+        graphics.setDepth(5);
+        
+        // Create physics body
+        this.scene.physics.add.existing(graphics);
+        graphics.body.setImmovable(true);
+        graphics.body.setSize(this.CRYSTAL_SIZE, this.CRYSTAL_SIZE);
+        
+        // Register as obstacle
+        if (this.scene.physicsManager) {
+            this.scene.physicsManager.registerObstacle(graphics);
+        }
+        
+        // Add to crystals array
+        const crystal = {
+            x: bullet.x,
+            y: bullet.y,
+            graphics: graphics,
+            body: graphics.body,
+            created: this.scene.time.now,
+            fromBullet: true
+        };
+        
+        this.crystals.push(crystal);
+        
+        // Sparkle effect
+        this.scene.add.particles(bullet.x, bullet.y, 'particle', {
+            speed: { min: 20, max: 60 },
+            scale: { start: 0.2, end: 0 },
+            lifespan: 300,
+            quantity: 5,
+            tint: this.CRYSTAL_COLOR
+        });
+        
+        return crystal;
+    }
+    
+    /**
+     * Check if player is touching any crystals to harvest them
+     */
+    checkCrystalHarvesting(player) {
+        const harvestRadius = 25; // px
+        
+        this.crystals = this.crystals.filter(crystal => {
+            const dx = crystal.x - player.x;
+            const dy = crystal.y - player.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist < harvestRadius) {
+                // Harvest the crystal!
+                this.harvestCrystal(crystal, player);
+                return false; // Remove from array
+            }
+            
+            return true; // Keep in array
+        });
     }
     
     updateCrystals(dt) {
