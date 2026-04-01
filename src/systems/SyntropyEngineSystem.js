@@ -457,6 +457,21 @@ export default class SyntropyEngineSystem {
         return false;
     }
     
+    /**
+     * Generate syntropy from external sources (e.g., ResonantWhisperSystem gifts)
+     * @param {number} amount - Amount of syntropy to generate
+     * @param {string} source - Source of the syntropy (e.g., 'gifted_echo')
+     */
+    generateSyntropy(amount, source = 'external') {
+        // Simply delegate to addSyntropy with player position
+        const player = this.scene.player;
+        if (player?.active) {
+            this.addSyntropy(amount, player.x, player.y);
+        } else {
+            this.addSyntropy(amount);
+        }
+    }
+    
     // ===== EXPENDITURE METHODS =====
     
     toggleRadial() {
