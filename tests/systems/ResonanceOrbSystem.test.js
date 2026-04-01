@@ -11,11 +11,12 @@ describe('ResonanceOrbSystem HUD Positioning', () => {
     const SLOT_WIDTH = 136; // 160 - 2*12 padding
     const ORB_RADIUS = 14;
     
-    // Simulate the positioning logic from the actual system
+    // Simulate the positioning logic from the actual system (centered around centerX)
     function calculateOrbPositions(orbCount) {
+        const centerX = 68; // SLOT_WIDTH / 2
         const orbSpacing = Math.min(32, (SLOT_WIDTH - ORB_RADIUS * 2) / Math.max(1, orbCount - 1));
-        const totalWidth = orbCount * ORB_RADIUS * 2 + (orbCount - 1) * (orbSpacing - ORB_RADIUS * 2);
-        const startX = (SLOT_WIDTH - totalWidth) / 2 + ORB_RADIUS;
+        const groupWidth = (orbCount - 1) * orbSpacing + ORB_RADIUS * 2;
+        const startX = centerX - groupWidth / 2 + ORB_RADIUS;
         
         const positions = [];
         for (let i = 0; i < orbCount; i++) {

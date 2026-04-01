@@ -171,11 +171,10 @@ export default class ResonanceOrbSystem {
             
             this.orbIndicators = [];
             
-            // Background panel for active orbs - size to fit slot width (136 = 160 - 2*12 padding)
-            const slotWidth = 136;
+            // Background panel for active orbs - use full available width and centerX
             const bgHeight = 32;
-            const bg = this.scene.add.rectangle(0, 0, slotWidth, bgHeight, 0x000000, 0.5);
-            bg.setOrigin(0, 0); // Top-left origin
+            const bg = this.scene.add.rectangle(layout.centerX, 16, layout.width, bgHeight, 0x000000, 0.5);
+            bg.setOrigin(0.5, 0.5); // Center origin
             bg.setStrokeStyle(1, 0x444444);
             container.add(bg);
             this.hudBg = bg;
@@ -659,24 +658,28 @@ export default class ResonanceOrbSystem {
         }
         this.orbIndicators = [];
         
-        // Get available width from panel (160 - 2*12 padding = 136)
+        // Center orbs around layout.centerX (68 = 136/2)
+        const centerX = 68;
         const slotWidth = 136;
         const orbRadius = 14;
         const orbSpacing = Math.min(32, (slotWidth - orbRadius * 2) / Math.max(1, orbCount - 1));
-        const totalWidth = orbCount * orbRadius * 2 + (orbCount - 1) * (orbSpacing - orbRadius * 2);
-        const startX = (slotWidth - totalWidth) / 2 + orbRadius; // Start with padding, center of first orb
         
-        // Resize background to fit within slot
+        // Calculate group width and starting position to center around centerX
+        const groupWidth = (orbCount - 1) * orbSpacing + orbRadius * 2;
+        const startX = centerX - groupWidth / 2 + orbRadius;
+        
+        // Resize and center background
         this.hudBg.setSize(slotWidth, 32);
+        this.hudBg.setPosition(centerX, 16);
         
-        // Create indicators for each active orb - positioned from left with proper spacing
+        // Create indicators for each active orb - centered around centerX
         let index = 0;
         for (const [type, data] of this.playerOrbs) {
             const config = this.ORB_TYPES[type];
             const remaining = Math.max(0, data.endTime - time);
             const pct = remaining / data.duration;
             
-            // Position from left edge with even spacing
+            // Position centered around layout.centerX
             const x = startX + index * orbSpacing;
             const y = 16; // Center vertically in 32px height
             

@@ -21,11 +21,12 @@ describe('Positioning Comparison - Old vs New', () => {
         return positions;
     }
     
-    // NEW fixed logic: left-edge based with calculated spacing
+    // NEW fixed logic: centered around centerX (68)
     function newCalculateOrbPositions(orbCount) {
+        const centerX = 68; // SLOT_WIDTH / 2
         const orbSpacing = Math.min(32, (SLOT_WIDTH - ORB_RADIUS * 2) / Math.max(1, orbCount - 1));
-        const totalWidth = orbCount * ORB_RADIUS * 2 + (orbCount - 1) * (orbSpacing - ORB_RADIUS * 2);
-        const startX = (SLOT_WIDTH - totalWidth) / 2 + ORB_RADIUS;
+        const groupWidth = (orbCount - 1) * orbSpacing + ORB_RADIUS * 2;
+        const startX = centerX - groupWidth / 2 + ORB_RADIUS;
         
         const positions = [];
         for (let i = 0; i < orbCount; i++) {
