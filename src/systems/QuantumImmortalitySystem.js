@@ -116,7 +116,9 @@ export default class QuantumImmortalitySystem {
             return;
         }
         console.log('[QuantumImmortalitySystem] Registering QUANTUM_IMMORTALITY slot...');
-        this.scene.hudPanels.registerSlot('QUANTUM_IMMORTALITY', (container, width) => {
+        console.log('[QuantumImmortalitySystem] hudPanels type:', typeof this.scene.hudPanels);
+        console.log('[QuantumImmortalitySystem] registerSlot type:', typeof this.scene.hudPanels?.registerSlot);
+        const result = this.scene.hudPanels.registerSlot('QUANTUM_IMMORTALITY', (container, width) => {
             this.entropyContainer = container;
             this.entropyContainer.setDepth(100);
             
@@ -138,6 +140,7 @@ export default class QuantumImmortalitySystem {
             }).setOrigin(0.5);
             container.add(this.echoIndicator);
         }, 'TOP_RIGHT');
+        console.log('[QuantumImmortalitySystem] registerSlot returned:', result);
         
         // Merge prompt (appears when ready) - NOT in panel, screen-centered
         this.mergePrompt = this.scene.add.text(this.scene.scale.width / 2, 120, '[Q] MERGE TIMELINES', {
