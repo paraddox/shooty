@@ -136,7 +136,7 @@ export default class CartographerProtocolSystem {
         this.updateVoidTides(dt, player);
         this.updatePathLithography(dt, player);
         this.updateStillnessSprings(dt, player);
-        // NOTE: updateBulletSculpting() stub - bullet sculpting system not yet implemented
+        this.updateBulletSculpting(dt, player);
         this.updateTerritorialResonance(deltaSeconds, player, enemies);
         this.updateCrystals(dt);
         this.renderAll();
