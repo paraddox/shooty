@@ -317,4 +317,72 @@ describe('HUD System Compliance', () => {
       });
     });
   });
+
+  describe('ApertureProtocolSystem Pattern (circular icons)', () => {
+    it('should position circular icons so they do not extend into negative Y', () => {
+      const container = new MockContainer(0, 0);
+      const radius = 25;
+      const centerY = radius; // Position so top of circle is at y=0
+
+      // Circular background at centerY
+      const bg = new MockRectangle(0, centerY, radius * 2, radius * 2, 0x22222a);
+      bg.setOrigin(0.5, 0.5); // Centered origin for circle
+      container.add(bg);
+
+      // Icon centered in the circle
+      const icon = new MockText(0, centerY, '◉', { fontSize: '20px' });
+      icon.setOrigin(0.5);
+      container.add(icon);
+
+      // Text below the circle
+      const label = new MockText(0, centerY + 35, 'APERTURE: 0%', { fontSize: '10px' });
+      label.setOrigin(0.5);
+      container.add(label);
+
+      // Verify circle doesn't extend into negative Y
+      const bounds = getContentBounds(container);
+      expect(bounds.top).toBe(0); // Circle top edge at y=0
+      expect(bounds.bottom).toBeGreaterThan(50); // Circle bottom + text
+
+      // Verify center is at expected position
+      expect(bg.y).toBe(radius);
+    });
+  });
+
+  describe('HeartfluxProtocolSystem Pattern (concentric circles)', () => {
+    it('should position heart orb elements with positive Y only', () => {
+      const container = new MockContainer(0, 0);
+      const centerY = 30; // Largest ring radius
+
+      // Background ring (radius 30)
+      const bgRing = new MockRectangle(0, centerY, 60, 60, 0x1a1a25);
+      bgRing.setOrigin(0.5);
+      container.add(bgRing);
+
+      // Heart orb (radius 20) at same center
+      const heartOrb = new MockRectangle(0, centerY, 40, 40, 0xff6b9d);
+      heartOrb.setOrigin(0.5);
+      container.add(heartOrb);
+
+      // Inner glow (radius 12)
+      const innerGlow = new MockRectangle(0, centerY, 24, 24, 0x9d4edd);
+      innerGlow.setOrigin(0.5);
+      container.add(innerGlow);
+
+      // State text below
+      const stateText = new MockText(0, centerY + 45, 'STREAM', { fontSize: '9px' });
+      stateText.setOrigin(0.5);
+      container.add(stateText);
+
+      // Verify all elements are in positive Y
+      const bounds = getContentBounds(container);
+      expect(bounds.top).toBe(0); // Largest ring starts at y=0
+      expect(bounds.bottom).toBeGreaterThan(centerY + 45);
+
+      // All circles share the same center Y
+      expect(bgRing.y).toBe(centerY);
+      expect(heartOrb.y).toBe(centerY);
+      expect(innerGlow.y).toBe(centerY);
+    });
+  });
 });
