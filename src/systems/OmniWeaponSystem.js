@@ -111,6 +111,9 @@ export default class OmniWeaponSystem {
     
     createUI() {
         // Register with HUDPanelManager at OMNI_WEAPON slot
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('OMNI_WEAPON', (container, width, layout) => {
             this.uiContainer = container;
             this.uiContainer.setDepth(100);

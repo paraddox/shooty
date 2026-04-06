@@ -154,6 +154,9 @@ export default class InscriptionProtocolSystem {
         }
         
         // Quill icon - registered with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('INSCRIPTION', (container, width) => {
             this.quillIcon = this.scene.add.image(0, 0, 'quillIcon');
             this.quillIcon.setDepth(91);
@@ -606,9 +609,9 @@ S Y N T H E S I S
     }
     
     triggerQuillAnimation() {
-        // Guard: quillIcon may not be initialized yet (panel-based HUD async)
+        // Guard: quillIcon only exists with panel-based HUD
+        // Silently skip when using Environmental HUD
         if (!this.quillIcon) {
-            console.warn('[InscriptionProtocol] Quill animation skipped - icon not initialized yet');
             return;
         }
         

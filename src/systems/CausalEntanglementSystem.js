@@ -122,21 +122,23 @@ export default class CausalEntanglementSystem {
     }
     
     createModeOverlay() {
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-        
-        // Radial gradient for mode indication
-        const gradient = ctx.createRadialGradient(256, 256, 100, 256, 256, 400);
-        gradient.addColorStop(0, 'rgba(0, 240, 255, 0)');
-        gradient.addColorStop(0.7, 'rgba(0, 240, 255, 0.05)');
-        gradient.addColorStop(1, 'rgba(0, 240, 255, 0.15)');
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 512, 512);
-        
-        this.scene.textures.addCanvas('entangleOverlay', canvas);
+        if (!this.scene.textures.exists('entangleOverlay')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            
+            // Radial gradient for mode indication
+            const gradient = ctx.createRadialGradient(256, 256, 100, 256, 256, 400);
+            gradient.addColorStop(0, 'rgba(0, 240, 255, 0)');
+            gradient.addColorStop(0.7, 'rgba(0, 240, 255, 0.05)');
+            gradient.addColorStop(1, 'rgba(0, 240, 255, 0.15)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 512, 512);
+            
+            this.scene.textures.addCanvas('entangleOverlay', canvas);
+        }
         
         this.modeOverlay = this.scene.add.image(
             this.scene.scale.width / 2,
@@ -154,10 +156,13 @@ export default class CausalEntanglementSystem {
     }
     
     createHUDIndicator() {
-        // Register with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+        
         this.scene.hudPanels.registerSlot('CAUSAL_LINK', (container, width, layout) => {
             this.hudContainer = container;
             this.hudContainer.setDepth(100);
+            this.hudContainer.setVisible(false); // HIDDEN until entanglements exist
             
             // Use top-left origin so elements stay within content bounds (x >= 0, y >= 0)
             const barHeight = 8;
@@ -191,21 +196,23 @@ export default class CausalEntanglementSystem {
     }
     
     createPulseTexture() {
-        const canvas = document.createElement('canvas');
-        canvas.width = 32;
-        canvas.height = 32;
-        const ctx = canvas.getContext('2d');
-        
-        // Glowing orb
-        const grad = ctx.createRadialGradient(16, 16, 2, 16, 16, 14);
-        grad.addColorStop(0, 'rgba(0, 240, 255, 1)');
-        grad.addColorStop(0.5, 'rgba(0, 240, 255, 0.5)');
-        grad.addColorStop(1, 'rgba(0, 240, 255, 0)');
-        
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 32, 32);
-        
-        this.scene.textures.addCanvas('entanglePulse', canvas);
+        if (!this.scene.textures.exists('entanglePulse')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            
+            // Glowing orb
+            const grad = ctx.createRadialGradient(16, 16, 2, 16, 16, 14);
+            grad.addColorStop(0, 'rgba(0, 240, 255, 1)');
+            grad.addColorStop(0.5, 'rgba(0, 240, 255, 0.5)');
+            grad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+            
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 32, 32);
+            
+            this.scene.textures.addCanvas('entanglePulse', canvas);
+        }
     }
     
     setupInput() {
@@ -950,6 +957,13 @@ export default class CausalEntanglementSystem {
     updateHUD() {
         // Guard: panel elements may not be initialized yet
         if (!this.linkSegments) return;
+        
+        // Only show when entanglements exist or in entanglement mode
+        const hasActivity = this.entanglements.length > 0 || this.entanglementMode;
+        if (this.hudContainer) {
+            this.hudContainer.setVisible(hasActivity);
+        }
+        if (!hasActivity) return; // Don't update segments if hidden
         
         // Update link segment visibility
         this.linkSegments.forEach((seg, i) => {

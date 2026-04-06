@@ -22,7 +22,7 @@ export default class AthenaeumProtocolSystem {
         // Configuration
         this.REGION_SIZE = 240; // px - size of each terrain cell
         this.MAX_REGIONS = 32; // 4x8 grid for 1920x1440 arena
-        this.DECAY_RATE = 0.05; // How fast regions fade without activity
+        this.DECAY_RATE = 0.1; // How fast regions fade without activity (2x faster than original)
         
         // Region types and their colors
         this.REGION_TYPES = {
@@ -93,6 +93,9 @@ export default class AthenaeumProtocolSystem {
     
     createUI() {
         // Region indicator - registered with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('ATHENAEUM', (container, width, layout) => {
             this.regionIndicator = container;
             this.regionIndicator.setDepth(1000);
@@ -218,18 +221,21 @@ export default class AthenaeumProtocolSystem {
         }
         
         // Record to buffer for batch processing
+        // Scale down by factor of 100 to require sustained activity (minutes, not milliseconds)
+        const scaledMovement = movement / 100;
+        
         if (!this.activityBuffer.has(key)) {
             this.activityBuffer.set(key, {
                 movement: 0,
                 combat: 0,
                 temporal: 0,
-                passes: 0
+                passes: 0,
+                lastActive: 0
             });
         }
         
-        const activity = this.activityBuffer.get(key);
-        activity.movement += movement * 0.1;
-        activity.passes += 1;
+        const buffer = this.activityBuffer.get(key);
+        buffer.movement += scaledMovement;
         
         // Temporal activity detection
         if (this.scene.nearMissState?.active || 
@@ -290,7 +296,7 @@ export default class AthenaeumProtocolSystem {
         
         // Decay all regions
         this.atlas.forEach(region => {
-            if (now - region.lastActive > 5) { // Only decay after 5s of inactivity
+            if (now - region.lastActive > 2) { // Only decay after 2s of inactivity (was 5s)
                 region.activity.movement = Math.max(0, region.activity.movement - this.DECAY_RATE * dt * 10);
                 region.activity.combat = Math.max(0, region.activity.combat - this.DECAY_RATE * dt * 10);
                 region.activity.temporal = Math.max(0, region.activity.temporal - this.DECAY_RATE * dt * 10);
@@ -307,38 +313,20 @@ export default class AthenaeumProtocolSystem {
     }
     
     recalculateRegionType(region) {
-        const { movement, combat, temporal, passes } = region.activity;
-        const total = movement + combat + temporal + passes;
-        
-        if (total < 10) {
-            region.type = 'VOID';
-            region.intensity = 0.1 + (total / 100);
-            return;
-        }
-        
-        // Determine dominant activity
-        const dominant = Math.max(movement, combat, temporal, passes);
-        
-        if (dominant === movement && movement > combat * 1.5) {
-            region.type = 'VERDANT';
-            region.intensity = Math.min(1, movement / 50);
-        } else if (dominant === combat && combat > movement * 1.5) {
+        const { combat } = region.activity;
+
+        // COMBAT-ONLY: Only SCORCHED terrain triggers from player combat
+        // Movement, temporal, and other activities are tracked but don't create terrain
+        if (combat >= 50) {
             region.type = 'SCORCHED';
             region.intensity = Math.min(1, combat / 50);
-        } else if (dominant === temporal && temporal > passes * 2) {
-            region.type = 'ECHO';
-            region.intensity = Math.min(1, temporal / 30);
-        } else if (movement > 20 && combat > 20 && temporal > 10) {
-            region.type = 'NEXUS';
-            region.intensity = Math.min(1, total / 150);
         } else {
-            // Mixed activity defaults to VOID
             region.type = 'VOID';
-            region.intensity = Math.min(0.5, total / 100);
+            region.intensity = 0.1 + (combat / 100);
         }
-        
-        // Mark discovery
-        if (!region.discovered && region.intensity > 0.3) {
+
+        // Mark discovery (requires sustained combat activity)
+        if (!region.discovered && region.intensity > 0.6 && region.type === 'SCORCHED') {
             region.discovered = true;
             this.discoveredRegions.add(`${region.gridX},${region.gridY}`);
             this.onRegionDiscovered(region);
@@ -491,21 +479,24 @@ export default class AthenaeumProtocolSystem {
     }
     
     renderRegions() {
-        // Render via UnifiedGraphicsManager on 'effects' layer
+        // Render via UnifiedGraphicsManager on 'world' layer (behind player/enemies)
         if (!this.scene.graphicsManager) return;
-        
+
         const gm = this.scene.graphicsManager;
-        
+
         this.atlas.forEach(region => {
-            if (region.intensity < 0.15 && !region.discovered) return;
-            
+            // ONLY render discovered regions with meaningful activity
+            // This prevents visual clutter from early-game activity accumulation
+            if (!region.discovered) return;
+            if (region.intensity < 0.6) return; // Was 0.3 - requires more sustained activity
+
             const typeInfo = this.REGION_TYPES[region.type];
-            const alpha = region.discovered ? 0.3 + region.intensity * 0.4 : 0.1;
+            const alpha = 0.3 + region.intensity * 0.4;
             const size = this.REGION_SIZE * 0.9;
-            
-            // Draw region cell (filled rect)
+
+            // Draw region cell (filled rect) on 'world' layer (depth 10, behind entities)
             gm.drawRect(
-                'effects',
+                'world',
                 region.x - size / 2,
                 region.y - size / 2,
                 size,
@@ -513,7 +504,7 @@ export default class AthenaeumProtocolSystem {
                 typeInfo.color,
                 alpha * 0.3
             );
-            
+
             // Draw border for discovered regions (stroked rect)
             if (region.discovered) {
                 const borderAlpha = 0.2 + region.intensity * 0.5;
@@ -521,7 +512,7 @@ export default class AthenaeumProtocolSystem {
                 // We use a filled rect approach for border (thinner inner rect)
                 const borderWidth = 2;
                 gm.drawRect(
-                    'effects',
+                    'world',
                     region.x - size / 2,
                     region.y - size / 2,
                     size,
@@ -530,7 +521,7 @@ export default class AthenaeumProtocolSystem {
                     borderAlpha
                 );
                 gm.drawRect(
-                    'effects',
+                    'world',
                     region.x - size / 2,
                     region.y + size / 2 - borderWidth,
                     size,
@@ -539,7 +530,7 @@ export default class AthenaeumProtocolSystem {
                     borderAlpha
                 );
                 gm.drawRect(
-                    'effects',
+                    'world',
                     region.x - size / 2,
                     region.y - size / 2,
                     borderWidth,
@@ -548,7 +539,7 @@ export default class AthenaeumProtocolSystem {
                     borderAlpha
                 );
                 gm.drawRect(
-                    'effects',
+                    'world',
                     region.x + size / 2 - borderWidth,
                     region.y - size / 2,
                     borderWidth,
@@ -557,10 +548,10 @@ export default class AthenaeumProtocolSystem {
                     borderAlpha
                 );
                 
-                // Draw symbol in center (circle)
+                // Draw symbol in center (circle) on 'world' layer
                 if (region.intensity > 0.5) {
                     gm.drawCircle(
-                        'effects',
+                        'world',
                         region.x,
                         region.y,
                         8 + region.intensity * 12,
@@ -571,9 +562,9 @@ export default class AthenaeumProtocolSystem {
             }
         });
     }
-    
+
     renderConnections() {
-        // Render via UnifiedGraphicsManager on 'effects' layer
+        // Render via UnifiedGraphicsManager on 'world' layer (behind entities)
         if (!this.scene.graphicsManager) return;
         
         const gm = this.scene.graphicsManager;
@@ -604,9 +595,9 @@ export default class AthenaeumProtocolSystem {
                     const avgIntensity = (region.intensity + neighbor.intensity) / 2;
                     const lineWidth = 2 + avgIntensity * 4;
                     const alpha = 0.3 + avgIntensity * 0.4;
-                    
+
                     gm.drawLine(
-                        'effects',
+                        'world',
                         region.x,
                         region.y,
                         neighbor.x,
@@ -615,7 +606,7 @@ export default class AthenaeumProtocolSystem {
                         alpha,
                         lineWidth
                     );
-                    
+
                     connected.add(connKey);
                 }
             });

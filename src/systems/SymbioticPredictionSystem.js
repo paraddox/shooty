@@ -178,30 +178,32 @@ export default class SymbioticPredictionSystem {
     
     createPredictionField() {
         // Create a subtle animated texture for the prediction field
-        const canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 256;
-        const ctx = canvas.getContext('2d');
-        
-        // Draw faint grid that pulses with AI confidence
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.03)';
-        ctx.lineWidth = 1;
-        
-        const gridSize = 32;
-        for (let x = 0; x <= 256; x += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, 256);
-            ctx.stroke();
+        if (!this.scene.textures.exists('predictionGrid')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw faint grid that pulses with AI confidence
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.03)';
+            ctx.lineWidth = 1;
+            
+            const gridSize = 32;
+            for (let x = 0; x <= 256; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, 256);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= 256; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(256, y);
+                ctx.stroke();
+            }
+            
+            this.scene.textures.addCanvas('predictionGrid', canvas);
         }
-        for (let y = 0; y <= 256; y += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(256, y);
-            ctx.stroke();
-        }
-        
-        this.scene.textures.addCanvas('predictionGrid', canvas);
         
         // The field covers the entire arena
         this.predictionField = this.scene.add.tileSprite(
@@ -216,9 +218,13 @@ export default class SymbioticPredictionSystem {
     
     createSymbiosisIndicator() {
         // Top-center indicator showing harmony/chaos balance - registered with HUDPanelManager
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('SYMBIOSIS_HARMONY', (container, width, layout) => {
             this.symbiosisContainer = container;
             this.symbiosisContainer.setDepth(100);
+            this.symbiosisContainer.setVisible(false); // HIDDEN until symbiosis > 0
             
             const barWidth = Math.min(200, width);
             const barHeight = 6;
@@ -819,6 +825,13 @@ export default class SymbioticPredictionSystem {
         if (!this.depthText || !this.harmonyBar || !this.chaosBar || !this.statusText || !this.predictionField) {
             return;
         }
+        
+        // Only show when symbiosis depth > 0
+        const hasActivity = this.aiState.symbiosisDepth > 0;
+        if (this.symbiosisContainer) {
+            this.symbiosisContainer.setVisible(hasActivity);
+        }
+        if (!hasActivity) return; // Don't update if hidden
         
         // Update visual indicator
         this.depthText.setText(`${Math.floor(this.aiState.symbiosisDepth)}%`);

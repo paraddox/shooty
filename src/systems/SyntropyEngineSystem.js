@@ -303,20 +303,21 @@ export default class SyntropyEngineSystem {
         const oldLevel = this.syntropyLevel;
         
         // Calculate level based on total lifetime syntropy
-        if (this.totalSyntropyGenerated >= 5000) this.syntropyLevel = 5;
-        else if (this.totalSyntropyGenerated >= 3000) this.syntropyLevel = 4;
-        else if (this.totalSyntropyGenerated >= 1500) this.syntropyLevel = 3;
-        else if (this.totalSyntropyGenerated >= 500) this.syntropyLevel = 2;
-        else if (this.totalSyntropyGenerated >= 100) this.syntropyLevel = 1;
+        // SCALED: Increased thresholds by 3x to slow progression (10+ min to reach mid-levels)
+        if (this.totalSyntropyGenerated >= 15000) this.syntropyLevel = 5;  // Was 5000
+        else if (this.totalSyntropyGenerated >= 9000) this.syntropyLevel = 4;  // Was 3000
+        else if (this.totalSyntropyGenerated >= 4500) this.syntropyLevel = 3;  // Was 1500
+        else if (this.totalSyntropyGenerated >= 1500) this.syntropyLevel = 2;  // Was 500
+        else if (this.totalSyntropyGenerated >= 300) this.syntropyLevel = 1;  // Was 100
         else this.syntropyLevel = 0;
         
-        // Check for cascade trigger
-        if (this.syntropy >= 1000 && !this.cascadeActive) {
+        // Check for cascade trigger (scaled from 1000 to 3000)
+        if (this.syntropy >= 3000 && !this.cascadeActive) {
             this.activateCascade();
         }
         
-        // Check for singularity availability
-        if (this.syntropy >= 2000 && !this.singularityAvailable) {
+        // Check for singularity availability (scaled from 2000 to 6000)
+        if (this.syntropy >= 6000 && !this.singularityAvailable) {
             this.singularityAvailable = true;
             this.showSingularityAvailable();
         }

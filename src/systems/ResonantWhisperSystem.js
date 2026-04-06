@@ -137,7 +137,7 @@ export default class ResonantWhisperSystem {
         
         // ===== WHISPER SPAWN TIMING =====
         this.whisperSpawnTimer = 0;
-        this.whisperSpawnInterval = 8000; // New whisper every 8 seconds
+        this.whisperSpawnInterval = 45000; // New whisper every 45 seconds (was 8 - too fast)
         this.lastBloodmarkDeath = null; // Track last death for bloodmark
         
         // ===== CONSTANTS =====
@@ -369,6 +369,9 @@ export default class ResonantWhisperSystem {
         this.responseContainer.setVisible(false);
         
         // Karma display - registered with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('KARMA', (container, width, layout) => {
             // Position at top of content area
             this.karmaDisplay = this.scene.add.text(
@@ -396,8 +399,9 @@ export default class ResonantWhisperSystem {
             description: 'Interact with nearby whispers'
         });
         
-        // Numbers 1-3 for fragment responses - registered with ControlsManager
-        this.scene.controls.register('ONE', 'Response Yes', () => {
+        // F1-F3 for fragment responses (avoid conflict with CausalEntanglementSystem)
+        // These only activate when a fragment is active
+        this.scene.controls.register('F1', 'Whisper Yes', () => {
             if (this.activeFragment) {
                 this.respondToFragment(this.activeFragment, 'yes');
             }
@@ -406,7 +410,7 @@ export default class ResonantWhisperSystem {
             description: 'Respond "yes" to fragment'
         });
         
-        this.scene.controls.register('TWO', 'Response No', () => {
+        this.scene.controls.register('F2', 'Whisper No', () => {
             if (this.activeFragment) {
                 this.respondToFragment(this.activeFragment, 'no');
             }
@@ -415,7 +419,7 @@ export default class ResonantWhisperSystem {
             description: 'Respond "no" to fragment'
         });
         
-        this.scene.controls.register('THREE', 'Response Perhaps', () => {
+        this.scene.controls.register('F3', 'Whisper Perhaps', () => {
             if (this.activeFragment) {
                 this.respondToFragment(this.activeFragment, 'perhaps');
             }

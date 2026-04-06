@@ -31,13 +31,13 @@ export default class PauseSystem {
         this.scene.physics.world.pause();
         this.scene.physics.world.timeScale = 0;
 
-        // 2. Pause all tweens (but NOT for patch_mode - UI needs animations)
-        if (reason !== 'patch_mode') {
+        // 2. Pause all tweens (but NOT for patch_mode or level_dialog - UI needs animations)
+        if (reason !== 'patch_mode' && reason !== 'level_dialog') {
             this.scene.tweens.pauseAll();
         }
         
-        // 3. Pause the Time system (stops delayedCall and addEvent) - but NOT for patch_mode
-        if (reason !== 'patch_mode') {
+        // 3. Pause the Time system (stops delayedCall and addEvent) - but NOT for patch_mode or level_dialog
+        if (reason !== 'patch_mode' && reason !== 'level_dialog') {
             this.scene.time.paused = true;
         }
         
@@ -115,13 +115,13 @@ export default class PauseSystem {
         this.scene.physics.world.resume();
         this.scene.physics.world.timeScale = 1;
 
-        // 2. Resume all tweens (only if we paused them - not for patch_mode)
-        if (this.pauseReason !== 'patch_mode') {
+        // 2. Resume all tweens (only if we paused them - not for patch_mode or level_dialog)
+        if (this.pauseReason !== 'patch_mode' && this.pauseReason !== 'level_dialog') {
             this.scene.tweens.resumeAll();
         }
         
-        // 3. Resume the Time system (only if we paused it - not for patch_mode)
-        if (this.pauseReason !== 'patch_mode') {
+        // 3. Resume the Time system (only if we paused it - not for patch_mode or level_dialog)
+        if (this.pauseReason !== 'patch_mode' && this.pauseReason !== 'level_dialog') {
             this.scene.time.paused = false;
         }
 

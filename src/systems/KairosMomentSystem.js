@@ -144,21 +144,23 @@ export default class KairosMomentSystem {
     
     createVisuals() {
         // Kairos overlay — golden iridescent sheen
-        const canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 256;
-        const ctx = canvas.getContext('2d');
-        
-        // Radial gradient: white-gold center, soft edges
-        const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 180);
-        gradient.addColorStop(0, 'rgba(255, 248, 231, 0.15)');
-        gradient.addColorStop(0.5, 'rgba(255, 215, 0, 0.08)');
-        gradient.addColorStop(1, 'rgba(255, 248, 231, 0)');
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 256, 256);
-        
-        this.scene.textures.addCanvas('kairos_overlay', canvas);
+        if (!this.scene.textures.exists('kairos_overlay')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            // Radial gradient: white-gold center, soft edges
+            const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 180);
+            gradient.addColorStop(0, 'rgba(255, 248, 231, 0.15)');
+            gradient.addColorStop(0.5, 'rgba(255, 215, 0, 0.08)');
+            gradient.addColorStop(1, 'rgba(255, 248, 231, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 256, 256);
+            
+            this.scene.textures.addCanvas('kairos_overlay', canvas);
+        }
         
         this.kairosOverlay = this.scene.add.image(
             this.scene.scale.width / 2,

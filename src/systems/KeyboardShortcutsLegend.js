@@ -81,7 +81,12 @@ export default class KeyboardShortcutsLegend {
         // Calculate required width before registration
         const requiredWidth = this.calculatePanelWidth();
         
-        // Register with HUDPanelManager in BOTTOM_LEFT panel's KEYBOARD_SHORTCUTS slot
+        // Environmental HUD System replaces panel-based HUD
+        // Skip registration if using EnvironmentalHUDSystem
+        if (!this.scene.hudPanels) {
+            return;
+        }
+        
         this.scene.hudPanels.registerSlot('KEYBOARD_SHORTCUTS', (container, width, layout) => {
             this.container = container;
             this.container.setDepth(100);

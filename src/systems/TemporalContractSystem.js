@@ -287,6 +287,9 @@ export default class TemporalContractSystem {
     
     createDebtIndicator() {
         // Register with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('DEBT_DISPLAY', (container, width) => {
             this.debtDisplay = container;
             this.debtDisplay.setDepth(1000);

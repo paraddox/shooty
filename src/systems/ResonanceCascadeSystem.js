@@ -62,7 +62,13 @@ export default class ResonanceCascadeSystem {
     }
     
     createVisuals() {
-        // Chain sequence display (center-top) - registered with HUDPanelManager
+        // Environmental HUD System replaces panel-based HUD
+        // Create standalone visuals if panel system not available
+        if (!this.scene.hudPanels) {
+            this.createStandaloneVisuals();
+            return;
+        }
+        
         this.scene.hudPanels.registerSlot('RESONANCE_CASCADE', (container, width, layout) => {
             this.chainContainer = container;
             this.chainContainer.setDepth(100);
@@ -108,6 +114,53 @@ export default class ResonanceCascadeSystem {
             this.cascadeText.setVisible(false);
             container.add(this.cascadeText);
         }, 'TOP_CENTER');
+    }
+    
+    createStandaloneVisuals() {
+        // Create container at screen center-top when panel system unavailable
+        const screenCenterX = this.scene.scale.width / 2;
+        const centerY = 40;
+        
+        this.chainContainer = this.scene.add.container(screenCenterX, centerY);
+        this.chainContainer.setDepth(100);
+        this.chainContainer.setVisible(false);
+        
+        // Multiplier text
+        this.multiplierText = this.scene.add.text(0, 0, '', {
+            fontFamily: 'monospace',
+            fontSize: '36px',
+            fontStyle: 'bold',
+            fill: '#ffffff'
+        });
+        this.multiplierText.setOrigin(0.5);
+        this.multiplierText.setDepth(101);
+        this.multiplierText.setVisible(false);
+        this.chainContainer.add(this.multiplierText);
+        
+        // Sequence dot pool
+        for (let i = 0; i < 6; i++) {
+            const dot = this.scene.add.circle(0, 0, 8, 0xffffff);
+            dot.setAlpha(0);
+            dot.setDepth(102);
+            this.sequenceDots.push({
+                sprite: dot,
+                active: false,
+                system: null
+            });
+            this.chainContainer.add(dot);
+        }
+        
+        // Cascade break text
+        this.cascadeText = this.scene.add.text(0, 0, '', {
+            fontFamily: 'monospace',
+            fontSize: '48px',
+            fontStyle: 'bold',
+            fill: '#ff00ff'
+        });
+        this.cascadeText.setOrigin(0.5);
+        this.cascadeText.setDepth(200);
+        this.cascadeText.setVisible(false);
+        this.chainContainer.add(this.cascadeText);
     }
     
     /**

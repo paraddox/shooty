@@ -225,19 +225,21 @@ export default class ApertureProtocolSystem {
         // - 'ui' for blink cooldown
         
         // Create attention charge particle texture
-        const canvas = document.createElement('canvas');
-        canvas.width = 32;
-        canvas.height = 32;
-        const ctx = canvas.getContext('2d');
-        
-        const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-        gradient.addColorStop(0, 'rgba(0, 212, 170, 0.6)');
-        gradient.addColorStop(0.5, 'rgba(0, 212, 170, 0.2)');
-        gradient.addColorStop(1, 'rgba(0, 212, 170, 0)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 32, 32);
-        
-        this.scene.textures.addCanvas('attentionGlow', canvas);
+        if (!this.scene.textures.exists('attentionGlow')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            
+            const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+            gradient.addColorStop(0, 'rgba(0, 212, 170, 0.6)');
+            gradient.addColorStop(0.5, 'rgba(0, 212, 170, 0.2)');
+            gradient.addColorStop(1, 'rgba(0, 212, 170, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 32, 32);
+            
+            this.scene.textures.addCanvas('attentionGlow', canvas);
+        }
         
         // Attention particles
         this.attentionParticles = this.scene.add.particles(0, 0, 'attentionGlow', {
@@ -391,6 +393,9 @@ export default class ApertureProtocolSystem {
     
     createUI() {
         // Register with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('APERTURE', (container, width, layout) => {
             this.blinkIndicator = container;
             this.blinkIndicator.setDepth(100);
@@ -892,11 +897,11 @@ export default class ApertureProtocolSystem {
     }
     
     destroy() {
-        this.attentionParticles.destroy();
-        this.blinkIndicator.destroy();
-        this.attentionMeter.destroy();
+        this.attentionParticles?.destroy?.();
+        this.blinkIndicator?.destroy?.();
+        this.attentionMeter?.destroy?.();
         
-        this.chargeIndicators.clear();
+        this.chargeIndicators?.clear?.();
         
         this.scene.events.off('update', this.update, this);
     }

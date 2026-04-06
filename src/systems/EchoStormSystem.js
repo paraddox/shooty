@@ -46,22 +46,24 @@ export default class EchoStormSystem {
     
     createEchoVisuals() {
         // Create echo core (glowing center)
-        const canvas = document.createElement('canvas');
-        canvas.width = 64;
-        canvas.height = 64;
-        const ctx = canvas.getContext('2d');
-        
-        // Radial gradient for echo core
-        const gradient = ctx.createRadialGradient(32, 32, 4, 32, 32, 30);
-        gradient.addColorStop(0, 'rgba(255, 215, 0, 1)');
-        gradient.addColorStop(0.3, 'rgba(255, 215, 0, 0.6)');
-        gradient.addColorStop(0.7, 'rgba(255, 215, 0, 0.2)');
-        gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 64, 64);
-        
-        this.scene.textures.addCanvas('echoCore', canvas);
+        if (!this.scene.textures.exists('echoCore')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            
+            // Radial gradient for echo core
+            const gradient = ctx.createRadialGradient(32, 32, 4, 32, 32, 30);
+            gradient.addColorStop(0, 'rgba(255, 215, 0, 1)');
+            gradient.addColorStop(0.3, 'rgba(255, 215, 0, 0.6)');
+            gradient.addColorStop(0.7, 'rgba(255, 215, 0, 0.2)');
+            gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 64, 64);
+            
+            this.scene.textures.addCanvas('echoCore', canvas);
+        }
         this.echoCore = this.scene.add.image(0, 0, 'echoCore');
         this.echoCore.setDepth(51);
         this.echoCore.setVisible(false);

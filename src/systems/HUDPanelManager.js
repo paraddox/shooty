@@ -103,7 +103,195 @@ export default class HUDPanelManager {
         this.elements = new Map();
         this.containers = new Map();
         
+        // Map HUD slots to system IDs for progressive revelation
+        // Slots not listed here are always visible (core HUD)
+        this.SLOT_TO_SYSTEM_MAP = {
+            // TOP_LEFT panel
+            'SYNTROPY': 'syntropyEngine',
+            'CONVERGENCE': 'aethericConvergence',
+            'SYNTHESIS': null, // Always visible or part of core
+            'PATTERN': 'observerEffect',
+            'VOID_COHERENCE': 'voidCoherence',
+            'CHRONO_LOOP': 'chronoLoop',
+            'CAUSAL_LINK': 'causalEntanglement',
+            'TEMPORAL_REWIND': 'temporalRewind',
+            
+            // TOP_RIGHT panel
+            'RESONANCE_ORB': 'resonanceOrb',
+            'QUANTUM_IMMORTALITY': 'quantumImmortality',
+            'DEBT_DISPLAY': 'voidExchange',
+            'BOOTSTRAP': 'bootstrapProtocol',
+            'DISSOLUTION': 'dissolutionProtocol',
+            'AMBIENT': null, // Not in TimeBasedUnlockConfig - always visible if implemented
+            'AXIOM_NEXUS': 'axiomNexus',
+            'HEARTFLUX': 'heartflux',
+            
+            // TOP_CENTER panel (Symbiosis)
+            'PROTEUS': 'proteusProtocol',
+            'SYMBIOSIS_HARMONY': 'symbioticPrediction',
+            'RESONANCE_CASCADE': 'resonanceCascade',
+            
+            // BOTTOM_RIGHT panel
+            'META_SYSTEM': 'metaSystemOperator',
+            'APERTURE': 'apertureProtocol',
+            'OBSERVER': 'observerEffect',
+            'KARMA': 'axiomNexus',
+            'PEDAGOGY': null, // Not in TimeBasedUnlockConfig - always visible if implemented
+            'ATHENAEUM': 'athenaeumProtocol',
+            'INSCRIPTION': 'inscriptionProtocol',
+            'HARMONIC': 'harmonicConvergence',
+        };
+        
+        // Track which slots are currently visible
+        this.visibleSlots = new Set();
+        
         this.createPanels();
+        
+        // Apply initial visibility based on system unlocks
+        this.updateAllSlotVisibility();
+    }
+    
+    /**
+     * Update visibility of all slots based on system unlock status
+     */
+    updateAllSlotVisibility() {
+        const unlockManager = this.scene.systemUnlockManager;
+        if (!unlockManager) return;
+        
+        // Check if the unlock manager supports progressive unlock
+        // SystemUnlockManager has isSystemActive, SlowSystemUnlockManager has isSystemUnlocked
+        const supportsProgressiveUnlock = 
+            typeof unlockManager.isSystemActive === 'function' ||
+            typeof unlockManager.isSystemUnlocked === 'function';
+        
+        for (const [slotId, systemId] of Object.entries(this.SLOT_TO_SYSTEM_MAP)) {
+            if (!systemId) {
+                // Always visible (core HUD)
+                this.setSlotVisibility(slotId, true);
+                continue;
+            }
+            
+            // If progressive unlock not supported, show all slots
+            // Otherwise, check if the specific system is active/unlocked
+            let isUnlocked = true;
+            if (supportsProgressiveUnlock) {
+                // Use appropriate method based on manager type
+                if (typeof unlockManager.isSystemActive === 'function') {
+                    isUnlocked = unlockManager.isSystemActive(systemId);
+                } else if (typeof unlockManager.isSystemUnlocked === 'function') {
+                    isUnlocked = unlockManager.isSystemUnlocked(systemId);
+                }
+            }
+            this.setSlotVisibility(slotId, isUnlocked);
+        }
+    }
+    
+    /**
+     * Reveal slot(s) for a specific system when it unlocks
+     * @param {string} systemId - The system that was unlocked
+     */
+    revealSlotForSystem(systemId) {
+        // Skip if unlock manager doesn't support progressive unlock
+        const unlockManager = this.scene.systemUnlockManager;
+        if (!unlockManager) return;
+        
+        // Check for either isSystemActive (wave-based) or isSystemUnlocked (time-based)
+        const supportsProgressiveUnlock = 
+            typeof unlockManager.isSystemActive === 'function' ||
+            typeof unlockManager.isSystemUnlocked === 'function';
+        
+        if (!supportsProgressiveUnlock) return;
+        
+        // Find all slots mapped to this system
+        for (const [slotId, mappedSystemId] of Object.entries(this.SLOT_TO_SYSTEM_MAP)) {
+            if (mappedSystemId === systemId) {
+                // Show this slot with a subtle animation
+                this.revealSlotWithAnimation(slotId);
+            }
+        }
+    }
+    
+    /**
+     * Reveal a slot with a subtle fade-in animation
+     * @param {string} slotId - The slot to reveal
+     */
+    revealSlotWithAnimation(slotId) {
+        for (const [region, panel] of this.panels) {
+            const slot = panel.slotMap?.get(slotId);
+            if (slot) {
+                // Make visible but start transparent
+                slot.container.setVisible(true);
+                slot.container.setAlpha(0);
+                this.visibleSlots.add(slotId);
+                
+                // Animate in
+                this.scene.tweens.add({
+                    targets: slot.container,
+                    alpha: 1,
+                    duration: 500,
+                    ease: 'Power2'
+                });
+                
+                // Recalculate panel layout
+                this.recalculatePanelLayout(region);
+                
+                console.log(`[HUDPanelManager] Revealed slot: ${slotId}`);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Set visibility of a specific slot by ID
+     * @param {string} slotId - The slot identifier
+     * @param {boolean} visible - Whether to show or hide
+     */
+    setSlotVisibility(slotId, visible) {
+        // Find which panel contains this slot
+        for (const [region, panel] of this.panels) {
+            const slot = panel.slotMap?.get(slotId);
+            if (slot) {
+                if (visible) {
+                    slot.container.setVisible(true);
+                    this.visibleSlots.add(slotId);
+                } else {
+                    slot.container.setVisible(false);
+                    this.visibleSlots.delete(slotId);
+                }
+                
+                // Recalculate panel layout after visibility change
+                this.recalculatePanelLayout(region);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Recalculate layout for a specific panel
+     */
+    recalculatePanelLayout(region) {
+        const panel = this.panels.get(region);
+        if (!panel) return;
+        
+        let currentY = 35; // Header offset
+        
+        for (const [slotId, slot] of panel.slotMap) {
+            if (slot.container.visible) {
+                slot.container.y = currentY;
+                currentY += (slot.measuredHeight || slot.config?.minHeight || 20) + 4;
+            }
+        }
+        
+        // Update panel background height
+        const newHeight = currentY + this.panelPadding * 2;
+        if (panel.container?.list?.[0]) {
+            const bg = panel.container.list[0];
+            if (bg && bg.height !== undefined) {
+                bg.height = newHeight;
+            }
+        }
     }
     
     createPanels() {

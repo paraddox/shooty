@@ -3,10 +3,13 @@ import Phaser from 'phaser';
 export default class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
         super(scene, x, y, 'player');
-        
+
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        
+
+        // Set depth above world layer (10) but below UI (30)
+        this.setDepth(25);
+
         this.setCollideWorldBounds(true);
         this.setDrag(800);
         this.setDamping(true);

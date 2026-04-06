@@ -3,10 +3,13 @@ import Phaser from 'phaser';
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, target, type = 'enemy') {
         super(scene, x, y, type);
-        
+
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        
+
+        // Set depth above world layer (10) but below UI (30), same as player
+        this.setDepth(25);
+
         this.setCollideWorldBounds(true);
         this.target = target;
         this.type = type;

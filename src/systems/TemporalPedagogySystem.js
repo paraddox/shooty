@@ -401,8 +401,8 @@ export default class TemporalPedagogySystem {
         mastery.used++;
         mastery.score = Math.min(100, mastery.score + quality);
         
-        // Check for discovery
-        if (!mastery.discovered && mastery.used >= 1) {
+        // Check for discovery (requires 3+ uses, not just 1 - prevents instant discovery)
+        if (!mastery.discovered && mastery.used >= 3) {
             mastery.discovered = true;
             this.onSystemDiscovered(systemName);
         }
@@ -468,6 +468,9 @@ export default class TemporalPedagogySystem {
     
     createSystemIndicators() {
         // Create all system indicators in a grid - registered with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('PEDAGOGY', (container, width, layout) => {
             this.pedagogyContainer = container;
             this.pedagogyContainer.setDepth(90);

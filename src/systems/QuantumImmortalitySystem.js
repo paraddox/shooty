@@ -111,8 +111,8 @@ export default class QuantumImmortalitySystem {
         // Rendering via UnifiedGraphicsManager
         
         // Entropy bar (top-right) - registered with HUDPanelManager
+        // Silently skip if using Environmental HUD (panel-free mode)
         if (!this.scene.hudPanels) {
-            console.warn('[QuantumImmortalitySystem] hudPanels not available, skipping UI registration');
             return;
         }
         this.scene.hudPanels.registerSlot('QUANTUM_IMMORTALITY', (container, width, layout) => {
@@ -457,12 +457,14 @@ export default class QuantumImmortalitySystem {
         const wasReady = this.mergeReady;
         this.mergeReady = this.quantumEchoes.length >= this.mergeRequiredEchoes && this.mergeCooldown <= 0;
         
-        // Show/hide prompt
-        if (this.mergeReady && !this.mergeActive) {
-            this.mergePrompt.setVisible(true);
-            this.mergePrompt.setAlpha(0.8 + Math.sin(this.scene.time.now / 200) * 0.2);
-        } else {
-            this.mergePrompt.setVisible(false);
+        // Show/hide prompt (if UI was created)
+        if (this.mergePrompt) {
+            if (this.mergeReady && !this.mergeActive) {
+                this.mergePrompt.setVisible(true);
+                this.mergePrompt.setAlpha(0.8 + Math.sin(this.scene.time.now / 200) * 0.2);
+            } else {
+                this.mergePrompt.setVisible(false);
+            }
         }
         
         // Pulse effect when first becoming ready
@@ -1037,7 +1039,7 @@ export default class QuantumImmortalitySystem {
     destroy() {
         // UnifiedGraphicsManager handles its own cleanup
         
-        this.entropyContainer.destroy();
-        this.mergePrompt.destroy();
+        this.entropyContainer?.destroy?.();
+        this.mergePrompt?.destroy?.();
     }
 }

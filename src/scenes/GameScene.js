@@ -62,7 +62,11 @@ import KeyboardShortcutsLegend from '../systems/KeyboardShortcutsLegend.js';
 import ControlsManager from '../systems/ControlsManager.js';
 import UnifiedGraphicsManager from '../systems/UnifiedGraphicsManager.js';
 import PauseSystem from '../systems/PauseSystem.js';
-import HUDPanelManager from '../systems/HUDPanelManager.js';
+import EnvironmentalHUDSystem from '../systems/EnvironmentalHUDSystem.js';
+import SlowSystemUnlockManager from '../systems/SlowSystemUnlockManager.js';
+import TutorialOverlay from '../systems/TutorialOverlay.js';
+import LevelManager from '../systems/LevelManager.js';
+import LevelStartDialog from '../systems/LevelStartDialog.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -260,23 +264,54 @@ export default class GameScene extends Phaser.Scene {
         
         // Pause System — Unified pause manager
         this.pauseSystem = null;
+        
+        // System Unlock Manager — incremental introduction of game systems
+        this.systemUnlockManager = null;
+
+        // Tutorial Overlay — displays contextual system tutorials
+        this.tutorialOverlay = null;
+
+        // Level Manager — tracks level-based progression (5 waves per level)
+        this.levelManager = null;
+
+        // Level Start Dialog — displays level introduction and system unlocks
+        this.levelStartDialog = null;
+
+        // Flag for waiting on level dialog dismissal
+        this.waitingForLevelDialog = false;
     }
 
     create() {
         // Initialize Pause System FIRST (needed by other systems)
         this.pauseSystem = new PauseSystem(this);
         
+        // Initialize System Unlock Manager (time-based, 1 system per 3 minutes)
+        this.systemUnlockManager = new SlowSystemUnlockManager(this);
+
+        // Initialize Tutorial Overlay (displays system unlock notifications)
+        this.tutorialOverlay = new TutorialOverlay(this);
+
+        // Initialize Level Manager (5 waves per level, 1 system per level)
+        this.levelManager = new LevelManager(this);
+
+        // Initialize Level Start Dialog
+        this.levelStartDialog = new LevelStartDialog(this);
+
+        // Listen for system unlock events
+        this.setupSystemUnlockEvents();
+
+        // Listen for level events
+        this.setupLevelEventListeners();
+        
         // Initialize Controls Manager (centralized key binding)
         this.controls = new ControlsManager(this);
         
-        // Initialize Panel-based HUD Manager for clean organized HUD
-        this.hudPanels = new HUDPanelManager(this);
-        
-        // Initialize Keyboard Shortcuts Legend in bottom left (reads from ControlsManager)
-        this.keyboardShortcutsLegend = new KeyboardShortcutsLegend(this);
+        // Initialize Environmental HUD System — "The Arena IS the HUD"
+        // Replaces all panel-based HUD elements with environmental perception
+        this.environmentalHUD = new EnvironmentalHUDSystem(this);
         
         // Backward compatibility: expose as hudLayout for existing systems
-        this.hudLayout = this.hudPanels;
+        this.hudLayout = this.environmentalHUD;
         
         // World bounds (game arena)
         const worldWidth = 1920;
@@ -627,25 +662,39 @@ export default class GameScene extends Phaser.Scene {
         // Initialize Void Exchange System — The 54th Dimension: TEMPORAL CAPITALISM
         this.voidExchange = new VoidExchangeSystem(this);
         
-        // Initialize Heartflux Protocol — The 55th Dimension: BIOMETRIC EMPATHY
-        this.heartflux = new HeartfluxProtocolSystem(this);
+        // Initialize late-game systems only if unlocked
+        // Heartflux Protocol — minute 153 (2h 33m)
+        if (this.systemUnlockManager.isSystemUnlocked('heartflux')) {
+            this.heartflux = new HeartfluxProtocolSystem(this);
+        }
         
-        // Initialize Exogenesis Protocol — The 56th Dimension: REALITY MANIFESTATION
-        this.exogenesis = new ExogenesisProtocolSystem(this);
+        // Exogenesis Protocol — minute 156 (2h 36m)
+        if (this.systemUnlockManager.isSystemUnlocked('exogenesis')) {
+            this.exogenesis = new ExogenesisProtocolSystem(this);
+        }
         
-        // Initialize Proteus Protocol — The 57th Dimension: THE EVOLUTION OF RULES
-        this.proteus = new ProteusProtocolSystem(this);
-        this.proteus.create();
+        // Proteus Protocol — minute 150 (2h 30m) or if genome exists
+        const proteusUnlocked = this.systemUnlockManager.isSystemUnlocked('proteusProtocol');
+        const hasGenome = ProteusProtocolSystem.hasSavedGenome?.() || false;
         
-        // Show Proteus welcome (once per session)
-        this.time.delayedCall(2000, () => {
-            if (this.proteus && this.proteus.genome.generation <= 2) {
-                this.showProteusWelcome();
+        if (proteusUnlocked || hasGenome) {
+            this.proteus = new ProteusProtocolSystem(this);
+            this.proteus.create();
+            
+            // Show Proteus welcome (once per session) only for new players
+            this.time.delayedCall(2000, () => {
+                if (this.proteus && this.proteus.genome.generation <= 2) {
+                    this.showProteusWelcome();
+                }
+            });
+        }
+        
+        // Show void exchange hint only if system is unlocked (wave 8+)
+        this.time.delayedCall(25000, () => {
+            if (this.isSystemActive('voidExchange')) {
+                this.showVoidExchangeHint();
             }
         });
-        
-        // Show void exchange hint
-        this.time.delayedCall(25000, () => this.showVoidExchangeHint());
         
         // Apply equipped shard bonuses
         this.applyEquippedShardBonuses();
@@ -753,20 +802,19 @@ export default class GameScene extends Phaser.Scene {
         this.time.delayedCall(480000, () => this.showApertureHint());
         
         // Show Cartographer Protocol hint (the 47th dimension - SPATIAL ONTOLOGY)
-        this.time.delayedCall(5000, () => this.showCartographerHint());
+        this.time.delayedCall(300000, () => this.showCartographerHint());  // Was 5s -> 5min
         
         // Show Meta-System Operator hint (the 50th dimension - ARCHITECTURAL ONTOLOGY)
-        this.time.delayedCall(10000, () => this.showMetaSystemOperatorHint());
+        this.time.delayedCall(600000, () => this.showMetaSystemOperatorHint());  // Was 10s -> 10min
         
         // Show Living World Protocol hint (the 51st dimension - AUTONOMOUS CONTINUITY)
-        this.time.delayedCall(15000, () => this.showLivingWorldHint());
+        this.time.delayedCall(450000, () => this.showLivingWorldHint());  // Was 15s -> 7.5min
         
         // Show Dream State Protocol hint (the 52nd dimension - ONEIRIC SYNTHESIS)
-        this.time.delayedCall(20000, () => this.showDreamStateHint());
+        this.time.delayedCall(900000, () => this.showDreamStateHint());  // Was 20s -> 15min
         
-        // Recalculate panel heights after ALL systems have registered their slots
-        // This ensures the panel background fits all content properly
-        this.hudPanels.recalculatePanelHeights();
+        // Environmental HUD System automatically adapts to active systems
+        // No manual panel recalculation needed — the Arena IS the HUD
     }
     
     showDissolutionHint() {
@@ -1672,21 +1720,23 @@ export default class GameScene extends Phaser.Scene {
 
     createBulletTimeVignette() {
         // Create a radial gradient texture for bullet time effect
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-        
-        // Draw radial gradient: transparent center, dark gold edges
-        const gradient = ctx.createRadialGradient(256, 256, 50, 256, 256, 256);
-        gradient.addColorStop(0, 'rgba(255, 215, 0, 0)');
-        gradient.addColorStop(0.5, 'rgba(255, 215, 0, 0.1)');
-        gradient.addColorStop(1, 'rgba(255, 215, 0, 0.4)');
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 512, 512);
-        
-        this.textures.addCanvas('vignette', canvas);
+        if (!this.textures.exists('vignette')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw radial gradient: transparent center, dark gold edges
+            const gradient = ctx.createRadialGradient(256, 256, 50, 256, 256, 256);
+            gradient.addColorStop(0, 'rgba(255, 215, 0, 0)');
+            gradient.addColorStop(0.5, 'rgba(255, 215, 0, 0.1)');
+            gradient.addColorStop(1, 'rgba(255, 215, 0, 0.4)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 512, 512);
+            
+            this.textures.addCanvas('vignette', canvas);
+        }
         
         this.bulletTimeVignette = this.add.image(
             this.cameras.main.width / 2,
@@ -1710,6 +1760,11 @@ export default class GameScene extends Phaser.Scene {
         this.bulletTimeVignette.setScale(
             Math.max(this.scale.width / 512, this.scale.height / 512) * 1.5
         );
+
+        // Start the first level - this triggers the level start dialog
+        if (this.levelManager) {
+            this.levelManager.startLevel();
+        }
     }
 
     update(time, delta) {
@@ -1739,18 +1794,18 @@ export default class GameScene extends Phaser.Scene {
         // Get time scale (affected by bullet time)
         const timeScale = this.getCurrentTimeScale();
         
-        // Update Echo Storm during bullet time
-        if (this.nearMissState.active && this.echoStorm) {
+        // Update Echo Storm during bullet time (level 2+)
+        if (this.nearMissState.active && this.echoStorm && this.isSystemActive('echoStorm')) {
             this.echoStorm.updateBulletTime(this.player);
         }
-        
-        // Update homing bullets (from echo storm)
-        if (this.echoStorm) {
+
+        // Update homing bullets (from echo storm, level 2+)
+        if (this.echoStorm && this.isSystemActive('echoStorm')) {
             this.echoStorm.updateHomingBullets();
         }
-        
-        // Update Fracture Protocol system
-        if (this.fractureSystem) {
+
+        // Update Fracture Protocol system (level 3+)
+        if (this.fractureSystem && this.isSystemActive('fractureSystem')) {
             this.fractureSystem.update(dt);
             
             // Add momentum for movement
@@ -1767,252 +1822,265 @@ export default class GameScene extends Phaser.Scene {
         }
         
         // Update Temporal Residue system
-        if (this.temporalResidue) {
+        if (this.temporalResidue && this.isSystemActive('temporalResidue')) {
             this.temporalResidue.update(dt, this.player);
         }
         
         // Update Resonance Cascade system
-        if (this.resonanceCascade) {
+        if (this.resonanceCascade && this.isSystemActive('resonanceCascade')) {
             this.resonanceCascade.update(dt);
         }
         
         // Update Temporal Singularity system
-        if (this.singularitySystem) {
+        if (this.singularitySystem && this.isSystemActive('singularitySystem')) {
             this.singularitySystem.update(dt);
         }
         
         // Update Omni-Weapon system
-        if (this.omniWeapon) {
+        if (this.omniWeapon && this.isSystemActive('omniWeapon')) {
             this.omniWeapon.update(dt);
         }
         
         // Update Paradox Engine system
-        if (this.paradoxEngine) {
+        if (this.paradoxEngine && this.isSystemActive('paradoxEngine')) {
             this.paradoxEngine.update(dt);
         }
         
         // Update Chrono-Loop system
-        if (this.chronoLoop) {
+        if (this.chronoLoop && this.isSystemActive('chronoLoop')) {
             this.chronoLoop.update(dt);
         }
         
         // Update Quantum Immortality system
-        if (this.quantumImmortality) {
+        if (this.quantumImmortality && this.isSystemActive('quantumImmortality')) {
             this.quantumImmortality.update(dt);
         }
         
         // Update Observer Effect system (the game that learns from you)
-        if (this.observerEffect) {
+        if (this.observerEffect && this.isSystemActive('observerEffect')) {
             this.observerEffect.update(dt);
         }
         
         // Update Void Coherence system (the quantum vacuum)
-        if (this.voidCoherence) {
+        if (this.voidCoherence && this.isSystemActive('voidCoherence')) {
             this.voidCoherence.update(dt);
         }
         
         // Update Timeline Chronicle — recording your legacy
-        if (this.timelineChronicle) {
+        if (this.timelineChronicle && this.isSystemActive('timelineChronicle')) {
             this.timelineChronicle.update();
         }
         
         // Update Temporal Contract System — tracking obligations
-        if (this.temporalContract) {
+        if (this.temporalContract && this.isSystemActive('temporalContract')) {
             this.temporalContract.update(dt);
         }
         
         // Update Causal Entanglement System — quantum topology warfare
-        if (this.causalEntanglement) {
+        if (this.causalEntanglement && this.isSystemActive('causalEntanglement')) {
             this.causalEntanglement.update(dt);
         }
         
         // Update Symbiotic Prediction System — the game that thinks with you
-        if (this.symbioticPrediction) {
+        if (this.symbioticPrediction && this.isSystemActive('symbioticPrediction')) {
             this.symbioticPrediction.update(dt);
         }
         
         // Update Dimensional Collapse System — apotheosis mode
-        if (this.dimensionalCollapse) {
+        if (this.dimensionalCollapse && this.isSystemActive('dimensionalCollapse')) {
             this.dimensionalCollapse.update(dt);
         }
         
         // Update Temporal Rewind System — the missing temporal dimension
-        if (this.temporalRewind) {
+        if (this.temporalRewind && this.isSystemActive('temporalRewind')) {
             this.temporalRewind.update(dt);
         }
         
         // Update Mnemosyne Weave System — the living monument
-        if (this.mnemosyneWeave) {
+        if (this.mnemosyneWeave && this.isSystemActive('mnemosyneWeave')) {
             this.mnemosyneWeave.update(dt);
         }
         
         // Update Kairos Moment System — the crystallization of flow
-        if (this.kairosMoment) {
+        if (this.kairosMoment && this.isSystemActive('kairosMoment')) {
             this.kairosMoment.update(dt);
         }
         
         // Update Syntropy Engine — the anti-entropy protocol
-        if (this.syntropyEngine) {
+        if (this.syntropyEngine && this.isSystemActive('syntropyEngine')) {
             this.syntropyEngine.update(time, delta);
         }
         
         // Update Nemesis Genesis System — the adversarial mirror
-        if (this.nemesisGenesis) {
+        if (this.nemesisGenesis && this.isSystemActive('nemesisGenesis')) {
             this.nemesisGenesis.update(dt);
         }
         
         // Update Oracle Protocol System — temporal guidance from unrealized futures
-        if (this.oracleProtocol) {
+        if (this.oracleProtocol && this.isSystemActive('oracleProtocol')) {
             this.oracleProtocol.update(dt);
         }
         
         // Update Resonant Whisper System — cross-timeline communication
-        if (this.resonantWhispers) {
+        if (this.resonantWhispers && this.isSystemActive('resonantWhispers')) {
             this.resonantWhispers.update(time, dt);
         }
         
         // Update Egregore Protocol System — collective unconscious as game designer
-        if (this.egregoreProtocol) {
+        if (this.egregoreProtocol && this.isSystemActive('egregoreProtocol')) {
             this.egregoreProtocol.update(dt);
         }
         
         // Update Cinematic Archive System — captures movie moments
-        if (this.cinematicArchive) {
+        if (this.cinematicArchive && this.isSystemActive('cinematicArchive')) {
             this.cinematicArchive.update(dt, time);
         }
         
         // Update Harmonic Convergence System — the music of temporal combat
-        if (this.harmonicConvergence) {
+        if (this.harmonicConvergence && this.isSystemActive('harmonicConvergence')) {
             this.harmonicConvergence.update(dt, this.player);
         }
         
         // Update Synchronicity Cascade — the transcendental convergence
-        if (this.synchronicityCascade) {
+        if (this.synchronicityCascade && this.isSystemActive('synchronicityCascade')) {
             this.synchronicityCascade.update(dt);
         }
         
         // Update Bootstrap Protocol — the retrocausal discovery engine
-        if (this.bootstrapProtocol) {
+        if (this.bootstrapProtocol && this.isSystemActive('bootstrapProtocol')) {
             this.bootstrapProtocol.update(dt);
         }
         
-        // Update Geometric Chorus — the living arena
-        if (this.geometricChorus && this.player) {
+        // Update Geometric Chorus — the living arena (level 35+)
+        if (this.geometricChorus && this.player && this.isSystemActive('geometricChorus')) {
             this.geometricChorus.update(dt, this.player);
         }
-        
-        // Update Architect System — detect and formalize player discoveries
-        if (this.architectSystem && this.player) {
+
+        // Update Architect System — detect and formalize player discoveries (level 36+)
+        if (this.architectSystem && this.player && this.isSystemActive('architect')) {
             this.architectSystem.update(dt);
         }
-        
-        // Update Noetic Mirror System — the self-aware commentary engine
-        if (this.noeticMirror && this.player) {
+
+        // Update Noetic Mirror System — the self-aware commentary engine (level 38+)
+        if (this.noeticMirror && this.player && this.isSystemActive('noeticMirror')) {
             this.noeticMirror.update(dt, this.player);
         }
-        
-        // Update Ambient Awareness System — the game that breathes with reality
-        if (this.ambientAwareness && this.player) {
+
+        // Update Ambient Awareness System — the game that breathes with reality (level 39+)
+        if (this.ambientAwareness && this.player && this.isSystemActive('ambientAwareness')) {
             this.ambientAwareness.update(dt);
         }
-        
-        // Update Dissolution Protocol — the art of intentional forgetting
-        if (this.dissolutionProtocol && this.player) {
+
+        // Update Dissolution Protocol — the art of intentional forgetting (level 40+)
+        if (this.dissolutionProtocol && this.player && this.isSystemActive('dissolutionProtocol')) {
             this.dissolutionProtocol.update(time, delta);
         }
-        
-        // Update Temporal Pedagogy System — the self-teaching game
-        if (this.temporalPedagogy && this.player) {
+
+        // Update Temporal Pedagogy System — the self-teaching game (level 41+)
+        if (this.temporalPedagogy && this.player && this.isSystemActive('temporalPedagogy')) {
             this.temporalPedagogy.update(dt, this.player);
         }
-        
-        // Update Athenaeum Protocol — the geography of memory (TOPOGRAPHY)
-        if (this.athenaeumProtocol && this.player) {
+
+        // Update Athenaeum Protocol — the geography of memory (level 42+)
+        if (this.athenaeumProtocol && this.player && this.isSystemActive('athenaeumProtocol')) {
             this.athenaeumProtocol.update(dt, this.player);
         }
-        
-        // Update Axiom Nexus — the synthesis mentor (PEDAGOGICAL SYNTHESIS)
-        if (this.axiomNexus && this.player) {
+
+        // Update Axiom Nexus — the synthesis mentor (level 43+)
+        if (this.axiomNexus && this.player && this.isSystemActive('axiomNexus')) {
             this.axiomNexus.update(dt);
         }
-        
-        // Update Inscription Protocol — Transcendence Through Persistent Memory
-        if (this.inscriptionProtocol && this.player) {
+
+        // Update Inscription Protocol — Transcendence Through Persistent Memory (level 44+)
+        if (this.inscriptionProtocol && this.player && this.isSystemActive('inscriptionProtocol')) {
             this.inscriptionProtocol.update(dt);
         }
         
         // Update Synaesthesia Protocol — The 42nd Dimension: AUDITORY SYNTHESIS
-        if (this.synaesthesiaProtocol) {
+        if (this.synaesthesiaProtocol && this.isSystemActive('synaesthesiaProtocol')) {
             this.synaesthesiaProtocol.update(time, delta);
         }
         
         // Update Tychos Aurora Protocol — The 43rd Dimension: PHASE SPACE MANIFESTATION
-        if (this.tychosAurora) {
+        if (this.tychosAurora && this.isSystemActive('tychosAurora')) {
             this.tychosAurora.update(delta);
         }
         
         // Update Rival Protocol — The 44th Dimension: RELATIONAL EVOLUTION
-        if (this.rivalProtocol) {
+        if (this.rivalProtocol && this.isSystemActive('rivalProtocol')) {
             this.rivalProtocol.update(dt);
         }
         
         // Update Rhythm of the Void — The 45th Dimension: MUSICAL ONTOGENESIS
-        if (this.rhythmOfTheVoid) {
+        if (this.rhythmOfTheVoid && this.isSystemActive('rhythmOfTheVoid')) {
             this.rhythmOfTheVoid.update(dt);
         }
         
-        // Update Cartographer Protocol — The 47th Dimension: SPATIAL ONTOLOGY
-        if (this.cartographerProtocol && this.player) {
+        // Update Cartographer Protocol — The 47th Dimension: SPATIAL ONTOLOGY (level 47+)
+        if (this.cartographerProtocol && this.player && this.isSystemActive('cartographerProtocol')) {
             this.cartographerProtocol.update(dt, this.player, this.enemies);
         }
         
         // Update Resonance Orb System — The 48th Dimension: LIVING POWER-UPS
-        if (this.resonanceOrbs) {
+        if (this.resonanceOrbs && this.isSystemActive('resonanceOrbs')) {
             this.resonanceOrbs.update(time, delta);
         }
         
         // Update Meta-System Operator — The 50th Dimension: ARCHITECTURAL ONTOLOGY
-        if (this.metaSystemOperator) {
+        if (this.metaSystemOperator && this.isSystemActive('metaSystemOperator')) {
             this.metaSystemOperator.update(dt);
         }
         
         // Update Dream State Protocol — The 52nd Dimension: ONEIRIC SYNTHESIS
-        if (this.dreamState) {
+        if (this.dreamState && this.isSystemActive('dreamState')) {
             this.dreamState.update(time, delta);
         }
         
         // Update Apophenia Protocol — The 53rd Dimension: PATTERN DIVINATION
-        if (this.apophenia) {
+        if (this.apophenia && this.isSystemActive('apophenia')) {
             this.apophenia.update();
         }
         
         // Update Void Exchange System — The 54th Dimension: TEMPORAL CAPITALISM
-        if (this.voidExchange) {
+        if (this.voidExchange && this.isSystemActive('voidExchange')) {
             this.voidExchange.update(dt, this.player);
         }
         
         // Update Heartflux Protocol — The 55th Dimension: BIOMETRIC EMPATHY
-        if (this.heartflux) {
+        if (this.heartflux && this.isSystemActive('heartflux')) {
             this.heartflux.update(dt, this.player);
         }
         
+        // Update Environmental HUD System — "The Arena IS the HUD"
+        // Encodes game state into visual patterns: ship glow, trails, environmental tints
+        if (this.environmentalHUD) {
+            this.environmentalHUD.update(dt);
+        }
+        
         // Update Exogenesis Protocol — The 56th Dimension: REALITY MANIFESTATION
-        if (this.exogenesis) {
+        if (this.exogenesis && this.isSystemActive('exogenesis')) {
             this.exogenesis.update();
         }
         
         // Update Proteus Protocol — The 57th Dimension: THE EVOLUTION OF RULES
-        if (this.proteus) {
+        if (this.proteus && this.isSystemActive('proteus')) {
             this.proteus.update();
         }
         
         // Update Tesseract Titan boss
-        if (this.tesseractTitan) {
+        if (this.tesseractTitan && this.isSystemActive('tesseractTitan')) {
             this.tesseractTitan.update(dt);
         }
         
-        // Observe movement for behavior analysis
-        if (this.observerEffect && this.player && this.player.body) {
+        // Update Slow System Unlock Manager (disabled when using level-based progression)
+        // Note: LevelManager now handles system unlocks, so this is only for backwards compatibility
+        if (this.systemUnlockManager && !this.levelManager) {
+            const newlyUnlocked = this.systemUnlockManager.update(time);
+            // Event is emitted from within the manager
+        }
+
+        // Observe movement for behavior analysis (level 12+)
+        if (this.observerEffect && this.player && this.player.body && this.isSystemActive('observerEffect')) {
             this.observerEffect.observeMovement(
                 { x: this.player.body.velocity.x, y: this.player.body.velocity.y },
                 this.nearMissState.active
@@ -2124,10 +2192,17 @@ export default class GameScene extends Phaser.Scene {
     }
     
     getCurrentTimeScale() {
+        // Check for bullet time (near-miss) first
         if (this.nearMissState.active) {
-            // Smooth ramp into/out of bullet time
             return this.SLOW_MO_SCALE;
         }
+        
+        // Also check physics world timeScale (used by CausalEntanglementSystem, etc.)
+        // This ensures enemy velocity scaling works correctly when systems slow time
+        if (this.physics?.world?.timeScale < 1.0) {
+            return this.physics.world.timeScale;
+        }
+        
         return 1.0;
     }
     
@@ -2159,20 +2234,20 @@ export default class GameScene extends Phaser.Scene {
                     state.streak = 0;
                 }
                 
-                // End Echo Storm and fire absorbed echoes
-                if (this.echoStorm) {
+                // End Echo Storm and fire absorbed echoes (level 2+)
+                if (this.echoStorm && this.isSystemActive('echoStorm')) {
                     const echoesFired = this.echoStorm.onBulletTimeEnd(this.player);
                     // Bonus score for absorbed echoes
                     if (echoesFired > 0) {
                         this.score += echoesFired * 50;
-                        
+
                         // Saga Engine: record echo storm release
-                        if (this.sagaEngine) {
+                        if (this.sagaEngine && this.isSystemActive('sagaEngine')) {
                             this.sagaEngine.onSystemActivated('echoStorm', { echoesFired });
                         }
-                        
-                        // Add charge for singularity on echo absorption
-                        if (this.singularitySystem) {
+
+                        // Add charge for singularity on echo absorption (level 6+)
+                        if (this.singularitySystem && this.isSystemActive('singularitySystem')) {
                             this.singularitySystem.addCharge(
                                 this.singularitySystem.chargeGainPerEchoAbsorb * echoesFired,
                                 'echoAbsorb'
@@ -2211,20 +2286,20 @@ export default class GameScene extends Phaser.Scene {
         state.timeSinceLast = 0;
         state.totalCount++;
         
-        // Generate Syntropy for near-miss (elegance under pressure)
-        if (this.syntropyEngine) {
+        // Generate Syntropy for near-miss (elegance under pressure, level 26+)
+        if (this.syntropyEngine && this.isSystemActive('syntropyEngine')) {
             this.syntropyEngine.onNearMiss(streakLevel);
         }
-        
-        // Record interaction for Architect System (Echo Storm + any active system)
-        if (this.architectSystem) {
-            if (this.fractureSystem && this.fractureSystem.isFractured) {
+
+        // Record interaction for Architect System (level 36+)
+        if (this.architectSystem && this.isSystemActive('architect')) {
+            if (this.fractureSystem && this.fractureSystem.isFractured && this.isSystemActive('fractureSystem')) {
                 this.architectSystem.recordSystemInteraction('echoStorm', 'fracture', {
                     outcome: { streakLevel },
                     context: 'near-miss-during-fracture'
                 });
             }
-            if (this.singularitySystem && this.singularitySystem.activeSingularity) {
+            if (this.singularitySystem && this.singularitySystem.activeSingularity && this.isSystemActive('singularitySystem')) {
                 this.architectSystem.recordSystemInteraction('echoStorm', 'singularity', {
                     outcome: { streakLevel },
                     context: 'near-miss-near-singularity'
@@ -2232,8 +2307,8 @@ export default class GameScene extends Phaser.Scene {
             }
         }
         
-        // Observe the near-miss (bullet time activation)
-        if (this.observerEffect) {
+        // Observe the near-miss (bullet time activation, level 12+)
+        if (this.observerEffect && this.isSystemActive('observerEffect')) {
             this.observerEffect.observeTemporalUse('bulletTime', {
                 streak: streakLevel,
                 duration: duration
@@ -2317,43 +2392,43 @@ export default class GameScene extends Phaser.Scene {
         
         // Screen shake for impact
         this.cameras.main.shake(100, 0.003);
-        
-        // Activate Echo Storm system
-        if (this.echoStorm) {
+
+        // Activate Echo Storm system (level 2+)
+        if (this.echoStorm && this.isSystemActive('echoStorm')) {
             this.echoStorm.onBulletTimeStart();
         }
-        
-        // Add momentum for near-miss
-        if (this.fractureSystem) {
+
+        // Add momentum for near-miss (level 3+)
+        if (this.fractureSystem && this.isSystemActive('fractureSystem')) {
             this.fractureSystem.addMomentum(
                 this.fractureSystem.momentumGain.nearMiss,
                 'nearMiss'
             );
         }
-        
-        // Track bullet time for Omni-Weapon (rapid barrel mod)
-        if (this.omniWeapon) {
+
+        // Track bullet time for Omni-Weapon (level 7+)
+        if (this.omniWeapon && this.isSystemActive('omniWeapon')) {
             this.omniWeapon.onBulletTimeGraze();
             if (streakLevel > 1) {
                 this.omniWeapon.onBulletTimeStreak(streakLevel);
             }
         }
-        
-        // Add charge for singularity
-        if (this.singularitySystem) {
+
+        // Add charge for singularity (level 6+)
+        if (this.singularitySystem && this.isSystemActive('singularitySystem')) {
             this.singularitySystem.addCharge(
                 this.singularitySystem.chargeGainPerNearMiss,
                 'nearMiss'
             );
         }
-        
-        // Record bullet time for Resonance Cascade
-        if (this.resonanceCascade) {
+
+        // Record bullet time for Resonance Cascade (level 5+)
+        if (this.resonanceCascade && this.isSystemActive('resonanceCascade')) {
             this.resonanceCascade.recordActivation('BULLET_TIME', { streakLevel });
         }
-        
-        // Void coherence: bullet time enhances void coherence accumulation
-        if (this.voidCoherence) {
+
+        // Void coherence: bullet time enhances void coherence accumulation (level 10+)
+        if (this.voidCoherence && this.isSystemActive('voidCoherence')) {
             this.voidCoherence.onBulletTime(dt);
         }
     }
@@ -2433,14 +2508,14 @@ export default class GameScene extends Phaser.Scene {
         
         // Gentle screen shake
         this.cameras.main.shake(50, 0.001);
-        
-        // Activate Echo Storm system (gentler echoes)
-        if (this.echoStorm) {
+
+        // Activate Echo Storm system (gentler echoes, level 2+)
+        if (this.echoStorm && this.isSystemActive('echoStorm')) {
             this.echoStorm.onBulletTimeStart();
         }
-        
-        // Record for Resonance Cascade as empathetic activation
-        if (this.resonanceCascade) {
+
+        // Record for Resonance Cascade as empathetic activation (level 5+)
+        if (this.resonanceCascade && this.isSystemActive('resonanceCascade')) {
             this.resonanceCascade.recordActivation('EMPATHETIC_TIME', { strength });
         }
     }
@@ -2457,13 +2532,13 @@ export default class GameScene extends Phaser.Scene {
                 this.enemyBulletTrails.emitParticleAt(bullet.x, bullet.y);
             }
             
-            // Check if singularity should trap this bullet
-            if (this.singularitySystem && this.singularitySystem.checkBulletTrapping(bullet)) {
+            // Check if singularity should trap this bullet (level 6+)
+            if (this.singularitySystem && this.isSystemActive('singularitySystem') && this.singularitySystem.checkBulletTrapping(bullet)) {
                 return; // Bullet was trapped, skip rest of processing
             }
-            
-            // Check if void coherence affects this bullet
-            if (this.voidCoherence && this.voidCoherence.checkBulletCollision(bullet, true)) {
+
+            // Check if void coherence affects this bullet (level 10+)
+            if (this.voidCoherence && this.isSystemActive('voidCoherence') && this.voidCoherence.checkBulletCollision(bullet, true)) {
                 // Bullet was redirected/absorbed by void structure
                 return;
             }
@@ -2763,15 +2838,15 @@ export default class GameScene extends Phaser.Scene {
             });
             this.physics.world.timeScale = 1;
             
-            // Cancel echo storm (punishment: lose absorbed echoes)
-            if (this.echoStorm) {
+            // Cancel echo storm (punishment: lose absorbed echoes, level 2+)
+            if (this.echoStorm && this.isSystemActive('echoStorm')) {
                 this.echoStorm.onBulletTimeEnd(player);
             }
         }
         
         if (player.health <= 0) {
-            // Observe death before quantum branching
-            if (this.observerEffect) {
+            // Observe death before quantum branching (level 12+)
+            if (this.observerEffect && this.isSystemActive('observerEffect')) {
                 this.observerEffect.observeDeath('bullet');
             }
             
@@ -2909,123 +2984,85 @@ export default class GameScene extends Phaser.Scene {
     }
 
     createHUD() {
-        // Use HUDPanelManager for organized panel-based HUD
-        const panels = this.hudPanels;
+        // Environmental HUD System replaces all panels
+        // Create minimal text objects for game logic (not displayed in panels)
+        // Visual encoding is handled by EnvironmentalHUDSystem
         
-        // Register TOP_LEFT panel slots
+        // Health bar (still used for visual reference, positioned by game)
+        this.healthBarBg = this.add.rectangle(0, 0, 100, 6, 0x22222a);
+        this.healthBar = this.add.rectangle(0, 0, 100, 6, 0x00f0ff);
+        this.healthBarBg.setDepth(1000);
+        this.healthBar.setDepth(1000);
         
-        // Health bar slot - uses layoutHelpers for clean bar positioning
-        panels.registerSlot('HEALTH_BAR', (container, width, layout) => {
-            const bars = layout.addBar(6, 0x00f0ff);
-            this.healthBarBg = bars.bg;
-            this.healthBar = bars.bar;
-        }, 'TOP_LEFT');
+        // Score (maintained for logic, visual encoded in trail)
+        this.scoreText = this.add.text(0, 0, '0', {
+            fontFamily: 'monospace',
+            fontSize: '24px',
+            fill: '#ffffff'
+        });
+        this.scoreText.setVisible(false); // Hidden - encoded in environment
         
-        // Score slot
-        panels.registerSlot('SCORE', (container, width) => {
-            this.scoreText = this.add.text(0, 0, '0', {
-                fontFamily: 'monospace',
-                fontSize: '24px',
-                fill: '#ffffff'
-            });
-            container.add(this.scoreText);
-        }, 'TOP_LEFT');
+        // Wave
+        this.waveText = this.add.text(0, 0, 'WAVE 1', {
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            fill: '#aaaaaa'
+        });
+        this.waveText.setVisible(false);
         
-        // Wave slot
-        panels.registerSlot('WAVE', (container, width) => {
-            this.waveText = this.add.text(0, 0, 'WAVE 1', {
-                fontFamily: 'monospace',
-                fontSize: '14px',
-                letterSpacing: 2,
-                fill: '#aaaaaa'
-            });
-            container.add(this.waveText);
-        }, 'TOP_LEFT');
+        // Enemy count
+        this.enemyText = this.add.text(0, 0, '0', {
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            fill: '#ff3366'
+        });
+        this.enemyText.setVisible(false);
         
-        // Enemy count slot
-        panels.registerSlot('ENEMY_COUNT', (container, width) => {
-            this.enemyText = this.add.text(0, 0, '0 ENEMIES', {
-                fontFamily: 'monospace',
-                fontSize: '12px',
-                letterSpacing: 1,
-                fill: '#ff3366'
-            });
-            container.add(this.enemyText);
-        }, 'TOP_LEFT');
+        // Syntropy
+        this.syntropyText = this.add.text(0, 0, '0', {
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            fill: '#00ffff'
+        });
+        this.syntropyText.setVisible(false);
         
-        // Syntropy slot
-        panels.registerSlot('SYNTROPY', (container, width) => {
-            this.syntropyText = this.add.text(0, 0, '◈ 0', {
-                fontFamily: 'monospace',
-                fontSize: '12px',
-                letterSpacing: 1,
-                fill: '#00ffff'
-            });
-            container.add(this.syntropyText);
-        }, 'TOP_LEFT');
+        // Convergence
+        this.convergenceText = this.add.text(0, 0, '', {
+            fontFamily: 'monospace',
+            fontSize: '11px',
+            fill: '#ffffff'
+        });
+        this.convergenceText.setVisible(false);
         
-        // Convergence slot (hidden by default)
-        panels.registerSlot('CONVERGENCE', (container, width) => {
-            this.convergenceText = this.add.text(0, 0, '', {
-                fontFamily: 'monospace',
-                fontSize: '11px',
-                letterSpacing: 1,
-                fill: '#ffffff'
-            });
-            container.add(this.convergenceText);
-        }, 'TOP_LEFT');
+        // Near-miss
+        this.nearMissText = this.add.text(0, 0, '', {
+            fontFamily: 'monospace',
+            fontSize: '11px',
+            fill: '#ffd700'
+        });
+        this.nearMissText.setVisible(false);
         
-        // Near-miss slot (hidden by default)
-        panels.registerSlot('NEAR_MISS', (container, width) => {
-            this.nearMissText = this.add.text(0, 0, '', {
-                fontFamily: 'monospace',
-                fontSize: '11px',
-                letterSpacing: 1,
-                fontStyle: 'bold',
-                fill: '#ffd700'
-            });
-            container.add(this.nearMissText);
-        }, 'TOP_LEFT');
+        // Synthesis
+        this.synthesisText = this.add.text(0, 0, '', {
+            fontFamily: 'monospace',
+            fontSize: '11px',
+            fill: '#ffeebb'
+        });
+        this.synthesisText.setVisible(false);
         
-        // Synthesis slot
-        panels.registerSlot('SYNTHESIS', (container, width) => {
-            this.synthesisText = this.add.text(0, 0, '◇ 0/50', {
-                fontFamily: 'monospace',
-                fontSize: '11px',
-                letterSpacing: 1,
-                fill: '#ffeebb'
-            });
-            container.add(this.synthesisText);
-        }, 'TOP_LEFT');
+        // Pattern
+        this.patternText = this.add.text(0, 0, '', {
+            fontFamily: 'monospace',
+            fontSize: '11px',
+            fill: '#f0f0f0'
+        });
+        this.patternText.setVisible(false);
         
-        // Pattern slot
-        panels.registerSlot('PATTERN', (container, width) => {
-            this.patternText = this.add.text(0, 0, '◈ 0 patterns', {
-                fontFamily: 'monospace',
-                fontSize: '11px',
-                letterSpacing: 1,
-                fill: '#f0f0f0'
-            });
-            container.add(this.patternText);
-        }, 'TOP_LEFT');
-        
-        // Register TOP_RIGHT panel slots
-        
-        // Wave timer slot
-        panels.registerSlot('WAVE_TIMER', (container, width) => {
-            this.waveTimerBg = this.add.rectangle(width, 0, width, 3, 0x22222a);
-            this.waveTimerBar = this.add.rectangle(width, 0, width, 3, 0xffff00);
-            this.waveTimerBg.setOrigin(1, 0.5);
-            this.waveTimerBar.setOrigin(1, 0.5);
-            container.add([this.waveTimerBg, this.waveTimerBar]);
-        }, 'TOP_RIGHT');
-        
-        // Placeholder slots for systems to fill in
-        // OmniWeapon, VoidCoherence, ChronoLoop, CausalLink, TemporalRewind
-        // These will be populated by their respective systems
-        
-        // NOTE: recalculatePanelHeights() is called at the end of create()
-        // after all systems have registered their slots
+        // Wave timer bars
+        this.waveTimerBg = this.add.rectangle(0, 0, 100, 3, 0x22222a);
+        this.waveTimerBar = this.add.rectangle(0, 0, 100, 3, 0xffff00);
+        this.waveTimerBg.setVisible(false);
+        this.waveTimerBar.setVisible(false);
         
         this.score = 0;
         this.scoreMultiplier = 1.0;
@@ -3038,11 +3075,7 @@ export default class GameScene extends Phaser.Scene {
         const worldWidth = 1920;
         const worldHeight = 1440;
         
-        // Let panel manager handle all HUD element repositioning
-        if (this.hudPanels) {
-            this.hudPanels.onResize();
-        }
-        
+        // Environmental HUD adapts automatically
         // Camera always at zoom=1 - just update bounds and viewport
         this.cameras.main.setZoom(1.0);
         this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
@@ -3090,11 +3123,16 @@ export default class GameScene extends Phaser.Scene {
             }
         }
         
-        // Apophenia Protocol pattern counter
+        // Apophenia Protocol pattern counter - only show when patterns exist
         if (this.apophenia && this.patternText) {
             const patternCount = this.apophenia.totalPatternsDiscovered;
             const activeCount = this.apophenia.detectedPatterns.length;
-            this.patternText.setText(`◈ ${patternCount} patterns${activeCount > 0 ? ` (${activeCount} active)` : ''}`);
+            if (patternCount > 0) {
+                this.patternText.setVisible(true);
+                this.patternText.setText(`◈ ${patternCount} patterns${activeCount > 0 ? ` (${activeCount} active)` : ''}`);
+            } else {
+                this.patternText.setVisible(false);
+            }
         }
 
         // Wave timer
@@ -3558,15 +3596,15 @@ export default class GameScene extends Phaser.Scene {
         this.cameras.main.flash(100, 255, 50, 50, 0.2);
 
         if (player.health <= 0) {
-            // Observe death from enemy collision
-            if (this.observerEffect) {
-                const cause = enemy.type === 'enemyTank' ? 'tank' : 
+            // Observe death from enemy collision (level 12+)
+            if (this.observerEffect && this.isSystemActive('observerEffect')) {
+                const cause = enemy.type === 'enemyTank' ? 'tank' :
                               enemy.type === 'enemyFast' ? 'fast' : 'normal';
                 this.observerEffect.observeDeath(cause);
             }
-            
-            // QUANTUM IMMORTALITY: Branch timeline instead of game over
-            if (this.quantumImmortality) {
+
+            // QUANTUM IMMORTALITY: Branch timeline instead of game over (level 11+)
+            if (this.quantumImmortality && this.isSystemActive('quantumImmortality')) {
                 this.triggerQuantumBranch(player, enemy);
             } else {
                 this.gameOver();
@@ -3585,44 +3623,61 @@ export default class GameScene extends Phaser.Scene {
     }
 
     nextWave() {
+        // Update legacy wave counter
         this.wave++;
         this.nextWaveTime = this.time.now + 30000;
-        
+
+        // Update level manager
+        let levelWaveInfo = null;
+        if (this.levelManager) {
+            levelWaveInfo = this.levelManager.advanceWave();
+        }
+
         // Rival Protocol: Check for enemy escapes at wave transition
-        // Enemies at low health may escape and become future Rivals
         if (this.rivalProtocol) {
             this.enemies.children.entries.forEach(enemy => {
                 if (enemy.active && !enemy.isRival && enemy.health / enemy.maxHealth <= 0.25) {
-                    // Low health enemy escapes - will remember this trauma
                     enemy.escape();
                 }
             });
         }
-        
+
         // Audio: wave transition cymbal + sub drop
         if (this.synaesthesiaProtocol) {
             this.synaesthesiaProtocol.onGameplayEvent('waveTransition', this.wave);
         }
-        
+
         // Advance Recursion Engine infection
         if (this.recursionEngine) {
             this.recursionEngine.advanceWave(this.wave);
         }
-        
-        // Check for boss spawn
+
+        // If level manager says this is boss wave, skip normal spawning
+        if (levelWaveInfo && levelWaveInfo.isBossWave) {
+            // Boss spawning is handled by level manager event
+            return;
+        }
+
+        // Legacy boss check (fallback if level manager not active)
         if (this.wave === this.bossWave && !this.bossSpawned) {
             this.spawnBoss();
-            return; // Skip normal wave spawning when boss spawns
+            return;
         }
-        
-        // Wave announcement
-        const waveText = this.add.text(this.player.x, this.player.y - 80, `WAVE ${this.wave}`, {
+
+        // Wave announcement with level context
+        const currentLevel = this.levelManager ? this.levelManager.currentLevel : 1;
+        const waveInLevel = this.levelManager ? this.levelManager.currentWaveInLevel : this.wave;
+        const displayText = this.levelManager
+            ? `LEVEL ${currentLevel} - WAVE ${waveInLevel}/5`
+            : `WAVE ${this.wave}`;
+
+        const waveText = this.add.text(this.player.x, this.player.y - 80, displayText, {
             fontFamily: 'monospace',
-            fontSize: '32px',
-            letterSpacing: 4,
+            fontSize: '28px',
+            letterSpacing: 3,
             fill: '#ffff00'
         }).setOrigin(0.5);
-        
+
         this.tweens.add({
             targets: waveText,
             y: waveText.y - 50,
@@ -3631,13 +3686,13 @@ export default class GameScene extends Phaser.Scene {
             ease: 'Power2',
             onComplete: () => waveText.destroy()
         });
-        
+
         // Spawn wave (reduced spawns if boss is active)
-        const spawnCount = this.tesseractTitan && this.tesseractTitan.active 
-            ? 2 + this.wave 
+        const spawnCount = this.tesseractTitan && this.tesseractTitan.active
+            ? 2 + this.wave
             : 3 + this.wave * 2;
         this.spawnEnemies(spawnCount);
-        
+
         // Increase spawn rate
         if (this.spawnTimer.delay > 1500) {
             this.spawnTimer.remove();
@@ -3650,9 +3705,87 @@ export default class GameScene extends Phaser.Scene {
         }
     }
     
+    /**
+     * Spawn boss for level-based progression (called by LevelManager).
+     */
+    spawnBossForLevel() {
+        this.bossSpawned = true;
+
+        // Get current level for boss scaling
+        const currentLevel = this.levelManager ? this.levelManager.currentLevel : 1;
+
+        // Spawn the Tesseract Titan at arena center
+        this.tesseractTitan = new TesseractTitan(this);
+        this.tesseractTitan.spawn();
+
+        // Scale boss difficulty with level
+        if (this.tesseractTitan.scaleWithLevel) {
+            this.tesseractTitan.scaleWithLevel(currentLevel);
+        }
+
+        // Add collision between player bullets and boss
+        this.physics.add.overlap(this.bullets, this.tesseractTitan.coreGlow, this.hitBoss, null, this);
+
+        // Add collision between player and boss (contact damage)
+        this.bossCollider = this.physics.add.overlap(
+            this.player, this.tesseractTitan.coreGlow,
+            this.playerHitBoss, null, this
+        );
+
+        // Stop regular enemy spawns during boss
+        this.spawnTimer.remove();
+
+        // Reduced spawns - occasional adds during boss
+        this.spawnTimer = this.time.addEvent({
+            delay: 6000,
+            callback: () => {
+                if (this.tesseractTitan && this.tesseractTitan.active) {
+                    this.spawnEnemies(2);
+                }
+            },
+            callbackScope: this,
+            loop: true
+        });
+
+        // Boss wave announcement
+        const bossText = this.add.text(this.player.x, this.player.y - 100, `LEVEL ${currentLevel} BOSS`, {
+            fontFamily: 'monospace',
+            fontSize: '36px',
+            letterSpacing: 4,
+            fill: '#ff0000'
+        }).setOrigin(0.5);
+
+        this.tweens.add({
+            targets: bossText,
+            y: bossText.y - 60,
+            alpha: 0,
+            duration: 2000,
+            ease: 'Power2',
+            onComplete: () => bossText.destroy()
+        });
+
+        // Observe boss spawn (level 12+)
+        if (this.observerEffect && this.isSystemActive('observerEffect')) {
+            this.observerEffect.observeTemporalUse('bossSpawn', {
+                bossName: 'TESSERACT TITAN',
+                level: currentLevel,
+                wave: 5
+            });
+        }
+
+        // Saga Engine: record boss confrontation story beat (level 25+)
+        if (this.sagaEngine && this.isSystemActive('sagaEngine')) {
+            this.sagaEngine.onSystemActivated('titan', {
+                level: currentLevel,
+                wave: 5,
+                bossName: 'The Geometric Overseer'
+            });
+        }
+    }
+
     spawnBoss() {
         this.bossSpawned = true;
-        
+
         // Spawn the Tesseract Titan at arena center
         this.tesseractTitan = new TesseractTitan(this);
         this.tesseractTitan.spawn();
@@ -3681,16 +3814,16 @@ export default class GameScene extends Phaser.Scene {
             loop: true
         });
         
-        // Observe boss spawn
-        if (this.observerEffect) {
+        // Observe boss spawn (level 12+)
+        if (this.observerEffect && this.isSystemActive('observerEffect')) {
             this.observerEffect.observeTemporalUse('bossSpawn', {
                 bossName: 'TESSERACT TITAN',
                 wave: this.wave
             });
         }
-        
-        // Saga Engine: record boss confrontation story beat
-        if (this.sagaEngine) {
+
+        // Saga Engine: record boss confrontation story beat (level 25+)
+        if (this.sagaEngine && this.isSystemActive('sagaEngine')) {
             this.sagaEngine.onSystemActivated('titan', {
                 wave: this.wave,
                 bossName: 'The Geometric Overseer'
@@ -3769,16 +3902,47 @@ export default class GameScene extends Phaser.Scene {
         
         // Check for death
         if (player.health <= 0) {
-            if (this.observerEffect) {
+            // Observe death from boss contact (level 12+)
+            if (this.observerEffect && this.isSystemActive('observerEffect')) {
                 this.observerEffect.observeDeath('boss_contact');
             }
-            
-            if (this.quantumImmortality) {
+
+            // QUANTUM IMMORTALITY: Branch timeline (level 11+)
+            if (this.quantumImmortality && this.isSystemActive('quantumImmortality')) {
                 this.triggerQuantumBranch(player, { type: 'boss' });
             } else {
                 this.gameOver();
             }
         }
+    }
+
+    /**
+     * Get list of active system names for chronicle/inscription.
+     */
+    getActiveSystems() {
+        const systems = [];
+        if (this.temporalRewind) systems.push('temporalRewind');
+        if (this.echoStorm) systems.push('echoStorm');
+        if (this.fractureProtocol) systems.push('fractureProtocol');
+        if (this.quantumImmortality) systems.push('quantumImmortality');
+        if (this.observerEffect) systems.push('observerEffect');
+        if (this.mnemosyneWeave) systems.push('mnemosyneWeave');
+        if (this.kairosMoment) systems.push('kairosMoment');
+        if (this.temporalSingularity) systems.push('temporalSingularity');
+        if (this.paradoxEngine) systems.push('paradoxEngine');
+        if (this.dreamState) systems.push('dreamState');
+        if (this.symbioticPrediction) systems.push('symbioticPrediction');
+        if (this.causalEntanglement) systems.push('causalEntanglement');
+        if (this.chronoLoop) systems.push('chronoLoop');
+        if (this.apertureProtocol) systems.push('apertureProtocol');
+        if (this.cartographerProtocol) systems.push('cartographerProtocol');
+        if (this.proteus) systems.push('proteus');
+        if (this.recursionEngine) systems.push('recursionEngine');
+        if (this.inscriptionProtocol) systems.push('inscriptionProtocol');
+        if (this.timelineChronicle) systems.push('timelineChronicle');
+        if (this.rivalSystem) systems.push('rivalSystem');
+        if (this.temporalPedagogy) systems.push('temporalPedagogy');
+        return systems;
     }
 
     gameOver() {
@@ -4037,6 +4201,12 @@ export default class GameScene extends Phaser.Scene {
             this.heartflux = null;
         }
         
+        // Clean up Environmental HUD System
+        if (this.environmentalHUD) {
+            this.environmentalHUD.destroy();
+            this.environmentalHUD = null;
+        }
+        
         // Clean up Proteus Protocol (genome is already saved during evolution)
         if (this.proteus) {
             this.proteus.cleanup();
@@ -4258,5 +4428,264 @@ export default class GameScene extends Phaser.Scene {
             ease: 'Power2',
             onComplete: () => container.destroy()
         });
+    }
+    
+    /**
+     * Setup event listeners for system unlock system
+     */
+    setupSystemUnlockEvents() {
+        // Listen for when new systems are unlocked (now receives array of system IDs)
+        this.events.on('systemUnlocked', (unlockedSystemIds) => {
+            console.log('[GameScene] Systems unlocked:', unlockedSystemIds);
+            
+            // Handle array of unlocked systems
+            const systems = Array.isArray(unlockedSystemIds) ? unlockedSystemIds : [unlockedSystemIds];
+            
+            for (const systemId of systems) {
+                // Environmental HUD adapts automatically — no manual slot reveal needed
+                
+                const tutorial = this.systemUnlockManager.getSystemTutorial(systemId);
+                if (tutorial) {
+                    const nextUnlock = this.systemUnlockManager.getNextUnlockInfo();
+                    this.tutorialOverlay.queueTutorial(tutorial, nextUnlock);
+                    
+                    // Show the tutorial immediately if not already showing
+                    if (!this.tutorialOverlay.getIsVisible()) {
+                        this.tutorialOverlay.show(tutorial, nextUnlock);
+                    }
+                }
+            }
+        });
+        
+        // Listen for upcoming unlock warnings
+        this.events.on('unlockApproaching', (approachData) => {
+            console.log(`[GameScene] Unlock approaching: ${approachData.systemName} in ${approachData.secondsUntilUnlock}s`);
+            // Could add visual/audio cue here
+        });
+        
+        // Tutorial visibility affects pause state
+        this.events.on('tutorialShown', () => {
+            // Pause game while tutorial is showing
+            if (this.pauseSystem && !this.pauseSystem.paused) {
+                this.pauseSystem.pause('tutorial');
+            }
+        });
+        
+        this.events.on('tutorialDismissed', () => {
+            // Resume game when tutorial dismissed (if no other pause reasons)
+            if (this.pauseSystem?.paused && this.pauseSystem.pauseReason === 'tutorial') {
+                this.pauseSystem.resume('tutorial');
+            }
+        });
+    }
+
+    /**
+     * Setup event listeners for level-based progression system
+     */
+    setupLevelEventListeners() {
+        // Level started - show the level start dialog
+        this.events.on('levelStarted', (data) => {
+            console.log(`[GameScene] Level ${data.level} started`);
+
+            // Pause game while dialog is shown
+            if (this.pauseSystem && !this.pauseSystem.paused) {
+                this.pauseSystem.pause('level_dialog');
+            }
+
+            // Show level start dialog
+            this.waitingForLevelDialog = true;
+            this.levelStartDialog.show({
+                level: data.level,
+                name: data.config.name,
+                tier: data.config.tier,
+                systemName: data.config.systemId ? data.config.name : null,
+                description: data.config.description,
+                hint: data.config.hint,
+                color: data.config.color,
+                onDismiss: () => {
+                    this.waitingForLevelDialog = false;
+                    // Resume game when dialog is dismissed
+                    if (this.pauseSystem?.paused && this.pauseSystem.pauseReason === 'level_dialog') {
+                        this.pauseSystem.resume('level_dialog');
+                    }
+                }
+            });
+        });
+
+        // Level completed - transition to next level
+        this.events.on('levelCompleted', (data) => {
+            console.log(`[GameScene] Level ${data.level} completed`);
+
+            // Show level complete announcement
+            this.showLevelCompleteAnnouncement(data.level, data.nextLevel);
+        });
+
+        // Wave advanced - handle boss waves
+        this.events.on('waveAdvanced', (data) => {
+            console.log(`[GameScene] Wave advanced: ${data.waveInLevel} of level ${data.level}`);
+
+            if (data.isBossWave) {
+                // Boss wave - spawn boss
+                this.spawnBossForLevel();
+            }
+        });
+
+        // Boss defeated
+        this.events.on('bossDefeated', (data) => {
+            console.log(`[GameScene] Boss defeated at level ${data.level}`);
+            if (this.levelManager) {
+                this.levelManager.onBossDefeated();
+            }
+        });
+
+        // Level dialog events (for pause coordination)
+        this.events.on('levelDialogShown', () => {
+            this.waitingForLevelDialog = true;
+        });
+
+        this.events.on('levelDialogDismissed', () => {
+            this.waitingForLevelDialog = false;
+        });
+
+        // Register shutdown handler to clean up systems on scene restart
+        this.events.on('shutdown', this.shutdown, this);
+    }
+
+    /**
+     * Shutdown handler - clean up all systems when scene restarts.
+     * This prevents keyboard input conflicts and memory leaks.
+     */
+    shutdown() {
+        console.log('[GameScene] Shutting down - cleaning up systems...');
+
+        // Destroy systems that have destroy methods
+        const systemsToDestroy = [
+            'temporalSingularity',
+            'chronoLoop',
+            'causalEntanglement',
+            'temporalRewind',
+            'observerEffect',
+            'dimensionalCollapse',
+            'mnemosyneWeave',
+            'kairosMoment',
+            'oracleProtocol',
+            'dreamState',
+            'apertureProtocol',
+            'apopheniaProtocol',
+            'bootstrapProtocol',
+            'geometricChorus',
+            'tychosAurora',
+            'quantumImmortality',
+            'paradoxEngine',
+            'symbioticPrediction',
+            'echoStorm',
+            'fractureSystem',
+            'resonanceCascade',
+            'omniWeapon',
+            'tesseractTitan',
+            'timelineChronicle',
+            'temporalContract',
+            'cinematicArchive',
+            'syntropyEngine',
+            'nemesisGenesis',
+            'resonantWhisper',
+            'egregoreProtocol',
+            'aethericConvergence',
+            'recursionEngine',
+            'harmonicConvergence',
+            'synchronicityCascade',
+            'architect',
+            'narrativeConvergence',
+            'noeticMirror',
+            'ambientAwareness',
+            'dissolutionProtocol',
+            'temporalPedagogy',
+            'athenaeum',
+            'axiomNexus',
+            'inscriptionProtocol',
+            'synaesthesiaProtocol',
+            'rivalProtocol',
+            'rhythmOfTheVoid',
+            'cartographer',
+            'resonanceOrb',
+            'exogenesis',
+            'proteus',
+            'voidExchange',
+            'heartflux',
+            'metaSystemOperator',
+            'livingWorld',
+            'sanctumProtocol'
+        ];
+
+        systemsToDestroy.forEach(systemName => {
+            const system = this[systemName];
+            if (system && typeof system.destroy === 'function') {
+                try {
+                    system.destroy();
+                } catch (e) {
+                    console.warn(`[GameScene] Error destroying ${systemName}:`, e);
+                }
+            }
+        });
+
+        // Clean up level start dialog
+        if (this.levelStartDialog) {
+            this.levelStartDialog.dismiss();
+        }
+
+        // Clean up tutorial overlay
+        if (this.tutorialOverlay && typeof this.tutorialOverlay.destroy === 'function') {
+            this.tutorialOverlay.destroy();
+        }
+
+        // Clean up pause system
+        if (this.pauseSystem && typeof this.pauseSystem.destroy === 'function') {
+            this.pauseSystem.destroy();
+        }
+
+        console.log('[GameScene] Shutdown complete');
+    }
+
+    /**
+     * Show level complete announcement.
+     */
+    showLevelCompleteAnnouncement(level, nextLevel) {
+        const completeText = this.add.text(this.player.x, this.player.y - 100, `LEVEL ${level} COMPLETE`, {
+            fontFamily: 'monospace',
+            fontSize: '36px',
+            letterSpacing: 4,
+            fill: '#00ff00'
+        }).setOrigin(0.5);
+
+        this.tweens.add({
+            targets: completeText,
+            y: completeText.y - 60,
+            alpha: 0,
+            duration: 2000,
+            ease: 'Power2',
+            onComplete: () => completeText.destroy()
+        });
+
+        // If there's a next level, start it after a delay
+        if (nextLevel) {
+            this.time.delayedCall(3000, () => {
+                if (this.levelManager) {
+                    this.levelManager.nextLevel();
+                }
+            });
+        }
+    }
+
+    /**
+     * Check if a system is currently unlocked/active.
+     * Uses level-based unlocking: systems are active if their level <= current level.
+     */
+    isSystemActive(systemId) {
+        // Prefer level manager check if available
+        if (this.levelManager) {
+            return this.levelManager.isSystemActive(systemId);
+        }
+        // Fallback to time-based unlock manager
+        return this.systemUnlockManager?.isSystemUnlocked(systemId) ?? true;
     }
 }

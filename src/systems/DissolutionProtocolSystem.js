@@ -236,17 +236,13 @@ export default class DissolutionProtocolSystem {
             }
         });
         
-        // ESC exits dissolution mode - registered with ControlsManager
-        this.scene.controls.register('ESC', 'Exit Dissolution', () => {
+        // ESC exits dissolution mode - direct binding to avoid conflicts with other ESC handlers
+        this.scene.input.keyboard.on('keydown-ESC', () => {
             if (this.dissolutionMode) {
                 this.exitDissolutionMode();
-            }
-            if (this.inReservoir) {
+            } else if (this.inReservoir) {
                 this.exitReservoir();
             }
-        }, {
-            system: 'DissolutionProtocolSystem',
-            description: 'Exit dissolution mode or reservoir'
         });
     }
     
@@ -257,6 +253,9 @@ export default class DissolutionProtocolSystem {
     
     createEssenceDisplay() {
         // Register with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('DISSOLUTION', (container, width, layout) => {
             this.essenceContainer = container;
             this.essenceContainer.setDepth(1000);

@@ -55,7 +55,7 @@ export default class BootstrapProtocolSystem {
         
         // Timing
         this.bootstrapTimer = 0;
-        this.bootstrapInterval = 12;          // Generate echoes every 12 seconds
+        this.bootstrapInterval = 45;          // Generate echoes every 45 seconds (was 12 - too fast)
         this.prophecyHorizon = 15;            // Seconds into future
         this.echoLifespan = 8;                // Seconds echo remains visible
         
@@ -85,42 +85,44 @@ export default class BootstrapProtocolSystem {
         // Graphics rendering handled by UnifiedGraphicsManager for UI elements
         
         // Echo particle texture
-        const canvas = document.createElement('canvas');
-        canvas.width = 32;
-        canvas.height = 32;
-        const ctx = canvas.getContext('2d');
-        
-        // Radial gradient for ethereal echo
-        const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-        gradient.addColorStop(0, 'rgba(255, 170, 0, 0.8)');
-        gradient.addColorStop(0.5, 'rgba(255, 170, 0, 0.3)');
-        gradient.addColorStop(1, 'rgba(255, 170, 0, 0)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 32, 32);
-        
-        this.scene.textures.addCanvas('echoParticle', canvas);
+        if (!this.scene.textures.exists('echoParticle')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            
+            // Radial gradient for ethereal echo
+            const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+            gradient.addColorStop(0, 'rgba(255, 170, 0, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(255, 170, 0, 0.3)');
+            gradient.addColorStop(1, 'rgba(255, 170, 0, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 32, 32);
+            
+            this.scene.textures.addCanvas('echoParticle', canvas);
+        }
         
         // Bootstrap glow texture (larger, softer)
-        const glowCanvas = document.createElement('canvas');
-        glowCanvas.width = 64;
-        glowCanvas.height = 64;
-        const glowCtx = glowCanvas.getContext('2d');
-        const glowGrad = glowCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
-        glowGrad.addColorStop(0, 'rgba(255, 200, 100, 0.4)');
-        glowGrad.addColorStop(1, 'rgba(255, 170, 0, 0)');
-        glowCtx.fillStyle = glowGrad;
-        glowCtx.fillRect(0, 0, 64, 64);
-        
-        this.scene.textures.addCanvas('bootstrapGlow', glowCanvas);
+        if (!this.scene.textures.exists('bootstrapGlow')) {
+            const glowCanvas = document.createElement('canvas');
+            glowCanvas.width = 64;
+            glowCanvas.height = 64;
+            const glowCtx = glowCanvas.getContext('2d');
+            const glowGrad = glowCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            glowGrad.addColorStop(0, 'rgba(255, 200, 100, 0.4)');
+            glowGrad.addColorStop(1, 'rgba(255, 170, 0, 0)');
+            glowCtx.fillStyle = glowGrad;
+            glowCtx.fillRect(0, 0, 64, 64);
+            
+            this.scene.textures.addCanvas('bootstrapGlow', glowCanvas);
+        }
     }
     
     createUI() {
-        // Bootstrap indicator - registered with panel-based HUD system
+        // Bootstrap indicator - skip if using Environmental HUD
         if (!this.scene.hudPanels) {
-            console.warn('[BootstrapProtocolSystem] hudPanels not available, skipping UI registration');
             return;
         }
-        console.log('[BootstrapProtocolSystem] Registering BOOTSTRAP slot...');
         this.scene.hudPanels.registerSlot('BOOTSTRAP', (container, width, layout) => {
             this.bootstrapIndicator = container;
             this.bootstrapIndicator.setDepth(100);
@@ -189,8 +191,8 @@ export default class BootstrapProtocolSystem {
             this.generateFutureEcho();
             this.bootstrapTimer = 0;
             
-            // Interval decreases slightly as level increases (more frequent)
-            this.bootstrapInterval = Math.max(8, 12 - this.bootstrapLevel * 0.3);
+            // Interval decreases slightly as level increases (more frequent) - capped to prevent spam
+            this.bootstrapInterval = Math.max(30, 45 - this.bootstrapLevel * 0.5);  // Min 30s, not 8s
         }
         
         // Update existing echoes

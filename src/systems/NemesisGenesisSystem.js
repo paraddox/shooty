@@ -448,6 +448,9 @@ export default class NemesisGenesisSystem {
     createNemesisHUD() {
         const camera = this.scene.cameras.main;
         // Nemesis health bar - registered with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('NEMESIS', (container, width) => {
             const barWidth = Math.min(200, width - 20);
             const barHeight = 10;

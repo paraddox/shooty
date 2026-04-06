@@ -110,21 +110,23 @@ export default class ParadoxEngineSystem {
     
     createParadoxOverlay() {
         // Create scanline texture
-        const canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 256;
-        const ctx = canvas.getContext('2d');
-        
-        // Draw horizontal scanlines
-        ctx.fillStyle = 'rgba(0, 0, 0, 0)';
-        ctx.fillRect(0, 0, 256, 256);
-        
-        ctx.fillStyle = 'rgba(255, 0, 255, 0.1)';
-        for (let y = 0; y < 256; y += 4) {
-            ctx.fillRect(0, y, 256, 1);
+        if (!this.scene.textures.exists('scanlines')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw horizontal scanlines
+            ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+            ctx.fillRect(0, 0, 256, 256);
+            
+            ctx.fillStyle = 'rgba(255, 0, 255, 0.1)';
+            for (let y = 0; y < 256; y += 4) {
+                ctx.fillRect(0, y, 256, 1);
+            }
+            
+            this.scene.textures.addCanvas('scanlines', canvas);
         }
-        
-        this.scene.textures.addCanvas('scanlines', canvas);
         
         this.paradoxOverlay = this.scene.add.image(
             this.scene.scale.width / 2,

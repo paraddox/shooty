@@ -151,9 +151,13 @@ export default class VoidCoherenceSystem {
         this.structureContainer.setDepth(6);
         
         // Coherence bar (top-left) - registered with HUDPanelManager
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('VOID_COHERENCE', (container, width, layout) => {
             this.coherenceContainer = container;
             this.coherenceContainer.setDepth(100);
+            this.coherenceContainer.setVisible(false); // HIDDEN until coherence > 0
             
             const barWidth = Math.min(200, width);
             
@@ -352,6 +356,13 @@ export default class VoidCoherenceSystem {
         if (!this.coherenceFill || !this.coherenceText || !this.structureIndicator) {
             return;
         }
+        
+        // Only show when coherence > 0 or structures exist
+        const hasActivity = this.coherenceLevel > 0 || this.structures.length > 0;
+        if (this.coherenceContainer) {
+            this.coherenceContainer.setVisible(hasActivity);
+        }
+        if (!hasActivity) return; // Don't update if hidden
         
         const percent = this.coherenceLevel / this.maxCoherence;
         this.coherenceFill.width = 200 * percent;

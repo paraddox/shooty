@@ -134,6 +134,9 @@ export default class HarmonicConvergenceSystem {
         }
         
         // Spectrum analyzer bars - registered with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('HARMONIC', (container, width, layout) => {
             const barCount = Math.min(16, Math.floor(width / 10));
             const barWidth = Math.min(8, (width - (barCount - 1) * 2) / barCount);

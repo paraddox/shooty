@@ -47,10 +47,18 @@ export default class ControlsManager {
     register(key, action, handler, options = {}) {
         // Normalize key to uppercase
         const normalizedKey = key.toUpperCase();
+        const system = options.system || 'unknown';
         
         // Check if key already bound
         if (this.bindings.has(normalizedKey)) {
             const existing = this.bindings.get(normalizedKey);
+            
+            // Idempotent: same system registering same key/action is OK
+            if (existing.system === system && existing.action === action) {
+                return true;
+            }
+            
+            // Different system or different action - genuine conflict
             console.warn(`[ControlsManager] Key ${normalizedKey} already bound to: ${existing.action} by ${existing.system}`);
             return false;
         }

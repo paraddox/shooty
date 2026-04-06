@@ -147,26 +147,31 @@ export default class ObserverEffectSystem {
     
     createObserverVisuals() {
         // Observer eye indicator (top-right, subtle)
-        const canvas = document.createElement('canvas');
-        canvas.width = 64;
-        canvas.height = 64;
-        const ctx = canvas.getContext('2d');
-        
-        // Draw stylized eye
-        ctx.strokeStyle = '#00d4ff';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(32, 32, 20, 0, Math.PI * 2); // Outer circle
-        ctx.stroke();
-        
-        ctx.beginPath();
-        ctx.arc(32, 32, 8, 0, Math.PI * 2); // Pupil
-        ctx.fillStyle = '#00d4ff';
-        ctx.fill();
-        
-        this.scene.textures.addCanvas('observerEye', canvas);
+        if (!this.scene.textures.exists('observerEye')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            
+            // Draw stylized eye
+            ctx.strokeStyle = '#00d4ff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(32, 32, 20, 0, Math.PI * 2); // Outer circle
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(32, 32, 8, 0, Math.PI * 2); // Pupil
+            ctx.fillStyle = '#00d4ff';
+            ctx.fill();
+            
+            this.scene.textures.addCanvas('observerEye', canvas);
+        }
         
         // Observer icon - registered with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('OBSERVER', (container, width, layout) => {
             // Position icon so it doesn't extend into negative Y
             // Image is ~32px, scaled to 16px, so center at y=8

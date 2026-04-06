@@ -65,22 +65,24 @@ export default class TemporalSingularitySystem {
     
     createVisuals() {
         // Singularity core (glowing orb) - sprite-based
-        const canvas = document.createElement('canvas');
-        canvas.width = 128;
-        canvas.height = 128;
-        const ctx = canvas.getContext('2d');
-        
-        // Radial gradient for singularity
-        const gradient = ctx.createRadialGradient(64, 64, 8, 64, 64, 60);
-        gradient.addColorStop(0, 'rgba(255, 23, 68, 1)');      // Bright center
-        gradient.addColorStop(0.3, 'rgba(220, 20, 60, 0.8)');   // Crimson
-        gradient.addColorStop(0.6, 'rgba(220, 20, 60, 0.4)');   // Fade
-        gradient.addColorStop(1, 'rgba(220, 20, 60, 0)');       // Transparent edge
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 128, 128);
-        
-        this.scene.textures.addCanvas('singularityCore', canvas);
+        if (!this.scene.textures.exists('singularityCore')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            
+            // Radial gradient for singularity
+            const gradient = ctx.createRadialGradient(64, 64, 8, 64, 64, 60);
+            gradient.addColorStop(0, 'rgba(255, 23, 68, 1)');      // Bright center
+            gradient.addColorStop(0.3, 'rgba(220, 20, 60, 0.8)');   // Crimson
+            gradient.addColorStop(0.6, 'rgba(220, 20, 60, 0.4)');   // Fade
+            gradient.addColorStop(1, 'rgba(220, 20, 60, 0)');       // Transparent edge
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 128, 128);
+            
+            this.scene.textures.addCanvas('singularityCore', canvas);
+        }
         this.singularityCore = this.scene.add.image(0, 0, 'singularityCore');
         this.singularityCore.setDepth(45);
         this.singularityCore.setVisible(false);

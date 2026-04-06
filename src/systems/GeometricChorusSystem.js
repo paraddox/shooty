@@ -144,36 +144,38 @@ export default class GeometricChorusSystem {
     }
     
     createWallTexture() {
-        const canvas = document.createElement('canvas');
-        canvas.width = 64;
-        canvas.height = 64;
-        const ctx = canvas.getContext('2d');
-        
-        // Indigo base with subtle pattern
-        ctx.fillStyle = '#4b0082';
-        ctx.fillRect(0, 0, 64, 64);
-        
-        // Hexagonal pattern
-        ctx.strokeStyle = '#6b30a0';
-        ctx.lineWidth = 1;
-        ctx.globalAlpha = 0.3;
-        
-        for (let y = 0; y < 64; y += 16) {
-            for (let x = 0; x < 64; x += 16) {
-                ctx.beginPath();
-                for (let i = 0; i < 6; i++) {
-                    const angle = (i * Math.PI) / 3;
-                    const px = x + 8 + Math.cos(angle) * 6;
-                    const py = y + 8 + Math.sin(angle) * 6;
-                    if (i === 0) ctx.moveTo(px, py);
-                    else ctx.lineTo(px, py);
+        if (!this.scene.textures.exists('chorusWall')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            
+            // Indigo base with subtle pattern
+            ctx.fillStyle = '#4b0082';
+            ctx.fillRect(0, 0, 64, 64);
+            
+            // Hexagonal pattern
+            ctx.strokeStyle = '#6b30a0';
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.3;
+            
+            for (let y = 0; y < 64; y += 16) {
+                for (let x = 0; x < 64; x += 16) {
+                    ctx.beginPath();
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (i * Math.PI) / 3;
+                        const px = x + 8 + Math.cos(angle) * 6;
+                        const py = y + 8 + Math.sin(angle) * 6;
+                        if (i === 0) ctx.moveTo(px, py);
+                        else ctx.lineTo(px, py);
+                    }
+                    ctx.closePath();
+                    ctx.stroke();
                 }
-                ctx.closePath();
-                ctx.stroke();
             }
+            
+            this.scene.textures.addCanvas('chorusWall', canvas);
         }
-        
-        this.scene.textures.addCanvas('chorusWall', canvas);
     }
     
     createArenaGrid() {
@@ -351,32 +353,32 @@ export default class GeometricChorusSystem {
     }
     
     updateAdaptiveGeometry(dt, player) {
-        // Create sanctuary when health is low (compassionate)
+        // Create sanctuary when health is low (compassionate - but rare)
         const healthPercent = (player.health || 100) / 100;
         if (healthPercent < 0.3 && this.sanctuaries.length < this.maxSanctuaries) {
-            if (Math.random() < dt * 0.5) { // 50% chance per second when low health
+            if (Math.random() < dt * 0.05) { // Was 50% per sec, now 5% per sec (~20 sec average)
                 this.createSanctuary(player);
             }
         }
         
-        // Create aggression lanes for high-aggression players
+        // Create aggression lanes for high-aggression players (spawn over minutes, not seconds)
         if (this.playstyleProfile.aggression > 0.7 && this.lanes.length < this.maxLanes) {
-            if (Math.random() < dt * 0.3) {
+            if (Math.random() < dt * 0.03) { // Was 0.3 (30% per sec), now 3% per sec (~33 sec average)
                 this.createAggressionLane(player);
             }
         }
         
-        // Create amplification chambers for system users
+        // Create amplification chambers for system users (very rare)
         if (this.playstyleProfile.systemUsage > 0.6 && this.chambers.length < this.maxChambers) {
-            if (Math.random() < dt * 0.2) {
+            if (Math.random() < dt * 0.015) { // Was 0.2 (20% per sec), now 1.5% per sec (~66 sec average)
                 this.createAmplificationChamber(player);
             }
         }
         
-        // Spawn walls during bullet storms (protection)
+        // Spawn walls during bullet storms (protection) - rare even during chaos
         const bulletCount = this.scene.enemyBullets?.countActive() || 0;
         if (bulletCount > 30 && this.walls.length < this.maxWalls) {
-            if (Math.random() < dt * 0.4) {
+            if (Math.random() < dt * 0.04) { // Was 0.4 (40% per sec), now 4% per sec (~25 sec average)
                 this.createStrategicWall(player);
             }
         }

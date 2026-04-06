@@ -159,6 +159,9 @@ export default class HeartfluxProtocolSystem {
     
     createVisuals() {
         // Heart flux indicator - registered with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('HEARTFLUX', (container, width, layout) => {
             this.container = container;
             this.container.setDepth(1000);
@@ -520,15 +523,20 @@ export default class HeartfluxProtocolSystem {
     }
     
     showBreathingCue() {
+        // Guard: breathGuide may not be initialized yet (async panel creation)
+        if (!this.breathGuide) {
+            return;
+        }
+
         // 4-7-8 breathing technique: inhale 4s, hold 7s, exhale 8s
         const steps = [
             { text: 'BREATHE IN...', duration: 4000, color: '#00f0ff' },
             { text: 'HOLD...', duration: 7000, color: '#ffd700' },
             { text: 'BREATHE OUT...', duration: 8000, color: '#ff6b9d' }
         ];
-        
+
         let stepIndex = 0;
-        
+
         const showStep = () => {
             if (stepIndex >= steps.length) {
                 this.breathGuide.setAlpha(0);

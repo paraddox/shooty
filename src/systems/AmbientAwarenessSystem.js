@@ -230,6 +230,9 @@ export default class AmbientAwarenessSystem {
     
     createVisualElements() {
         // Ambient status - registered with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('AMBIENT', (container, width) => {
             // Time-state indicator
             this.timeStateText = this.scene.add.text(

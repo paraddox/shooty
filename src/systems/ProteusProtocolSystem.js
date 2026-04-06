@@ -416,11 +416,9 @@ export default class ProteusProtocolSystem {
     }
     
     create() {
-        // Register with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
         if (!this.scene.hudPanels) {
-            console.warn('[ProteusProtocolSystem] hudPanels not available, deferring UI registration');
-            // Retry after a short delay
-            this.scene.time.delayedCall(100, () => this.create());
+            // No panel-based HUD — visual encoded in environment
             return;
         }
         

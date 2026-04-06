@@ -148,7 +148,13 @@ export default class TemporalRewindSystem {
     
     createInstabilityBar() {
         // Register with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('TEMPORAL_REWIND', (container, width, layout) => {
+            this.rewindContainer = container;  // Store reference for visibility control
+            this.rewindContainer.setVisible(false);  // HIDDEN until instability > 0 or anchors exist
+            
             const barWidth = Math.min(120, width);
             const height = 6;
             
@@ -179,21 +185,23 @@ export default class TemporalRewindSystem {
     
     createRewindOverlay() {
         // Create amber vignette texture
-        const canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 256;
-        const ctx = canvas.getContext('2d');
-        
-        // Radial gradient from transparent center to amber edges
-        const gradient = ctx.createRadialGradient(128, 128, 50, 128, 128, 180);
-        gradient.addColorStop(0, 'rgba(255, 170, 0, 0)');
-        gradient.addColorStop(0.7, 'rgba(255, 170, 0, 0.3)');
-        gradient.addColorStop(1, 'rgba(255, 170, 0, 0.6)');
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 256, 256);
-        
-        this.scene.textures.addCanvas('rewindVignette', canvas);
+        if (!this.scene.textures.exists('rewindVignette')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            // Radial gradient from transparent center to amber edges
+            const gradient = ctx.createRadialGradient(128, 128, 50, 128, 128, 180);
+            gradient.addColorStop(0, 'rgba(255, 170, 0, 0)');
+            gradient.addColorStop(0.7, 'rgba(255, 170, 0, 0.3)');
+            gradient.addColorStop(1, 'rgba(255, 170, 0, 0.6)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 256, 256);
+            
+            this.scene.textures.addCanvas('rewindVignette', canvas);
+        }
         
         // Overlay image
         this.rewindOverlay = this.scene.add.image(
@@ -756,6 +764,13 @@ export default class TemporalRewindSystem {
             return;
         }
         
+        // Only show when instability > 0 or anchors exist
+        const hasActivity = this.instability > 0 || this.anchors.length > 0 || this.isRewinding;
+        if (this.rewindContainer) {
+            this.rewindContainer.setVisible(hasActivity);
+        }
+        if (!hasActivity) return; // Don't update if hidden
+        
         // Update instability bar
         const width = 120;
         const fillWidth = (this.instability / this.maxInstability) * (width - 2);
@@ -1085,7 +1100,10 @@ export default class TemporalRewindSystem {
         // UnifiedGraphicsManager only - no legacy graphics objects to destroy
         if (this.rewindOverlay) this.rewindOverlay.destroy();
         
-        Object.values(this.instabilityBar).forEach(el => el.destroy());
+        // Guard against null/undefined instabilityBar
+        if (this.instabilityBar && typeof this.instabilityBar === 'object') {
+            Object.values(this.instabilityBar).forEach(el => el?.destroy?.());
+        }
         if (this.instabilityText) this.instabilityText.destroy();
         
         this.anchors = [];

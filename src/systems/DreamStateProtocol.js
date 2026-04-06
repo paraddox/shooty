@@ -194,20 +194,22 @@ export default class DreamStateProtocol {
     
     createDreamParticleTexture() {
         // Create dream particle texture
-        const canvas = document.createElement('canvas');
-        canvas.width = 64;
-        canvas.height = 64;
-        const ctx = canvas.getContext('2d');
-        
-        // Ethereal soft glow for dream symbols
-        const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-        gradient.addColorStop(0, 'rgba(75, 0, 130, 0.8)');
-        gradient.addColorStop(0.5, 'rgba(0, 212, 255, 0.4)');
-        gradient.addColorStop(1, 'rgba(75, 0, 130, 0)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 64, 64);
-        
-        this.scene.textures.addCanvas('dreamParticle', canvas);
+        if (!this.scene.textures.exists('dreamParticle')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            
+            // Ethereal soft glow for dream symbols
+            const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(75, 0, 130, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(0, 212, 255, 0.4)');
+            gradient.addColorStop(1, 'rgba(75, 0, 130, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 64, 64);
+            
+            this.scene.textures.addCanvas('dreamParticle', canvas);
+        }
     }
     
     createSymbolContainer() {

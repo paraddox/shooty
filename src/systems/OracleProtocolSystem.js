@@ -173,20 +173,22 @@ export default class OracleProtocolSystem {
     }
     
     createVisionOverlay() {
-        const canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 256;
-        const ctx = canvas.getContext('2d');
-        
-        // Create chromatic separation texture
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
-        ctx.fillRect(0, 0, 256, 256);
-        ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
-        ctx.fillRect(10, 0, 246, 256);
-        ctx.fillStyle = 'rgba(0, 255, 0, 0.05)';
-        ctx.fillRect(-5, 0, 251, 256);
-        
-        this.scene.textures.addCanvas('vision_chromatic', canvas);
+        if (!this.scene.textures.exists('vision_chromatic')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            // Create chromatic separation texture
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, 256, 256);
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
+            ctx.fillRect(10, 0, 246, 256);
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.05)';
+            ctx.fillRect(-5, 0, 251, 256);
+            
+            this.scene.textures.addCanvas('vision_chromatic', canvas);
+        }
         
         this.visionOverlay = this.scene.add.image(
             this.scene.scale.width / 2,

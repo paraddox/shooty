@@ -176,16 +176,18 @@ export default class ApopheniaProtocol {
         this.currentMandala = null;       // Session archetype
         
         // ===== CONFIGURATION =====
+        // SLOWED: Pattern detection now requires sustained gameplay (60+ seconds) to accumulate
+        // enough points for meaningful patterns. Prevents early-game pattern spam.
         this.config = {
-            pointDecay: 30000,            // 30s before points fade
-            patternThreshold: 0.85,       // Detection confidence (0-1)
-            maxPatterns: 8,               // Active patterns cap
-            detectionRadius: 300,         // Search range for geometry
-            minPointsForPattern: 3,       // Minimum cluster size
+            pointDecay: 60000,            // Was 30s -> 60s (points last longer, but need more to form patterns)
+            patternThreshold: 0.90,       // Was 0.85 -> 0.90 (higher confidence needed)
+            maxPatterns: 3,               // Was 8 -> 3 (fewer patterns until more playtime)
+            detectionRadius: 200,         // Was 300 -> 200 (tighter search range)
+            minPointsForPattern: 8,       // Was 3 -> 8 (need more points = ~60-90s of gameplay)
             prophecyAccuracy: 0.7,        // Chance prophecy comes true
-            patternLifetime: 20000,       // How long patterns last
-            chargeRate: 0.05,             // Pattern charge per tick
-            gridSnap: 20                  // Snap points to grid for detection
+            patternLifetime: 30000,       // Was 20s -> 30s (patterns last longer once found)
+            chargeRate: 0.03,             // Was 0.05 -> 0.03 (slower charging)
+            gridSnap: 25                  // Was 20 -> 25 (slightly coarser grid = harder to match)
         };
         
         // ===== VISUALS =====
@@ -347,9 +349,10 @@ export default class ApopheniaProtocol {
     // ===== PATTERN DETECTION =====
     
     startDetectionLoop() {
-        // TUNED: 750ms balance between responsiveness and performance
+        // SLOWED: Was 750ms -> 5000ms. Pattern detection now runs every 5 seconds
+        // This prevents rapid pattern discovery in first minute of gameplay
         this.scene.time.addEvent({
-            delay: 750,
+            delay: 5000,
             callback: () => this.detectPatterns(),
             loop: true
         });

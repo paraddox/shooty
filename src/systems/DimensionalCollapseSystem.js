@@ -158,17 +158,19 @@ export default class DimensionalCollapseSystem {
     
     createOverlayEffects() {
         // Scanline overlay for glitch effect
-        const canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 256;
-        const ctx = canvas.getContext('2d');
-        
-        ctx.fillStyle = 'rgba(0, 240, 255, 0.05)';
-        for (let y = 0; y < 256; y += 4) {
-            ctx.fillRect(0, y, 256, 1);
+        if (!this.scene.textures.exists('scanlines_dim')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.05)';
+            for (let y = 0; y < 256; y += 4) {
+                ctx.fillRect(0, y, 256, 1);
+            }
+            
+            this.scene.textures.addCanvas('scanlines_dim', canvas);
         }
-        
-        this.scene.textures.addCanvas('scanlines_dim', canvas);
         
         this.scanlineOverlay = this.scene.add.image(
             this.scene.scale.width / 2,

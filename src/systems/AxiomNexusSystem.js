@@ -319,6 +319,9 @@ export default class AxiomNexusSystem {
         this.illuminationText.setVisible(false);
         
         // Synthesis discovery panel - registered with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('AXIOM_NEXUS', (container, width, layout) => {
             this.synthesisPanel = container;
             this.synthesisPanel.setDepth(95);
@@ -470,16 +473,30 @@ export default class AxiomNexusSystem {
     // === DISCOVERY DETECTION ===
     
     checkForSyntheses() {
-        // Check each synthesis in the current layer
+        const now = Date.now();
+        
+        // Check each synthesis in the current layer (but only check every 2 seconds max)
         const layerSyntheses = Array.from(this.synthesisMatrix.values())
             .filter(s => s.layer <= this.currentLayer && !s.discovered);
         
         for (const synth of layerSyntheses) {
+            // Rate limit: only check each synthesis every 2 seconds
+            if (synth.lastCheckTime && (now - synth.lastCheckTime) < 2000) {
+                continue;
+            }
+            synth.lastCheckTime = now;
+            
             if (synth.catalyst && synth.catalyst()) {
+                // Track when this synthesis was first triggered
+                if (!synth.firstTriggerTime) {
+                    synth.firstTriggerTime = now;
+                }
                 synth.triggeredCount++;
                 
-                // Must trigger consistently to count as "discovered"
-                if (synth.triggeredCount >= 3) {
+                // Must trigger consistently over TIME to count as "discovered"
+                // Requires 5 triggers over at least 10 seconds (not 3 frames)
+                const timeSinceFirstTrigger = now - synth.firstTriggerTime;
+                if (synth.triggeredCount >= 5 && timeSinceFirstTrigger > 10000) {
                     this.discoverSynthesis(synth);
                 }
             }

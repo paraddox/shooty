@@ -146,6 +146,9 @@ export default class MetaSystemOperator {
     
     createPatchHUD() {
         // Small indicator in corner showing active patches - registered with HUDPanelManager
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('META_SYSTEM', (container, width, layout) => {
             this.patchHUD = container;
             this.patchHUD.setDepth(100);
@@ -186,14 +189,11 @@ export default class MetaSystemOperator {
             description: 'Enter patch mode to wire systems together'
         });
         
-        // ESC to exit patch mode (UI system)
-        this.scene.controls.register('ESC', 'Close Menu', () => {
+        // ESC to exit patch mode - direct binding for temporary UI mode
+        this.scene.input.keyboard.on('keydown-ESC', () => {
             if (this.isPatchMode) {
                 this.exitPatchMode();
             }
-        }, {
-            system: 'UI',
-            description: 'Close current menu or exit patch mode'
         });
     }
     

@@ -75,9 +75,13 @@ export default class ChronoLoopSystem {
     
     createLoopIndicator() {
         // Register with panel-based HUD system
+        // Environmental HUD System replaces panel-based HUD
+        if (!this.scene.hudPanels) return;
+
         this.scene.hudPanels.registerSlot('CHRONO_LOOP', (container, width, layout) => {
             this.loopIndicator = container;
             this.loopIndicator.setDepth(100);
+            this.loopIndicator.setVisible(false); // HIDDEN until first recording or echoes exist
             
             // Use top-left origin so elements stay within content bounds (x >= 0, y >= 0)
             const barHeight = 8;
@@ -138,8 +142,10 @@ export default class ChronoLoopSystem {
         });
         
         // Show progress bar
-        this.recordProgressBar.setVisible(true);
-        this.recordProgressBar.width = 0;
+        if (this.recordProgressBar) {
+            this.recordProgressBar.setVisible(true);
+            this.recordProgressBar.width = 0;
+        }
         
         // Note: Recording ring is now drawn via UnifiedGraphicsManager in updateRecordingVisuals()
         
@@ -161,7 +167,9 @@ export default class ChronoLoopSystem {
         if (!this.isRecording) return;
         
         this.isRecording = false;
-        this.recordProgressBar.setVisible(false);
+        if (this.recordProgressBar) {
+            this.recordProgressBar.setVisible(false);
+        }
         // Note: Recording ring is now cleared via UnifiedGraphicsManager (no visibility toggle needed)
         
         // Create Past Echo from recording
@@ -360,8 +368,10 @@ export default class ChronoLoopSystem {
         }
         
         // Update progress bar
-        const progress = elapsed / this.recordDuration;
-        this.recordProgressBar.width = 60 * progress;
+        if (this.recordProgressBar) {
+            const progress = elapsed / this.recordDuration;
+            this.recordProgressBar.width = 60 * progress;
+        }
     }
     
     updateEchoes(dt) {
@@ -559,6 +569,13 @@ export default class ChronoLoopSystem {
         // Guard: loopSegments may not be initialized yet (panel-based HUD async)
         if (!this.loopSegments) return;
         
+        // Only show indicator when recording or echoes exist
+        const hasActivity = this.isRecording || this.pastEchoes.length > 0;
+        if (this.loopIndicator) {
+            this.loopIndicator.setVisible(hasActivity);
+        }
+        if (!hasActivity) return; // Don't update segments if hidden
+        
         // Update segment colors based on active echoes
         this.loopSegments.forEach((segment, i) => {
             if (i < this.pastEchoes.length) {
@@ -690,8 +707,11 @@ export default class ChronoLoopSystem {
     
     destroy() {
         // Note: UnifiedGraphicsManager handles cleanup of its own graphics objects
-        this.loopIndicator.destroy();
-        
+        this.loopIndicator?.destroy();
+
+        // Clean up T key listener
+        this.tKey?.destroy();
+
         // Clean up echoes
         this.pastEchoes = [];
     }

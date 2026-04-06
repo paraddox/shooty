@@ -136,31 +136,33 @@ export default class MnemosyneWeaveSystem {
     
     createVisuals() {
         // Trance overlay (iridescent sheen)
-        const canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 256;
-        const ctx = canvas.getContext('2d');
-        
-        // Create iridescent gradient
-        const gradient = ctx.createLinearGradient(0, 0, 256, 256);
-        gradient.addColorStop(0, 'rgba(0, 240, 255, 0.1)');
-        gradient.addColorStop(0.3, 'rgba(157, 78, 221, 0.08)');
-        gradient.addColorStop(0.6, 'rgba(255, 215, 0, 0.06)');
-        gradient.addColorStop(1, 'rgba(255, 0, 100, 0.1)');
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 256, 256);
-        
-        // Add subtle interference pattern
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-        for (let i = 0; i < 256; i += 8) {
-            ctx.beginPath();
-            ctx.moveTo(0, i);
-            ctx.lineTo(256, i + (i % 16 === 0 ? 4 : -4));
-            ctx.stroke();
+        if (!this.scene.textures.exists('mnemosyne_overlay')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            // Create iridescent gradient
+            const gradient = ctx.createLinearGradient(0, 0, 256, 256);
+            gradient.addColorStop(0, 'rgba(0, 240, 255, 0.1)');
+            gradient.addColorStop(0.3, 'rgba(157, 78, 221, 0.08)');
+            gradient.addColorStop(0.6, 'rgba(255, 215, 0, 0.06)');
+            gradient.addColorStop(1, 'rgba(255, 0, 100, 0.1)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 256, 256);
+            
+            // Add subtle interference pattern
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            for (let i = 0; i < 256; i += 8) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(256, i + (i % 16 === 0 ? 4 : -4));
+                ctx.stroke();
+            }
+            
+            this.scene.textures.addCanvas('mnemosyne_overlay', canvas);
         }
-        
-        this.scene.textures.addCanvas('mnemosyne_overlay', canvas);
         
         this.tranceOverlay = this.scene.add.image(
             this.scene.scale.width / 2,

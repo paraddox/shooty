@@ -184,10 +184,15 @@ export default class TychosAuroraSystem {
         this.auroraCanvas = document.createElement('canvas');
         this.auroraCanvas.width = this.columns;
         this.auroraCanvas.height = this.rows;
-        this.auroraTexture = this.scene.textures.addCanvas('auroraField', this.auroraCanvas);
+        
+        if (!this.scene.textures.exists('auroraField')) {
+            this.auroraTexture = this.scene.textures.addCanvas('auroraField', this.auroraCanvas);
+        }
         
         // Field data texture (for shader access)
-        this.fieldTexture = this.scene.textures.addCanvas('fieldData', this.auroraCanvas);
+        if (!this.scene.textures.exists('fieldData')) {
+            this.fieldTexture = this.scene.textures.addCanvas('fieldData', this.auroraCanvas);
+        }
     }
     
     createShaders() {
